@@ -7,10 +7,11 @@ import (
 	"flag"
 	"net/http"
 	"encoding/json"
+	"github.com/racerxdl/segdsp/demodcore"
 )
 
 func OnInt16IQ(data []spy2go.ComplexInt16) {
-	//log.Println("Received Complex 16 Data! ", len(data))
+	AddS16Fifo(data)
 }
 func OnDeviceSync(spyserver *spy2go.Spyserver) {
 	var d = DeviceMessage{
@@ -98,6 +99,8 @@ func main() {
 	spyserver.SetDisplayOffset(10)
 	spyserver.SetDisplayDecimationStage(uint32(*displayDecimationStage))
 	spyserver.SetDisplayCenterFrequency(uint32(*displayFrequency))
+
+	demodulator = demodcore.MakeWBFMDemodulator(spyserver.GetSampleRate())
 
 	log.Println("Starting")
 	spyserver.Start()
