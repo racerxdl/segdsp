@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"container/list"
 	"encoding/json"
+	"runtime"
 )
 
 var chanList = list.New()
@@ -56,17 +57,14 @@ func handleMessages(c *websocket.Conn) {
 		//if err != nil {
 		//	break
 		//}
-		select {
-		case msg := <- cChannel:
-			err = c.WriteMessage(websocket.TextMessage, []byte(msg))
-			if err != nil {
-				log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
-				break
-				break
-			}
-		default:
+		msg := <- cChannel
+		err = c.WriteMessage(websocket.TextMessage, []byte(msg))
+		if err != nil {
+			log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
+			break
 		}
 
+		runtime.Gosched()
 	}
 	// endregion
 }

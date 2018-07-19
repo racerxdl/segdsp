@@ -78,6 +78,5 @@ func dspLoop() {
 	for running {
 		dspRun()
 		runtime.Gosched()
-		// time.Sleep(time.Microsecond)
 	}
 }

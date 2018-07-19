@@ -8,7 +8,24 @@ import (
 	"net/http"
 	"encoding/json"
 	"github.com/racerxdl/segdsp/demodcore"
+	"os"
+	"runtime/pprof"
+	"os/signal"
+	"syscall"
 )
+
+var addr = flag.String("addr", "localhost:8080", "http service address")
+var spyserverhost = flag.String("spyserver", "localhost:5555", "spyserver address")
+var displayPixels = flag.Uint("displayPixels", 512, "Width in pixels of the FFT")
+
+var channelFrequency = flag.Uint("channelFrequency", 106300000, "Channel (IQ) Center Frequency")
+var displayFrequency = flag.Uint("fftFrequency", 106300000, "FFT Center Frequency")
+
+var channelDecimationStage = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
+var displayDecimationStage = flag.Uint("fftDecimationStage", 2, "FFT Decimation Stage (The actual decimation will be 2^d)")
+
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+
 
 func OnInt16IQ(data []spy2go.ComplexInt16) {
 	go AddS16Fifo(data)
@@ -45,16 +62,6 @@ func OnFFT(data []uint8) {
 	broadcastMessage(string(m))
 }
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
-var spyserverhost = flag.String("spyserver", "localhost:5555", "spyserver address")
-var displayPixels = flag.Uint("displayPixels", 512, "Width in pixels of the FFT")
-
-var channelFrequency = flag.Uint("channelFrequency", 106300000, "Channel (IQ) Center Frequency")
-var displayFrequency = flag.Uint("fftFrequency", 106300000, "FFT Center Frequency")
-
-var channelDecimationStage = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
-var displayDecimationStage = flag.Uint("fftDecimationStage", 2, "FFT Decimation Stage (The actual decimation will be 2^d)")
-
 func sendData(data interface{}) {
 	//log.Println("Sending buffer")
 	var j = MakeDataMessage(data)
@@ -65,16 +72,37 @@ func sendData(data interface{}) {
 	broadcastMessage(string(m))
 }
 
-func main() {
-
-	flag.Parse()
-	log.SetFlags(0)
+func CreateServer() *http.Server {
+	srv := &http.Server{Addr: *addr}
 
 	fs := http.FileServer(http.Dir("./content/static"))
 
 	http.HandleFunc("/ws", ws)
 	http.Handle("/static/", http.StripPrefix("/static", fs))
 	http.HandleFunc("/", content)
+
+	go func() {
+		log.Println(http.ListenAndServe(*addr, nil))
+	}()
+
+	return srv
+}
+
+func main() {
+
+	flag.Parse()
+	log.SetFlags(0)
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println("Starting CPU Profile")
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	InitDSP()
 
@@ -124,14 +152,30 @@ func main() {
 
 	dspCb = sendData
 
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigs
+		fmt.Println(sig)
+		done <- true
+	}()
+
+	var srv = CreateServer()
+
 	StartDSP()
 
 	log.Println("Starting")
 	spyserver.Start()
 
-	log.Print(http.ListenAndServe(*addr, nil))
+	<-done
+
+	srv.Shutdown(nil)
 
 	log.Print("Stopping")
 	spyserver.Stop()
 	StopDSP()
+
+	fmt.Println("Work Done")
 }

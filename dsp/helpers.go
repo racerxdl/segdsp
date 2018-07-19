@@ -1,12 +1,5 @@
 package dsp
 
-/*
-#cgo CFLAGS: -O3
-
-#include "ccode/simd.c"
-
- */
-import "C"
 import "math"
 
 func Min(a, b int) int {
@@ -27,8 +20,6 @@ func DotProduct(result *complex64, input []complex64, taps []float32) {
 	}
 
 	*result = complex(res[0], res[1])
-
-	//C.dotProduct(unsafe.Pointer(result), unsafe.Pointer(&input[0]), unsafe.Pointer(&taps[0]), C.uint(length))
 }
 
 func DotProductResult(input []complex64, taps []float32) complex64 {
@@ -72,6 +63,12 @@ func MultiplyConjugate(vecA, vecB []complex64, length int) []complex64 {
 	}
 
 	return output
+}
+
+func MultiplyConjungateInline(vecA, vecB []complex64, length int) {
+	for i := 0; i < length; i++ {
+		vecA[i] = vecA[i] * Conj(vecB[i])
+	}
 }
 
 func Modulus(c complex64) float32 {

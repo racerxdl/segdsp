@@ -22,8 +22,6 @@ let deviceInfo = {
     Gain: 0,
 };
 
-let audioBuffer;
-let audioSource;
 const buffers = [];
 
 const node = audioCtx.createScriptProcessor(16384, 0, 1);
@@ -34,8 +32,6 @@ node.onaudioprocess = function(event) {
         if (buffers.length > 0) {
             const buff = buffers.shift();
             event.outputBuffer.getChannelData(0).set(buff);
-        } else {
-           // console.log("Empty");
         }
     } catch(e) {
         console.log(e);

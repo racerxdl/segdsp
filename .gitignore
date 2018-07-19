@@ -12,3 +12,5 @@
 *.out
 .idea
 build
+segdsp
+segdsp.prof
