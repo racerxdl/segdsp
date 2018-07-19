@@ -11,7 +11,7 @@ import (
 )
 
 func OnInt16IQ(data []spy2go.ComplexInt16) {
-	AddS16Fifo(data)
+	go AddS16Fifo(data)
 }
 func OnDeviceSync(spyserver *spy2go.Spyserver) {
 	var d = DeviceMessage{
@@ -50,10 +50,20 @@ var spyserverhost = flag.String("spyserver", "localhost:5555", "spyserver addres
 var displayPixels = flag.Uint("displayPixels", 512, "Width in pixels of the FFT")
 
 var channelFrequency = flag.Uint("channelFrequency", 106300000, "Channel (IQ) Center Frequency")
-var displayFrequency = flag.Uint("fftFrequency", 106000000, "FFT Center Frequency")
+var displayFrequency = flag.Uint("fftFrequency", 106300000, "FFT Center Frequency")
 
 var channelDecimationStage = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
-var displayDecimationStage = flag.Uint("fftDecimationStage", 1, "FFT Decimation Stage (The actual decimation will be 2^d)")
+var displayDecimationStage = flag.Uint("fftDecimationStage", 2, "FFT Decimation Stage (The actual decimation will be 2^d)")
+
+func sendData(data interface{}) {
+	//log.Println("Sending buffer")
+	var j = MakeDataMessage(data)
+	m, err := json.Marshal(j)
+	if err != nil {
+		log.Println("Error serializing JSON: ", err)
+	}
+	broadcastMessage(string(m))
+}
 
 func main() {
 
@@ -65,6 +75,8 @@ func main() {
 	http.HandleFunc("/ws", ws)
 	http.Handle("/static/", http.StripPrefix("/static", fs))
 	http.HandleFunc("/", content)
+
+	InitDSP()
 
 	var spyserver = spy2go.MakeSpyserverByFullHS(*spyserverhost)
 
@@ -84,8 +96,19 @@ func main() {
 
 	log.Println("Available SampleRates:")
 	for i := 0; i < len(srs); i++ {
-		log.Println(fmt.Sprintf("		%f msps", float32(srs[i]) / 1e6))
+		log.Println(fmt.Sprintf("		%f msps (dec stage %d)", float32(srs[i]) / 1e6, i))
 	}
+
+
+	spyserver.SetStreamingMode(spy2go.StreamModeFFTIQ)
+	//spyserver.SetStreamingMode(spy2go.StreamModeIQOnly)
+	spyserver.SetDisplayPixels(uint32(*displayPixels))
+	spyserver.SetDisplayRange(90)
+	spyserver.SetDisplayOffset(10)
+	spyserver.SetDisplayDecimationStage(uint32(*displayDecimationStage))
+	spyserver.SetDisplayCenterFrequency(uint32(*displayFrequency))
+
+
 	if spyserver.SetDecimationStage(uint32(*channelDecimationStage)) == 0xFFFFFFFF {
 		log.Println("Error setting sample rate.")
 	}
@@ -93,14 +116,15 @@ func main() {
 		log.Println("Error setting center frequency.")
 	}
 
-	spyserver.SetStreamingMode(spy2go.StreamModeFFTIQ)
-	spyserver.SetDisplayPixels(uint32(*displayPixels))
-	spyserver.SetDisplayRange(90)
-	spyserver.SetDisplayOffset(10)
-	spyserver.SetDisplayDecimationStage(uint32(*displayDecimationStage))
-	spyserver.SetDisplayCenterFrequency(uint32(*displayFrequency))
+	log.Println("IQ Sample Rate: ", spyserver.GetSampleRate())
+	log.Println("IQ Center Frequency ", spyserver.GetCenterFrequency())
+	log.Println("FFT Sample Rate: ", spyserver.GetDisplaySampleRate())
 
-	demodulator = demodcore.MakeWBFMDemodulator(spyserver.GetSampleRate())
+	demodulator = demodcore.MakeWBFMDemodulator(spyserver.GetSampleRate(), 120000, 48000)
+
+	dspCb = sendData
+
+	StartDSP()
 
 	log.Println("Starting")
 	spyserver.Start()
@@ -109,4 +133,5 @@ func main() {
 
 	log.Print("Stopping")
 	spyserver.Stop()
+	StopDSP()
 }

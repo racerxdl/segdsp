@@ -8,34 +8,34 @@ import (
 	"encoding/json"
 )
 
+var chanList = list.New()
+
 func closeN(c *list.Element) {
 	wsMutex.Lock()
-	var v = c.Value.(*websocket.Conn)
-	log.Println("Closing connection from", v.RemoteAddr())
-	websocketConnections.Remove(c)
-	c.Value.(*websocket.Conn).Close()
+	chanList.Remove(c)
 	wsMutex.Unlock()
 }
 
 func broadcastMessage(data string) {
 	wsMutex.Lock()
-	for e := websocketConnections.Front(); e != nil; {
-		var ws = e.Value.(*websocket.Conn)
-		err := ws.WriteMessage(websocket.TextMessage, []byte(data))
+	for e := chanList.Front(); e != nil; {
+		var c = e.Value.(chan string)
+		go func() {
+			c <- data
+		}()
 		var next = e.Next()
-		if err != nil {
-			log.Println("Error sending message:", err, "dropping connection from", ws.RemoteAddr())
-			websocketConnections.Remove(e)
-			ws.Close()
-		}
 		e = next
 	}
 	wsMutex.Unlock()
 }
 
 func handleMessages(c *websocket.Conn) {
-	var el = websocketConnections.PushBack(c)
-	defer closeN(el)
+
+	var cChannel = make(chan string)
+	wsMutex.Lock()
+	var li = chanList.PushBack(cChannel)
+	wsMutex.Unlock()
+	defer closeN(li)
 
 	// region Send DeviceInfo
 	log.Println("New connection from", c.RemoteAddr())
@@ -52,10 +52,21 @@ func handleMessages(c *websocket.Conn) {
 	// endregion
 	// region Client Loop
 	for {
-		_, _, err := c.ReadMessage()
-		if err != nil {
-			break
+		//_, _, err := c.ReadMessage()
+		//if err != nil {
+		//	break
+		//}
+		select {
+		case msg := <- cChannel:
+			err = c.WriteMessage(websocket.TextMessage, []byte(msg))
+			if err != nil {
+				log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
+				break
+				break
+			}
+		default:
 		}
+
 	}
 	// endregion
 }

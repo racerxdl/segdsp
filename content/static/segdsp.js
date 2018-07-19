@@ -2,6 +2,7 @@
 
 const margin = 50;
 const spacing = 50;
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 let width, height;
 let canvas;
@@ -21,6 +22,28 @@ let deviceInfo = {
     Gain: 0,
 };
 
+let audioBuffer;
+let audioSource;
+const buffers = [];
+
+const node = audioCtx.createScriptProcessor(16384, 0, 1);
+const source = audioCtx.createBufferSource();
+
+node.onaudioprocess = function(event) {
+    try {
+        if (buffers.length > 0) {
+            const buff = buffers.shift();
+            event.outputBuffer.getChannelData(0).set(buff);
+        } else {
+           // console.log("Empty");
+        }
+    } catch(e) {
+        console.log(e);
+    }
+};
+source.connect(node);
+node.connect(audioCtx.destination);
+source.start();
 /**
  * @return {number}
  */
@@ -109,7 +132,7 @@ function DrawFFT() {
     // endregion
     // region Markers
     const channelX = (margin + (deviceInfo.ChannelCenterFrequency - startFreq) * invDelta) >> 0;
-    const channelW = ((deviceInfo.CurrentSampleRate * 0.8) * invDelta) >> 0;
+    const channelW = ((deviceInfo.CurrentSampleRate * 0.8 * 0.5) * invDelta) >> 0;
     ctx.fillStyle = 'rgba(127, 127, 127, 0.3)';
     ctx.fillRect(channelX - channelW / 2, margin, channelW, baseOffset - margin);
     ctx.beginPath();
@@ -128,7 +151,14 @@ function HandleFFT(data) {
 }
 
 function HandleData(data) {
-
+    // console.log('Received buffer!');
+    try {
+        const buffer = data.Data;
+        const audioRate = data.OutputRate;
+        buffers.push(new Float32Array(buffer));
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 function HandleDevice(data) {

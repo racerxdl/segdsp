@@ -37,7 +37,7 @@ type FFTMessage struct {
 
 type DataMessage struct {
 	MessageType string
-	Data JsonInt16
+	Data interface{}
 }
 
 type DeviceMessage struct {
@@ -60,7 +60,7 @@ func MakeFFTMessage(data []uint8) FFTMessage {
 	}
 }
 
-func MakeDataMessage(data []int16) DataMessage {
+func MakeDataMessage(data interface{}) DataMessage {
 	return DataMessage{
 		MessageType: "data",
 		Data: data,

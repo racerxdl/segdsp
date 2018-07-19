@@ -22,5 +22,21 @@ func (f *QuadDemod) Work(data []complex64) []float32 {
 		out[i] = f.gain * Atan2(imag(tmp[i]), real(tmp[i]))
 	}
 
+	f.history = samples[len(samples)-2:]
+	//var out = make([]float32, len(data))
+	//
+	//for i := 0; i < len(data); i++ {
+	//	var c = data[i] * Conj(f.history[0])
+	//	//var mod = Modulus(c)
+	//	//if mod > 0 {
+	//	//	mod = 1 / mod
+	//	//	c = complex(real(c) * mod, imag(c) * mod)
+	//	//}
+	//
+	//	//var argument = Argument(c)
+	//	out[i] = Atan2(imag(c), real(c)) * f.gain
+	//	f.history[0] = data[i]
+	//}
+
 	return out
 }

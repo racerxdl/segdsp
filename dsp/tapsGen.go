@@ -25,6 +25,14 @@ func computeNTaps(sampleRate, transitionWidth float64) int {
 	return nTaps
 }
 
+func computeNTapsAtt(sampleRate, transitionWidth, maxAttenuation float64) int {
+	var nTaps = int(maxAttenuation * sampleRate / (22.0 * transitionWidth))
+
+	nTaps |= 1
+
+	return nTaps
+}
+
 func MakeRRC(gain, sampleRate, symbolRate, alpha float64, nTaps int) []float32 {
 	nTaps |= 1
 	var taps = make([]float32, nTaps)
@@ -98,6 +106,78 @@ func MakeLowPass(gain, sampleRate, cutFrequency, transitionWidth float64) []floa
 
 	for i := 0; i < nTaps; i++ {
 		taps[i] = float32(float64(taps[i]) * gain)
+	}
+
+	return taps
+}
+
+func MakeLowPass2(gain, sampleRate, cutFrequency, transitionWidth, attenuation float64) []float32 {
+	var nTaps = computeNTapsAtt(sampleRate, transitionWidth, attenuation)
+	var taps = make([]float32, nTaps)
+	var w = hammingWindow(nTaps)
+
+	var M = (nTaps - 1) / 2
+	var fwT0 = 2 * math.Pi * cutFrequency / sampleRate
+
+	for i := -M; i <= M; i++ {
+		if i == 0 {
+			taps[i + M] = float32(fwT0 / math.Pi * w[i + M])
+		} else {
+			taps[i + M] = float32(math.Sin(float64(i) * fwT0) / (float64(i) * math.Pi) * w[i + M])
+		}
+	}
+
+	var fmax = float64(taps[M])
+	for i := 1; i <= M; i++ {
+		fmax += 2 * float64(taps[i + M])
+	}
+
+	gain /= fmax
+
+	for i := 0; i < nTaps; i++ {
+		taps[i] = float32(float64(taps[i]) * gain)
+	}
+
+	return taps
+}
+
+func generateDiffTaps(taps []float32) []float32 {
+	var dF0 = float64(-1)
+	var dF1 = float64(1)
+	var diffTaps = make([]float32, len(taps))
+
+	for i := 0; i < len(taps) - 1; i++ {
+		diffTaps[i] = float32(dF0 * float64(taps[i]) + dF1 * float64(taps[i+1]))
+	}
+
+	diffTaps[len(taps)-1] = 0
+
+	return diffTaps
+}
+
+func MakeLowPassFixed(sampleRate, cutFrequency float64, length int) []float32 {
+	length |= 1
+
+	var taps = make([]float32, length)
+	var frequency = cutFrequency / sampleRate
+	var center = int(math.Floor(float64(length) / 2))
+	var sum = 0.0
+
+	for i := 0; i < length; i++ {
+		var val = float64(0.0)
+		if i == center {
+			val = 2 * math.Pi * float64(frequency)
+		} else {
+			var angle = 2 * math.Pi * ( float64(i) + 1 ) / (float64(length) + 1)
+			val = math.Sin(2 * math.Pi * frequency * float64(i - center)) / float64(i - center)
+			val *= 0.42 - 0.5 * math.Cos(angle) + 0.08 * math.Cos(2 * angle)
+		}
+		sum += val
+		taps[i] = float32(val)
+	}
+
+	for i := 0; i < length; i++ {
+		taps[i] /= float32(sum)
 	}
 
 	return taps
