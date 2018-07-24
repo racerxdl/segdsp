@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/websocket"
 	"sync"
 	"net/http"
+	"github.com/racerxdl/spy2go"
 )
 
 var upgrader = websocket.Upgrader{
@@ -13,4 +14,6 @@ var upgrader = websocket.Upgrader{
 } // use default options
 
 var wsMutex = sync.Mutex{}
-var currDevice = DeviceMessage{}
+var currDevice = DeviceMessage{
+	Gain: spy2go.InvalidValue,
+}

@@ -43,8 +43,8 @@ var displayPixelsFlag = flag.Uint("displayPixels", 512, "Width in pixels of the 
 var channelFrequencyFlag = flag.Uint("channelFrequency", 106300000, "Channel (IQ) Center Frequency")
 var displayFrequencyFlag = flag.Uint("fftFrequency", 106300000, "FFT Center Frequency")
 
-var channelDecimationStageFlag = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
-var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 2, "FFT Decimation Stage (The actual decimation will be 2^d)")
+var channelDecimationStageFlag = flag.Uint("decimationStage", 4, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
+var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 0, "FFT Decimation Stage (The actual decimation will be 2^d)")
 
 var demodulatorModeFlag = flag.String("demodMode", modeWBFM, fmt.Sprintf("Demodulator Mode: %s", modes))
 var outputRateFlag = flag.Uint("outputRate", 48000, "Output Rate in Hertz")

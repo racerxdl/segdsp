@@ -26,6 +26,8 @@ func MakeIIRFilter(ataps, btaps []float32) *IIRFilter {
 	return &IIRFilter{
 		fftaps: ataps,
 		fbtaps: btaps,
+		latestM: 0,
+		latestN: 0,
 		prevInput: make([]float32, 2 * n),
 		prevOutput: make([]float32, 2 * m),
 	}

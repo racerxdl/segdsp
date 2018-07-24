@@ -2,7 +2,6 @@
 
 const margin = 50;
 const spacing = 50;
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 let width, height;
 let canvas;
@@ -22,24 +21,33 @@ let deviceInfo = {
     Gain: 0,
 };
 
-const buffers = [];
+let buffers = null;
 
-const node = audioCtx.createScriptProcessor(16384, 0, 1);
-const source = audioCtx.createBufferSource();
+function InitWebAudio(sampleRate) {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)({
+        sampleRate: sampleRate,
+    });
 
-node.onaudioprocess = function(event) {
-    try {
-        if (buffers.length > 0) {
-            const buff = buffers.shift();
-            event.outputBuffer.getChannelData(0).set(buff);
+    const node = audioCtx.createScriptProcessor(16384, 0, 1);
+    const source = audioCtx.createBufferSource();
+
+    node.onaudioprocess = function(event) {
+        try {
+            if (buffers.length > 0) {
+                const buff = buffers.shift();
+                event.outputBuffer.getChannelData(0).set(buff);
+            }
+        } catch(e) {
+            console.log(e);
         }
-    } catch(e) {
-        console.log(e);
-    }
-};
-source.connect(node);
-node.connect(audioCtx.destination);
-source.start();
+    };
+    source.sampleRate = 48000;
+    source.connect(node);
+    node.connect(audioCtx.destination);
+    source.start();
+    buffers = [];
+}
+
 /**
  * @return {number}
  */
@@ -151,6 +159,10 @@ function HandleData(data) {
     try {
         const buffer = data.Data;
         const audioRate = data.OutputRate;
+        if (buffers === null) {
+            InitWebAudio(audioRate);
+        }
+        // audioCtx.sampleRate = audioRate;
         buffers.push(new Float32Array(buffer));
     } catch (e) {
         console.log(e);

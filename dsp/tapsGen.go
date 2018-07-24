@@ -144,6 +144,7 @@ func MakeLowPass2(gain, sampleRate, cutFrequency, transitionWidth, attenuation f
 func generateDiffTaps(taps []float32) []float32 {
 	var dF0 = float64(-1)
 	var dF1 = float64(1)
+
 	var diffTaps = make([]float32, len(taps))
 
 	for i := 0; i < len(taps) - 1; i++ {
@@ -155,7 +156,7 @@ func generateDiffTaps(taps []float32) []float32 {
 	return diffTaps
 }
 
-func MakeLowPassFixed(sampleRate, cutFrequency float64, length int) []float32 {
+func MakeLowPassFixed(gain, sampleRate, cutFrequency float64, length int) []float32 {
 	length |= 1
 
 	var taps = make([]float32, length)
@@ -178,6 +179,7 @@ func MakeLowPassFixed(sampleRate, cutFrequency float64, length int) []float32 {
 
 	for i := 0; i < length; i++ {
 		taps[i] /= float32(sum)
+		taps[i] *= float32(gain)
 	}
 
 	return taps

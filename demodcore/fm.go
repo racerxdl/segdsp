@@ -20,6 +20,8 @@ type FMDemod struct {
 	quadDemod *dsp.QuadDemod
 	decimation int
 	resampler *dsp.FloatResampler
+	rresampler *dsp.FloatRationalResampler
+	finalStage *dsp.FloatFirFilter
 	deemph *dsp.FMDeemph
 	outFifo *fifo.Queue
 }
@@ -39,14 +41,16 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 	var quadRate = sampleRate
 
 	var fmDemodGain = float64(quadRate) / ( 2 * math.Pi * float64(maxDeviation) )
-	var resampleRate = float32(float64(outputRate) / (float64(quadRate) / decim))
+	var intermediateRate = float64(quadRate) / decim
+	var resampleRate = float32(float64(outputRate) / intermediateRate)
 
-	var stageCut = math.Min(float64(outputRate), float64(quadRate) / float64(decim)) / 2
+	var stageCut = math.Min(float64(outputRate), intermediateRate) / 2
 
 	return &FMDemod{
 		sampleRate: float64(sampleRate),
 		secondStage: dsp.MakeFloatFirFilter(
 			dsp.MakeLowPassFixed(
+				1,
 				float64(quadRate),
 				stageCut,
 				63,
@@ -57,6 +61,14 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 		decimation: int(decim),
 		resampler: dsp.MakeFloatResampler(32, resampleRate),
 		deemph: dsp.MakeFMDeemph(tau, float32(outputRate)),
+		finalStage: dsp.MakeFloatFirFilter(
+			dsp.MakeLowPassFixed(
+				0.25,
+				float64(outputRate),
+				float64(outputRate) / 2 - float64(outputRate) / 32,
+				63,
+			),
+		),
 		outputRate: outputRate,
 		outFifo: fifo.NewQueue(),
 	}
@@ -70,8 +82,9 @@ func (f *FMDemod) Work(data []complex64) interface{} {
 	var fmDemodData = f.quadDemod.Work(data)
 
 	fmDemodData = f.secondStage.FilterDecimateOut(fmDemodData, f.decimation)
-	fmDemodData = f.resampler.Work(fmDemodData, len(fmDemodData))
+	fmDemodData = f.resampler.Work(fmDemodData)
 	fmDemodData = f.deemph.Work(fmDemodData)
+	fmDemodData = f.finalStage.FilterOut(fmDemodData)
 
 
 	for i := 0; i < len(fmDemodData); i++ {

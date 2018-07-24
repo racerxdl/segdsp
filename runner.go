@@ -10,6 +10,7 @@ import (
 	"runtime/pprof"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func OnInt16IQ(data []spy2go.ComplexInt16) {
@@ -31,12 +32,15 @@ func OnDeviceSync(spyserver *spy2go.Spyserver) {
 		Gain: spyserver.GetGain(),
 
 	}
+	sendPacket := currDevice.Gain != spy2go.InvalidValue
 	currDevice = MakeDeviceMessage(d)
-	m, err := json.Marshal(currDevice)
-	if err != nil {
-		log.Println("Error serializing JSON: ", err)
+	if sendPacket {
+		m, err := json.Marshal(currDevice)
+		if err != nil {
+			log.Println("Error serializing JSON: ", err)
+		}
+		go broadcastMessage(string(m))
 	}
-	broadcastMessage(string(m))
 }
 
 func OnFFT(data []uint8) {
@@ -46,7 +50,7 @@ func OnFFT(data []uint8) {
 	if err != nil {
 		log.Println("Error serializing JSON: ", err)
 	}
-	broadcastMessage(string(m))
+	go broadcastMessage(string(m))
 }
 
 func sendData(data interface{}) {
@@ -56,7 +60,7 @@ func sendData(data interface{}) {
 	if err != nil {
 		log.Println("Error serializing JSON: ", err)
 	}
-	broadcastMessage(string(m))
+	go broadcastMessage(string(m))
 }
 
 func CreateServer() *http.Server {
@@ -124,15 +128,18 @@ func main() {
 	spyserver.SetDisplayCenterFrequency(uint32(displayFrequency))
 
 
-	if spyserver.SetDecimationStage(uint32(channelDecimationStage)) == 0xFFFFFFFF {
+	if spyserver.SetDecimationStage(uint32(channelDecimationStage)) == spy2go.InvalidValue {
 		log.Println("Error setting sample rate.")
 	}
-	if spyserver.SetCenterFrequency(uint32(channelFrequency)) == 0xFFFFFFFF {
+	if spyserver.SetCenterFrequency(uint32(channelFrequency)) == spy2go.InvalidValue {
 		log.Println("Error setting center frequency.")
 	}
 
+	time.Sleep(10 * time.Millisecond)
+
 	log.Println("IQ Sample Rate: ", spyserver.GetSampleRate())
 	log.Println("IQ Center Frequency ", spyserver.GetCenterFrequency())
+	log.Println("FFT Center Frequency ", spyserver.GetDisplayCenterFrequency())
 	log.Println("FFT Sample Rate: ", spyserver.GetDisplaySampleRate())
 
 	demodulator = BuildDSP(spyserver.GetSampleRate())

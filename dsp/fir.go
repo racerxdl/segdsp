@@ -107,6 +107,16 @@ func (f *FloatFirFilter) FilterDecimateOut(data []float32, decimate int) []float
 	f.sampleHistory = samples[len(samples) - f.tapsLen:]
 	return output
 }
+func (f *FloatFirFilter) FilterOut(data []float32) []float32 {
+	var samples = append(f.sampleHistory, data...)
+	var length = len(data)
+	var output = make([]float32, length)
+	for i := 0; i < length; i++ {
+		output[i] = DotProductFloatResult(samples[i:], f.taps)
+	}
+	f.sampleHistory = samples[len(samples) - f.tapsLen:]
+	return output
+}
 
 func (f *FloatFirFilter) SetTaps(taps []float32) {
 	f.taps = taps

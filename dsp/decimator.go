@@ -8,7 +8,7 @@ type Decimator struct {
 
 func MakeDecimator(decimationRatio int) *Decimator {
 	return &Decimator{
-		fir: MakeFirFilter(MakeLowPassFixed(1, 1 / (2 * float64(decimationRatio)), 63)),
+		fir: MakeFirFilter(MakeLowPassFixed(1,1, 1 / (2 * float64(decimationRatio)), 127)),
 		decimationRatio: decimationRatio,
 	}
 }
@@ -25,7 +25,7 @@ type FloatDecimator struct {
 
 func MakeFloatDecimator(decimationRatio int) *FloatDecimator {
 	return &FloatDecimator{
-		fir: MakeFloatFirFilter(MakeLowPassFixed(1, 1 / (2 * float64(decimationRatio)), 63)),
+		fir: MakeFloatFirFilter(MakeLowPassFixed(1,1, 1 / (2 * float64(decimationRatio)), 127)),
 		decimationRatio: decimationRatio,
 	}
 }
