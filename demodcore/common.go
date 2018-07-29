@@ -3,6 +3,8 @@ package demodcore
 import (
 	"strings"
 	"fmt"
+	"bytes"
+	"encoding/binary"
 )
 
 type JsonFloat32 []float32
@@ -15,4 +17,10 @@ func (u JsonFloat32) MarshalJSON() ([]byte, error) {
 		result = strings.Join(strings.Fields(fmt.Sprintf("%f", u)), ",")
 	}
 	return []byte(result), nil
+}
+
+func (u JsonFloat32) MarshalByteArray() ([]byte) {
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, u)
+	return buf.Bytes()
 }

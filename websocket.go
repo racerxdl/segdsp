@@ -11,6 +11,11 @@ import (
 
 var chanList = list.New()
 
+type conn struct {
+	stringc chan string
+	bytec chan []byte
+}
+
 func closeN(c *list.Element) {
 	wsMutex.Lock()
 	chanList.Remove(c)
@@ -20,9 +25,21 @@ func closeN(c *list.Element) {
 func broadcastMessage(data string) {
 	wsMutex.Lock()
 	for e := chanList.Front(); e != nil; {
-		var c = e.Value.(chan string)
+		var c = e.Value.(conn)
 		go func() {
-			c <- data
+			c.stringc <- data
+		}()
+		var next = e.Next()
+		e = next
+	}
+	wsMutex.Unlock()
+}
+func broadcastBMessage(data []byte) {
+	wsMutex.Lock()
+	for e := chanList.Front(); e != nil; {
+		var c = e.Value.(conn)
+		go func() {
+			c.bytec <- data
 		}()
 		var next = e.Next()
 		e = next
@@ -33,8 +50,12 @@ func broadcastMessage(data string) {
 func handleMessages(c *websocket.Conn) {
 
 	var cChannel = make(chan string)
+	var bChannel = make(chan []byte)
 	wsMutex.Lock()
-	var li = chanList.PushBack(cChannel)
+	var li = chanList.PushBack(conn{
+		stringc: cChannel,
+		bytec: bChannel,
+	})
 	wsMutex.Unlock()
 	defer closeN(li)
 
@@ -52,16 +73,27 @@ func handleMessages(c *websocket.Conn) {
 	}
 	// endregion
 	// region Client Loop
-	for {
+	running := true
+	for running {
 		//_, _, err := c.ReadMessage()
 		//if err != nil {
 		//	break
 		//}
-		msg := <- cChannel
-		err = c.WriteMessage(websocket.TextMessage, []byte(msg))
-		if err != nil {
-			log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
-			break
+		select {
+			case msg := <-cChannel:
+				err = c.WriteMessage(websocket.TextMessage, []byte(msg))
+				if err != nil {
+					log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
+					running = false
+					break
+				}
+			case msg := <-bChannel:
+				err = c.WriteMessage(websocket.BinaryMessage, msg)
+				if err != nil {
+					log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
+					running = false
+					break
+				}
 		}
 
 		runtime.Gosched()

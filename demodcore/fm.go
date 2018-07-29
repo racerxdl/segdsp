@@ -6,11 +6,6 @@ import (
 	"github.com/racerxdl/go.fifo"
 )
 
-type FMDemodData struct {
-	OutputRate uint32
-	Data JsonFloat32
-}
-
 type FMDemod struct {
 	sampleRate float64
 	outputRate uint32
@@ -20,7 +15,6 @@ type FMDemod struct {
 	quadDemod *dsp.QuadDemod
 	decimation int
 	resampler *dsp.FloatResampler
-	rresampler *dsp.FloatRationalResampler
 	finalStage *dsp.FloatFirFilter
 	deemph *dsp.FMDeemph
 	outFifo *fifo.Queue
@@ -98,7 +92,7 @@ func (f *FMDemod) Work(data []complex64) interface{} {
 			outBuff[i] = f.outFifo.Next().(float32)
 		}
 
-		return FMDemodData{
+		return DemodData{
 			OutputRate: f.outputRate,
 			Data: outBuff,
 		}

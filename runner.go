@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"github.com/racerxdl/segdsp/demodcore"
 )
 
 func OnInt16IQ(data []spy2go.ComplexInt16) {
@@ -30,7 +31,7 @@ func OnDeviceSync(spyserver *spy2go.Spyserver) {
 		CurrentSampleRate: spyserver.GetSampleRate(),
 		ChannelCenterFrequency: spyserver.GetCenterFrequency(),
 		Gain: spyserver.GetGain(),
-
+		OutputRate: uint32(outputRate),
 	}
 	sendPacket := currDevice.Gain != spy2go.InvalidValue
 	currDevice = MakeDeviceMessage(d)
@@ -54,13 +55,21 @@ func OnFFT(data []uint8) {
 }
 
 func sendData(data interface{}) {
-	//log.Println("Sending buffer")
-	var j = MakeDataMessage(data)
-	m, err := json.Marshal(j)
-	if err != nil {
-		log.Println("Error serializing JSON: ", err)
+	switch data.(type) {
+	case demodcore.DemodData:
+		var b = data.(demodcore.DemodData)
+		go broadcastBMessage(b.Data.MarshalByteArray())
+		break
+	default:
+		var j = MakeDataMessage(data)
+		m, err := json.Marshal(j)
+		if err != nil {
+			log.Println("Error serializing JSON: ", err)
+		}
+		go broadcastMessage(string(m))
+		break
 	}
-	go broadcastMessage(string(m))
+	//log.Println("Sending buffer")
 }
 
 func CreateServer() *http.Server {
@@ -122,10 +131,10 @@ func main() {
 	spyserver.SetStreamingMode(spy2go.StreamModeFFTIQ)
 	//spyserver.SetStreamingMode(spy2go.StreamModeIQOnly)
 	spyserver.SetDisplayPixels(uint32(displayPixels))
-	spyserver.SetDisplayRange(90)
-	spyserver.SetDisplayOffset(10)
 	spyserver.SetDisplayDecimationStage(uint32(displayDecimationStage))
 	spyserver.SetDisplayCenterFrequency(uint32(displayFrequency))
+	spyserver.SetDisplayRange(90)
+	spyserver.SetDisplayOffset(10)
 
 
 	if spyserver.SetDecimationStage(uint32(channelDecimationStage)) == spy2go.InvalidValue {

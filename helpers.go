@@ -3,18 +3,19 @@ package main
 import (
 	"strings"
 	"fmt"
+	"encoding/base64"
+	"bytes"
+	"encoding/json"
 )
 
 type JsonUint8 []uint8
 
 func (u JsonUint8) MarshalJSON() ([]byte, error) {
-	var result string
-	if u == nil {
-		result = "null"
-	} else {
-		result = strings.Join(strings.Fields(fmt.Sprintf("%d", u)), ",")
-	}
-	return []byte(result), nil
+	buf := bytes.NewBufferString("")
+	enc := base64.NewEncoder(base64.StdEncoding, buf)
+	enc.Write(u)
+	enc.Close()
+	return json.Marshal(string(buf.Bytes()))
 }
 
 type JsonInt16 []int16
@@ -51,6 +52,7 @@ type DeviceMessage struct {
 	ChannelCenterFrequency  uint32
 	CurrentSampleRate		uint32
 	Gain					uint32
+	OutputRate				uint32
 }
 
 func MakeFFTMessage(data []uint8) FFTMessage {

@@ -1,7 +1,7 @@
 "use strict";
 
 const margin = 50;
-const spacing = 50;
+const spacing = 60;
 
 let width, height;
 let canvas;
@@ -21,9 +21,12 @@ let deviceInfo = {
     Gain: 0,
 };
 
+let averageTraffic = 0;
+let trafficSum = 0;
 let buffers = null;
 
 function InitWebAudio(sampleRate) {
+    console.log('Initializing WebAudio with SR: ' + sampleRate);
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)({
         sampleRate: sampleRate,
     });
@@ -94,16 +97,22 @@ function DrawFFT() {
     ctx.fillText(MHzText, width - 50, baseOffset + 40);
     ctx.restore();
 
+    const min = -deviceInfo.DisplayOffset;
+    const max = min - deviceInfo.DisplayRange;
+    const range = (baseOffset) - margin;
+    const dbPerPixel = (max - min) / range;
+
     for (let i = margin; i < baseOffset+1; i+=hDivDelta) {
         ctx.moveTo(margin - 10, i);
         ctx.lineTo(width - margin, i);
-        // const dbLvl = deviceInfo.DisplayOffset + deltaDb * (baseOffset - i);
-        // const dbLvlStr = dbLvl.toLocaleString();
-        // ctx.save();
-        // ctx.fillStyle = '#FFFFFF';
-        // const dbLvlX = margin - ctx.measureText(dbLvlStr).width - 15;
-        // ctx.fillText(dbLvlStr, dbLvlX, i + 5);
-        // ctx.restore();
+        const z = i - margin;
+        const dbLvl = (z * dbPerPixel) + min;
+        const dbLvlStr = dbLvl.toFixed(0);
+        ctx.save();
+        ctx.fillStyle = '#FFFFFF';
+        const dbLvlX = margin - ctx.measureText(dbLvlStr).width - 15;
+        ctx.fillText(dbLvlStr, dbLvlX, i + 5);
+        ctx.restore();
     }
     ctx.stroke();
     ctx.closePath();
@@ -113,7 +122,7 @@ function DrawFFT() {
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#AAAAAA';
     ctx.moveTo(margin, baseOffset - fftData[0]);
-    for (let i = 0; i < fftWidth; i++) {
+    for (let i = 1; i < fftWidth; i++) {
         ctx.lineTo(margin + i, baseOffset - fftData[i]);
     }
     ctx.stroke();
@@ -129,6 +138,7 @@ function DrawFFT() {
         ctx.fillText('Channel BW: ' + deviceInfo.CurrentSampleRate.toLocaleString() + ' Hz', 10, height - 46);
         ctx.fillText('FFT Center Frequency: ' + deviceInfo.DisplayCenterFrequency.toLocaleString() + ' Hz', 10, height - 28);
         ctx.fillText('Channel Center Frequency: ' + deviceInfo.ChannelCenterFrequency.toLocaleString() + ' Hz', 10, height - 10);
+        ctx.fillText('Avg. Traffic: '+ (averageTraffic / 1024).toFixed(2) + " kb/s", width - 170, height - 10);
     } else {
         ctx.fillStyle = 'red';
         ctx.fillText('Connecting to ' + url, 10, 20);
@@ -150,7 +160,14 @@ function DrawFFT() {
 }
 
 function HandleFFT(data) {
-    fftData = data;
+    const z = atob(data);
+    const buff = [];
+
+    for (let i = 0; i < z.length; i++) {
+        buff.push(z.charCodeAt(i));
+    }
+
+    fftData = buff;
     DrawFFT();
 }
 
@@ -169,18 +186,41 @@ function HandleData(data) {
     }
 }
 
+function HandleRawData(data) {
+    if (buffers !== null) {
+        let fileReader = new FileReader();
+        let buff;
+        fileReader.onload = function(event) {
+            buff = event.target.result;
+            trafficSum += buff.byteLength;
+            buffers.push(new Float32Array(buff));
+        };
+        fileReader.readAsArrayBuffer(data);
+    }
+}
+
 function HandleDevice(data) {
-    console.log(data);
     deviceInfo = data;
+    InitWebAudio(data.OutputRate);
     canvas.width = deviceInfo.DisplayPixels + margin * 2;
     width = deviceInfo.DisplayPixels + margin * 2;
     document.getElementById("contentDiv").style.maxWidth = width + "px";
     document.getElementById("contentDiv").style.width = width + "px";
     DrawFFT();
+    console.log(data);
+}
+
+function UpdateTraffic() {
+
+    averageTraffic = trafficSum;
+    trafficSum = 0;
+
+    setTimeout(UpdateTraffic, 1000);
 }
 
 function Connect() {
     // Websocket
+    UpdateTraffic();
     const proto = location.protocol === 'https:' ? 'wss://' : 'ws://';
     url = proto + location.host + "/ws";
     socket = new WebSocket(url);
@@ -195,6 +235,11 @@ function Connect() {
     };
     socket.onmessage = (evt) => {
         // console.log('Received message: ' + evt.data);
+        if (typeof evt.data !== 'string') {
+            HandleRawData(evt.data);
+            return;
+        }
+        trafficSum += evt.data.length;
         try {
             const data = JSON.parse(evt.data);
             switch (data.MessageType) {
