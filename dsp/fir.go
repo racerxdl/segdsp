@@ -24,6 +24,17 @@ func (f *FirFilter) Filter(data []complex64, length int) {
 	f.sampleHistory = data[len(data) - f.tapsLen:]
 }
 
+func (f *FirFilter) FilterOut(data []complex64) []complex64 {
+	var samples = append(f.sampleHistory, data...)
+	var output = make([]complex64, len(data))
+	var length = len(samples) - f.tapsLen
+	for i := 0; i < length; i++ {
+		output[i] = DotProductResult(samples[i:], f.taps)
+	}
+	f.sampleHistory = samples[length:]
+	return output
+}
+
 func (f *FirFilter) FilterDecimate(data []complex64, decimate int, length int) {
 	var samples = append(f.sampleHistory, data...)
 	var j = 0

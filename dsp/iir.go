@@ -1,6 +1,45 @@
 package dsp
 
+type SinglePoleIIRFilter struct {
+	alpha float32
+	alpham1 float32
+	previousOutput float32
+}
 
+func MakeSinglePoleIIRFilter(alpha float32) *SinglePoleIIRFilter {
+	if alpha < 0 || alpha > 1 {
+		panic("Alpha should be between 0 and 1")
+	}
+
+	return &SinglePoleIIRFilter{
+		alpha: alpha,
+		alpham1: 1.0 - alpha,
+		previousOutput: 0,
+	}
+}
+
+func (f *SinglePoleIIRFilter) Filter(input float32) float32 {
+	output := f.alpha * input + f.alpham1 * f.previousOutput
+	f.previousOutput = output
+	return output
+}
+
+func (f *SinglePoleIIRFilter) FilterArray(input []float32) []float32 {
+	var out = make([]float32, len(input))
+	for i := 0; i < len(input); i++ {
+		out[i] = f.Filter(input[i])
+	}
+	return out
+}
+
+func (f *SinglePoleIIRFilter) SetTaps(alpha float32) {
+	f.alpha = alpha
+	f.alpham1 =  1.0 - alpha
+}
+
+func (f *SinglePoleIIRFilter) GetPreviousOutput() float32 {
+	return f.previousOutput
+}
 
 type IIRFilter struct {
 	fftaps []float32

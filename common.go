@@ -31,6 +31,8 @@ const envMode = "DEMOD_MODE"
 const envFMBW = "FM_BANDWIDTH"
 const envFMDeviation = "FM_DEVIATION"
 const envFMTau = "FM_TAU"
+const envFMSquelch = "FM_SQUELCH"
+const envFMSquelchAlpha = "FM_SQUELCH_ALPHA"
 // endregion
 
 // endregion
@@ -44,7 +46,7 @@ var channelFrequencyFlag = flag.Uint("channelFrequency", 106300000, "Channel (IQ
 var displayFrequencyFlag = flag.Uint("fftFrequency", 106300000, "FFT Center Frequency")
 
 var channelDecimationStageFlag = flag.Uint("decimationStage", 4, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
-var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 0, "FFT Decimation Stage (The actual decimation will be 2^d)")
+var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 1, "FFT Decimation Stage (The actual decimation will be 2^d)")
 
 var demodulatorModeFlag = flag.String("demodMode", modeWBFM, fmt.Sprintf("Demodulator Mode: %s", modes))
 var outputRateFlag = flag.Uint("outputRate", 48000, "Output Rate in Hertz")
@@ -55,6 +57,8 @@ var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var fmBandwidthFlag = flag.Uint("fmBandwidth", 120e3, "FM Demodulator Filter Bandwidth in Hertz")
 var fmDeviationFlag = flag.Uint("fmDeviation", 75e3, "FM Demodulator Max Deviation in Hertz")
 var fmTauFlag = flag.Float64("fmTau", 75e-6, "FM Demodulator Tau in seconds (0 to disable)")
+var fmSquelchFlag = flag.Float64("fmSquelch", -150, "FM Demodulator Squelch in dB")
+var fmSquelchAlphaFlag = flag.Float64("fmSquelchAlpha", 0.001, "FM Demodulator Squelch Filter Alpha")
 // endregion
 
 // endregion
@@ -75,6 +79,8 @@ var outputRate uint
 var fmBandwidth uint
 var fmDeviation uint
 var fmTau float32
+var fmSquelch float32
+var fmSquelchAlpha float32
 // endregion
 
 func SetEnv() {
@@ -135,6 +141,14 @@ func SetEnv() {
 	if os.Getenv(envFMBW) == "" {
 		os.Setenv(envFMBW, strconv.FormatUint(uint64(*fmBandwidthFlag), 10))
 	}
+
+	if os.Getenv(envFMSquelch) == "" {
+		os.Setenv(envFMSquelch, strconv.FormatFloat(*fmSquelchFlag, 'E', -1, 32))
+	}
+
+	if os.Getenv(envFMSquelchAlpha) == "" {
+		os.Setenv(envFMSquelchAlpha, strconv.FormatFloat(*fmSquelchAlphaFlag, 'E', -1, 32))
+	}
 	// endregion
 	// region Fill Variables
 	httpAddr = os.Getenv(envHTTPAddr)
@@ -185,5 +199,15 @@ func SetEnv() {
 		panic(err)
 	}
 	fmTau = float32(fmtau)
+	fmsquelch, err := strconv.ParseFloat(os.Getenv(envFMSquelch), 32)
+	if err != nil {
+		panic(err)
+	}
+	fmSquelch = float32(fmsquelch)
+	fmsquelchalpha, err := strconv.ParseFloat(os.Getenv(envFMSquelchAlpha), 32)
+	if err != nil {
+		panic(err)
+	}
+	fmSquelchAlpha = float32(fmsquelchalpha)
 	// endregion
 }

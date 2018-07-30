@@ -9,6 +9,7 @@ import (
 type FMDemod struct {
 	sampleRate float64
 	outputRate uint32
+	firstStage *dsp.FirFilter
 	secondStage *dsp.FloatFirFilter
 	signalBw float64
 	deviation float32
@@ -18,9 +19,11 @@ type FMDemod struct {
 	finalStage *dsp.FloatFirFilter
 	deemph *dsp.FMDeemph
 	outFifo *fifo.Queue
+	sql *dsp.Squelch
+	tau float32
 }
 
-func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uint32, tau, maxDeviation float32) *FMDemod {
+func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uint32, tau, squelch, squelchAlpha, maxDeviation float32) *FMDemod {
 	var decim = math.Floor(float64(sampleRate) / signalBw)
 	if (float64(sampleRate) / decim) <= float64(outputRate) {
 		decim /= 4
@@ -42,6 +45,14 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 
 	return &FMDemod{
 		sampleRate: float64(sampleRate),
+		firstStage: dsp.MakeFirFilter(
+			dsp.MakeLowPassFixed(
+				1,
+				float64(sampleRate),
+				signalBw,
+				63,
+			),
+		),
 		secondStage: dsp.MakeFloatFirFilter(
 			dsp.MakeLowPassFixed(
 				1,
@@ -50,6 +61,7 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 				63,
 			),
 		),
+		tau: tau,
 		deviation: maxDeviation,
 		quadDemod: dsp.MakeQuadDemod(float32(fmDemodGain)),
 		decimation: int(decim),
@@ -65,19 +77,25 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 		),
 		outputRate: outputRate,
 		outFifo: fifo.NewQueue(),
+		sql: dsp.MakeSquelch(squelch, squelchAlpha),
 	}
 }
 
 func MakeWBFMDemodulator(sampleRate uint32, signalBw float64, outputRate uint32) *FMDemod {
-	return MakeCustomFMDemodulator(sampleRate, signalBw, outputRate, 75e-6, 75000)
+	return MakeCustomFMDemodulator(sampleRate, signalBw, outputRate, 75e-6, 75000, -150, 0.001)
 }
 
 func (f *FMDemod) Work(data []complex64) interface{} {
-	var fmDemodData = f.quadDemod.Work(data)
+	var filteredData = f.firstStage.FilterOut(data)
+	filteredData = f.sql.Work(data)
+
+	var fmDemodData = f.quadDemod.Work(filteredData)
 
 	fmDemodData = f.secondStage.FilterDecimateOut(fmDemodData, f.decimation)
 	fmDemodData = f.resampler.Work(fmDemodData)
-	fmDemodData = f.deemph.Work(fmDemodData)
+	if f.tau != 0 {
+		fmDemodData = f.deemph.Work(fmDemodData)
+	}
 	fmDemodData = f.finalStage.FilterOut(fmDemodData)
 
 
