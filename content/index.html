@@ -8,15 +8,19 @@
             padding: 0;
             margin: 0.5cm 0 0 0;
             background-color: #001111;
+            color: white;
+            font-family: Arial, serif;
+            font-size: 15px;
         }
         .content {
             position: relative;
             margin: auto;
+            padding: 10px;
         }
         .lockedBorder {
-            -webkit-border-radius: 5px;
-            -moz-border-radius: 5px;
-            border-radius: 5px;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            border-radius: 10px;
             border: 2px dashed goldenrod;
         }
         .locked {
@@ -30,17 +34,41 @@
             top: -12px;
             display: none;
         }
+        #headText {
+            color: darkgreen;
+        }
+        #description {
+            position: relative;
+            padding: 0;
+            line-height: 20px;
+        }
+        #avgTraffic {
+            position: absolute;
+            right: 10px;
+            bottom: 0;
+        }
     </style>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <script type="text/javascript" src="/static/segdsp.js"></script>
 </head>
 <body onLoad="Init()">
-    <div id="contentDiv" class="content" style="margin: auto; padding: 0; max-width: 400px">
+    <div id="contentDiv" class="content" style="margin: auto; max-width: 400px">
         <div id="lockedImg" class="unlocked">
             <img src="/static/locked.png" width="24"/>
         </div>
-        <canvas id="fft" width="400" height="500"></canvas>
+        <div id="headText">Connecting...</div>
+        <canvas id="fft" width="400" height="400"></canvas>
+        <div id="description">
+            Demodulator Mode: <span id="demodMode">FM</span><BR>
+            Filter BW: <span id="filterBw">120 kHz</span><BR>
+            Channel BW: <span id="channelBw">1.5 MHz</span><BR>
+            FFT Center Frequency: <span id="fftFreq">106.3 MHz</span><BR>
+            Channel Center Frequency: <span id="channelFreq">106.3 MHz</span><BR>
+            <div id="avgTraffic">
+                Avg. Traffic: 207.38 kb/s
+            </div>
+        </div>
     </div>
 </body>
 </html>

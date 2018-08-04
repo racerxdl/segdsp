@@ -1,8 +1,10 @@
 "use strict";
 
 const margin = 50;
+const marginTop = 15;
 const spacing = 60;
-const bottomSize = 150;
+
+const waterFallLut = [];
 
 let width, height;
 let canvas;
@@ -10,6 +12,7 @@ let ctx;
 let socket = null;
 let fftData = [];
 let url = '';
+let waterFallHeight = 128;
 let deviceInfo = {
     OutputRate: 48000,
     ChannelCenterFrequency: 0,
@@ -32,6 +35,64 @@ let deviceInfo = {
 let averageTraffic = 0;
 let trafficSum = 0;
 let buffers = null;
+let waterfallBuffers = [];
+
+// From GQRX: https://github.com/csete/gqrx -> qtgui/plotter.cpp
+for (let i = 0; i < 256; i++) {
+    // level 0: black background
+    if (i < 20)
+        waterFallLut.push([0, 0, 0]);
+    // level 1: black -> blue
+    else if ((i >= 20) && (i < 70))
+        waterFallLut.push([0, 0, 140*(i-20)/50]);
+    // level 2: blue -> light-blue / greenish
+    else if ((i >= 70) && (i < 100))
+        waterFallLut.push([60*(i-70)/30, 125*(i-70)/30, 115*(i-70)/30 + 140]);
+    // level 3: light blue -> yellow
+    else if ((i >= 100) && (i < 150))
+        waterFallLut.push([195*(i-100)/50 + 60, 130*(i-100)/50 + 125, 255-(255*(i-100)/50)]);
+    // level 4: yellow -> red
+    else if ((i >= 150) && (i < 250))
+        waterFallLut.push([255, 255-255*(i-150)/100, 0]);
+    // level 5: red -> white
+    else if (i >= 250)
+        waterFallLut.push([255, 255*(i-250)/5, 255*(i-250)/5]);
+}
+
+function toNotationUnit(v) {
+    let unit;
+    let submultiplo = ["","m","&micro;","n","p","f","a","z","y"];
+    let multiplo    = ["","k","M","G","T","P","E","Z","Y"];
+    let counter= 0;
+    let value = v;
+    if(value < 1) {
+        while(value < 1) {
+            counter++;
+            value=value*1e3;
+            if(counter === 8) break;
+        }
+        unit = submultiplo[counter];
+    }else{
+        while(value > 1000) {
+            counter++;
+            value=value/1e3;
+            if(counter === 8) break;
+        }
+        unit = multiplo[counter];
+    }
+    value = Math.round(value*1e2)/1e2;
+    return [value,unit];
+}
+
+function toHzNotation(v) {
+    const z = toNotationUnit(v);
+    return z[0].toLocaleString() + ' ' + z[1] + 'Hz';
+}
+
+function toBytesPerSecNotation(v) {
+    const z = toNotationUnit(v);
+    return z[0].toLocaleString() + ' ' + z[1] + 'b/s';
+}
 
 function InitWebAudio(sampleRate) {
     console.log('Initializing WebAudio with SR: ' + sampleRate);
@@ -67,102 +128,92 @@ function CalcDiv(size) {
 }
 
 function DrawFFT() {
-    const baseOffset = height - bottomSize;
+    const fftHeight = 256;
+    waterFallHeight = height - 50 - fftHeight;
     // region Clear
     ctx.fillStyle = '#001111';
     ctx.fillRect(0, 0, width, height);
     // endregion
     // region Draw Grid
     const fftWidth = deviceInfo.DisplayPixels;
-    const hDivs = CalcDiv(baseOffset) * 2;
+    const hDivs = CalcDiv(fftHeight) * 2;
     const vDivs = CalcDiv(fftWidth);
-    const hDivDelta = baseOffset / hDivs;
+    const hDivDelta = fftHeight / hDivs;
     const vDivDelta = fftWidth / vDivs;
-    // const deltaDb = baseOffset / (deviceInfo.DisplayRange / 256);
     const delta = deviceInfo.DisplayBandwidth / fftWidth;
     const invDelta = fftWidth / deviceInfo.DisplayBandwidth;
     const startFreq = deviceInfo.DisplayCenterFrequency - (deviceInfo.DisplayBandwidth / 2);
-    const endFreq = deviceInfo.DisplayCenterFrequency + (deviceInfo.DisplayBandwidth / 2);
 
+    // region Draw Frequency Labels
     ctx.beginPath();
     ctx.lineWidth = 1;
     ctx.strokeStyle = '#444444';
     for (let i = 0; i < fftWidth+1; i+=vDivDelta) {
-        ctx.moveTo(margin + i, margin);
-        ctx.lineTo(margin + i, baseOffset + 5);
+        ctx.moveTo(margin + i, marginTop);
+        ctx.lineTo(margin + i, marginTop + fftHeight + 5);
         const freq = (startFreq + i * delta) / 1e6;
         const freqStr = freq.toLocaleString();
         ctx.save();
         ctx.fillStyle = '#FFFFFF';
         const freqX = margin + i - ctx.measureText(freqStr).width / 2;
-        ctx.fillText(freqStr, freqX, baseOffset + 25);
+        ctx.fillText(freqStr, freqX, marginTop + fftHeight + 25);
         ctx.restore();
     }
 
     ctx.save();
     ctx.fillStyle = '#FFFFFF';
     const MHzText = 'MHz';
-    ctx.fillText(MHzText, width - 50, baseOffset + 40);
+    ctx.fillText(MHzText, width - 50, marginTop + fftHeight + 10);
     ctx.restore();
-
+    // endregion
+    // region Draw dB Label
     const min = -deviceInfo.DisplayOffset;
     const max = min - deviceInfo.DisplayRange;
-    const range = (baseOffset) - margin;
-    const dbPerPixel = (max - min) / range;
+    const dbPerPixel = (max - min) / fftHeight;
 
-    for (let i = margin; i < baseOffset+1; i+=hDivDelta) {
-        ctx.moveTo(margin - 10, i);
-        ctx.lineTo(width - margin, i);
-        const z = i - margin;
-        const dbLvl = (z * dbPerPixel) + min;
+    for (let i = 0; i < fftHeight + 1; i+=hDivDelta) {
+        ctx.moveTo(margin - 10, marginTop + i);
+        ctx.lineTo(width - margin, marginTop + i);
+        const dbLvl = (i * dbPerPixel) + min;
         const dbLvlStr = dbLvl.toFixed(0);
         ctx.save();
         ctx.fillStyle = '#FFFFFF';
         const dbLvlX = margin - ctx.measureText(dbLvlStr).width - 15;
-        ctx.fillText(dbLvlStr, dbLvlX, i + 5);
+        ctx.fillText(dbLvlStr, dbLvlX, marginTop + i + 5);
         ctx.restore();
     }
     ctx.stroke();
     ctx.closePath();
     // endregion
+    // endregion
     // region Draw FFT
     ctx.beginPath();
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#AAAAAA';
-    ctx.moveTo(margin, baseOffset - fftData[0]);
+    ctx.moveTo(margin, marginTop + fftHeight - fftData[0]);
     for (let i = 1; i < fftWidth; i++) {
-        ctx.lineTo(margin + i, baseOffset - fftData[i]);
+        ctx.lineTo(margin + i, marginTop + fftHeight - fftData[i]);
     }
     ctx.stroke();
     ctx.closePath();
     // endregion
-    // region Draw Texts
-    ctx.font = "15px Arial";
-
-    if (deviceInfo.connected) {
-        ctx.fillStyle = 'green';
-        ctx.fillText('Connected to ' + deviceInfo.StationName + ' at ' + url + ' (' + deviceInfo.DeviceName + ')', 10, 20);
-        ctx.fillStyle = 'white';
-        ctx.fillText('Demodulator Mode: ' + deviceInfo.DemodulatorMode, 10, height - 64);
-        ctx.fillText('Channel BW: ' + deviceInfo.CurrentSampleRate.toLocaleString() + ' Hz', 10, height - 46);
-        ctx.fillText('FFT Center Frequency: ' + deviceInfo.DisplayCenterFrequency.toLocaleString() + ' Hz', 10, height - 28);
-        ctx.fillText('Channel Center Frequency: ' + deviceInfo.ChannelCenterFrequency.toLocaleString() + ' Hz', 10, height - 10);
-        ctx.fillText('Avg. Traffic: '+ (averageTraffic / 1024).toFixed(2) + " kb/s", width - 170, height - 10);
-    } else {
-        ctx.fillStyle = 'red';
-        ctx.fillText('Connecting to ' + url, 10, 20);
+    // region Draw Waterfall
+    let waterFallOffset = marginTop + fftHeight + 30;
+    for (let i = waterfallBuffers.length - 1; i >= 0; i--) {
+        ctx.putImageData(waterfallBuffers[i], margin, waterFallOffset);
+        waterFallOffset++;
     }
     // endregion
     // region Markers
     const channelX = (margin + (deviceInfo.ChannelCenterFrequency - startFreq) * invDelta) >> 0;
     const channelW = (deviceInfo.FilterBandwidth * invDelta) >> 0;
     ctx.fillStyle = 'rgba(127, 127, 127, 0.3)';
-    ctx.fillRect(channelX - channelW / 2, margin, channelW, baseOffset - margin);
+    ctx.fillRect(channelX - channelW / 2, marginTop, channelW, fftHeight);
     ctx.beginPath();
     ctx.lineWidth = 1;
     ctx.strokeStyle = '#AA0000';
-    ctx.moveTo(channelX, margin);
-    ctx.lineTo(channelX, baseOffset);
+    ctx.moveTo(channelX, marginTop);
+    ctx.lineTo(channelX, marginTop + fftHeight);
     ctx.stroke();
     ctx.closePath();
     // endregion
@@ -171,11 +222,23 @@ function DrawFFT() {
 function HandleFFT(data) {
     const z = atob(data);
     const buff = [];
+    const wtfBuff = ctx.createImageData(data.length, 1);
+    const wtfData = wtfBuff.data;
 
     for (let i = 0; i < z.length; i++) {
-        buff.push(z.charCodeAt(i));
+        const v = z.charCodeAt(i);
+        buff.push(v);
+        wtfData[i*4+0] = waterFallLut[v][0];
+        wtfData[i*4+1] = waterFallLut[v][1];
+        wtfData[i*4+2] = waterFallLut[v][2];
+        wtfData[i*4+3] = 255;
     }
 
+    waterfallBuffers.push(wtfBuff);
+
+    if (waterfallBuffers.length > waterFallHeight) {
+        waterfallBuffers.splice(0, 1);
+    }
     fftData = buff;
     DrawFFT();
 }
@@ -242,6 +305,19 @@ function HandleDevice(data) {
     width = deviceInfo.DisplayPixels + margin * 2;
     document.getElementById("contentDiv").style.maxWidth = width + "px";
     document.getElementById("contentDiv").style.width = width + "px";
+
+    if (deviceInfo.connected) {
+        document.getElementById("headText").innerHTML = 'Connected to ' + deviceInfo.StationName + ' at ' + url + ' (' + deviceInfo.DeviceName + ')';
+        document.getElementById("demodMode").innerHTML = deviceInfo.DemodulatorMode;
+        document.getElementById("filterBw").innerHTML = toHzNotation(deviceInfo.FilterBandwidth);
+        document.getElementById("channelBw").innerHTML = toHzNotation(deviceInfo.CurrentSampleRate);
+        document.getElementById("fftFreq").innerHTML = toHzNotation(deviceInfo.DisplayCenterFrequency);
+        document.getElementById("channelFreq").innerHTML = toHzNotation(deviceInfo.ChannelCenterFrequency);
+    } else {
+        // ctx.fillStyle = 'red';
+        document.getElementById("headText").innerHTML = 'Connecting to ' + url;
+    }
+
     DrawFFT();
     console.log(data);
 }
@@ -250,6 +326,7 @@ function UpdateTraffic() {
 
     averageTraffic = trafficSum;
     trafficSum = 0;
+    document.getElementById('avgTraffic').innerHTML = 'Avg. Traffic: '+ toBytesPerSecNotation(averageTraffic);
 
     setTimeout(UpdateTraffic, 1000);
 }
