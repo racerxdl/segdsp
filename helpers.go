@@ -43,16 +43,26 @@ type DataMessage struct {
 
 type DeviceMessage struct {
 	MessageType 			string
+
 	DeviceName				string
 	DisplayBandwidth		uint32
 	DisplayCenterFrequency  uint32
 	DisplayOffset			int32
 	DisplayRange			int32
 	DisplayPixels			uint32
+
 	ChannelCenterFrequency  uint32
 	CurrentSampleRate		uint32
 	Gain					uint32
 	OutputRate				uint32
+
+	FilterBandwidth			uint32
+	DemodulatorMode			string
+	DemodulatorParams		interface{}
+
+	StationName				string
+	WebCanControl			bool
+	TCPCanControl			bool
 }
 
 func MakeFFTMessage(data []uint8) FFTMessage {

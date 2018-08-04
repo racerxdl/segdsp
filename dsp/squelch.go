@@ -8,6 +8,7 @@ type Squelch struct {
 	threshold float32
 	muted bool
 	filter *SinglePoleIIRFilter
+	avgThreshold float32
 }
 
 func MakeSquelch(threshold, alpha float32) *Squelch {
@@ -16,6 +17,10 @@ func MakeSquelch(threshold, alpha float32) *Squelch {
 	}
 	s.SetThreshold(threshold)
 	return &s
+}
+
+func (f *Squelch) GetAvgLevel() float32 {
+	return float32(10 * math.Log10(float64(f.avgThreshold)))
 }
 
 func (f *Squelch) IsMuted() bool {
@@ -33,18 +38,21 @@ func (f *Squelch) SetThreshold(dB float32) {
 func (f *Squelch) Work(data []complex64) []complex64 {
 	var out = make([]complex64, len(data))
 
+	var avg = float32(0)
 	for i := 0; i < len(data); i++ {
 		v := data[i]
 		mag := real(v) * real(v) + imag(v) * imag(v)
 		v2 := f.filter.Filter(mag)
-		if v2 >= f.threshold {
-			out[i] = v
-		} else {
-			out[i] = complex(0, 0)
-		}
+		avg += v2
+		out[i] = complex(0, 0)
 	}
+	avg /= float32(len(data))
+	f.avgThreshold = avg
+	f.muted = avg <= f.threshold
 
-	f.muted = f.filter.GetPreviousOutput() >= f.threshold
-
-	return out
+	if avg >= f.threshold {
+		return data
+	} else {
+		return out
+	}
 }

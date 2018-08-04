@@ -2,6 +2,7 @@
 
 const margin = 50;
 const spacing = 60;
+const bottomSize = 150;
 
 let width, height;
 let canvas;
@@ -18,7 +19,12 @@ let deviceInfo = {
     DisplayPixels: 0,
     DisplayRange: 0,
     DisplayBandwidth: 0,
+    FilterBandwidth: 0,
+    DemodulatorMode: '',
+    DemodulatorParams: null,
     Gain: 0,
+    connected: false,
+    StationName: "SegDSP"
 };
 
 let averageTraffic = 0;
@@ -59,7 +65,7 @@ function CalcDiv(size) {
 }
 
 function DrawFFT() {
-    const baseOffset = height - 100;
+    const baseOffset = height - bottomSize;
     // region Clear
     ctx.fillStyle = '#001111';
     ctx.fillRect(0, 0, width, height);
@@ -131,10 +137,11 @@ function DrawFFT() {
     // region Draw Texts
     ctx.font = "15px Arial";
 
-    if (socket !== null) {
+    if (deviceInfo.connected) {
         ctx.fillStyle = 'green';
-        ctx.fillText('Connected to ' + url + ' (' + deviceInfo.DeviceName + ')', 10, 20);
+        ctx.fillText('Connected to ' + deviceInfo.StationName + ' at ' + url + ' (' + deviceInfo.DeviceName + ')', 10, 20);
         ctx.fillStyle = 'white';
+        ctx.fillText('Demodulator Mode: ' + deviceInfo.DemodulatorMode, 10, height - 64);
         ctx.fillText('Channel BW: ' + deviceInfo.CurrentSampleRate.toLocaleString() + ' Hz', 10, height - 46);
         ctx.fillText('FFT Center Frequency: ' + deviceInfo.DisplayCenterFrequency.toLocaleString() + ' Hz', 10, height - 28);
         ctx.fillText('Channel Center Frequency: ' + deviceInfo.ChannelCenterFrequency.toLocaleString() + ' Hz', 10, height - 10);
@@ -146,7 +153,7 @@ function DrawFFT() {
     // endregion
     // region Markers
     const channelX = (margin + (deviceInfo.ChannelCenterFrequency - startFreq) * invDelta) >> 0;
-    const channelW = ((deviceInfo.CurrentSampleRate * 0.8 * 0.5) * invDelta) >> 0;
+    const channelW = (deviceInfo.FilterBandwidth * invDelta) >> 0;
     ctx.fillStyle = 'rgba(127, 127, 127, 0.3)';
     ctx.fillRect(channelX - channelW / 2, margin, channelW, baseOffset - margin);
     ctx.beginPath();
@@ -201,6 +208,7 @@ function HandleRawData(data) {
 
 function HandleDevice(data) {
     deviceInfo = data;
+    deviceInfo.connected = true;
     InitWebAudio(data.OutputRate);
     canvas.width = deviceInfo.DisplayPixels + margin * 2;
     width = deviceInfo.DisplayPixels + margin * 2;

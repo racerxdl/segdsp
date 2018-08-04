@@ -7,13 +7,12 @@ import (
 )
 
 func BuildFM(sampleRate uint32) *demodcore.FMDemod {
-	return demodcore.MakeCustomFMDemodulator(sampleRate, float64(fmBandwidth), uint32(outputRate), fmTau, fmSquelch, fmSquelchAlpha, float32(fmDeviation))
+	return demodcore.MakeCustomFMDemodulator(sampleRate, float64(filterBandwidth), uint32(outputRate), fmTau, fmSquelch, fmSquelchAlpha, float32(fmDeviation))
 }
 
 func BuildDSP(sampleRate uint32) demodcore.DemodCore {
 	switch demodulatorMode {
-	case modeNFM:
-	case modeWBFM:
+	case modeFM:
 		return BuildFM(sampleRate)
 	}
 

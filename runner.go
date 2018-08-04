@@ -32,7 +32,16 @@ func OnDeviceSync(spyserver *spy2go.Spyserver) {
 		ChannelCenterFrequency: spyserver.GetCenterFrequency(),
 		Gain: spyserver.GetGain(),
 		OutputRate: uint32(outputRate),
+		FilterBandwidth: uint32(filterBandwidth),
+		DemodulatorMode: demodulatorMode,
+		DemodulatorParams: nil,
+		StationName: stationName,
 	}
+
+	if demodulator != nil {
+		d.DemodulatorParams = demodulator.GetDemodParams()
+	}
+
 	sendPacket := currDevice.Gain != spy2go.InvalidValue
 	currDevice = MakeDeviceMessage(d)
 	if sendPacket {

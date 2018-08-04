@@ -9,10 +9,9 @@ import (
 
 // region Modes
 
-const modeWBFM = "WBFM"
-const modeNFM = "NFM"
+const modeFM = "FM"
 
-var modes = []string {modeWBFM, modeNFM}
+var modes = []string {modeFM}
 
 // endregion
 
@@ -26,9 +25,12 @@ const envDecimationStage = "DECIMATION_STAGE"
 const envFFTDecimationStage = "FFT_DECIMATION_STAGE"
 const envOutputRate = "OUTPUT_RATE"
 const envMode = "DEMOD_MODE"
+const envFSBW = "FS_BANDWIDTH"
+const envStationName = "STATION_NAME"
+const envWebCanControl = "WEB_CAN_CONTROL"
+const envTCPCanControl = "TCP_CAN_CONTROL"
 
 // region FM Demodulator Options
-const envFMBW = "FM_BANDWIDTH"
 const envFMDeviation = "FM_DEVIATION"
 const envFMTau = "FM_TAU"
 const envFMSquelch = "FM_SQUELCH"
@@ -42,22 +44,26 @@ var addrFlag = flag.String("httpAddr", "localhost:8080", "http service address")
 var spyserverhostFlag = flag.String("spyserver", "localhost:5555", "spyserver address")
 var displayPixelsFlag = flag.Uint("displayPixels", 512, "Width in pixels of the FFT")
 
-var channelFrequencyFlag = flag.Uint("channelFrequency", 106300000, "Channel (IQ) Center Frequency")
-var displayFrequencyFlag = flag.Uint("fftFrequency", 106300000, "FFT Center Frequency")
+var channelFrequencyFlag = flag.Uint("channelFrequency", 106.3e6, "Channel (IQ) Center Frequency")
+var displayFrequencyFlag = flag.Uint("fftFrequency", 106.3e6, "FFT Center Frequency")
 
-var channelDecimationStageFlag = flag.Uint("decimationStage", 4, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
+var channelDecimationStageFlag = flag.Uint("decimationStage", 2, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
 var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 1, "FFT Decimation Stage (The actual decimation will be 2^d)")
 
-var demodulatorModeFlag = flag.String("demodMode", modeWBFM, fmt.Sprintf("Demodulator Mode: %s", modes))
+var demodulatorModeFlag = flag.String("demodMode", modeFM, fmt.Sprintf("Demodulator Mode: %s", modes))
 var outputRateFlag = flag.Uint("outputRate", 48000, "Output Rate in Hertz")
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
+var stationNameFlag = flag.String("stationName", "SegDSP", "Your station name or callsign (it identifies this instance)")
+var webCanControlFlag = flag.Bool("webCanControl", false, "If Web UI Clients can control this server")
+var tcpCanControlFlag = flag.Bool("tcpCanControl", false, "If TCP Clients can control this server")
+
 // region FM Demodulator Flags
-var fmBandwidthFlag = flag.Uint("fmBandwidth", 120e3, "FM Demodulator Filter Bandwidth in Hertz")
+var filterBandwidthFlag = flag.Uint("filterBandwidth", 120e3, "First Stage Filter Bandwidth in Hertz")
 var fmDeviationFlag = flag.Uint("fmDeviation", 75e3, "FM Demodulator Max Deviation in Hertz")
 var fmTauFlag = flag.Float64("fmTau", 75e-6, "FM Demodulator Tau in seconds (0 to disable)")
-var fmSquelchFlag = flag.Float64("fmSquelch", -150, "FM Demodulator Squelch in dB")
+var fmSquelchFlag = flag.Float64("fmSquelch", -65, "FM Demodulator Squelch in dB")
 var fmSquelchAlphaFlag = flag.Float64("fmSquelchAlpha", 0.001, "FM Demodulator Squelch Filter Alpha")
 // endregion
 
@@ -75,12 +81,16 @@ var displayDecimationStage uint
 
 var demodulatorMode string
 var outputRate uint
+var filterBandwidth uint
 
-var fmBandwidth uint
 var fmDeviation uint
 var fmTau float32
 var fmSquelch float32
 var fmSquelchAlpha float32
+
+var stationName string
+var webCanControl bool
+var tcpCanControl bool
 // endregion
 
 func SetEnv() {
@@ -126,8 +136,8 @@ func SetEnv() {
 		os.Setenv(envOutputRate, strconv.FormatUint(uint64(*outputRateFlag), 10))
 	}
 
-	if os.Getenv(envFMBW) == "" {
-		os.Setenv(envFMBW, strconv.FormatUint(uint64(*fmBandwidthFlag), 10))
+	if os.Getenv(envFSBW) == "" {
+		os.Setenv(envFSBW, strconv.FormatUint(uint64(*filterBandwidthFlag), 10))
 	}
 
 	if os.Getenv(envFMDeviation) == "" {
@@ -138,10 +148,6 @@ func SetEnv() {
 		os.Setenv(envFMTau, strconv.FormatFloat(*fmTauFlag, 'E', -1, 32))
 	}
 
-	if os.Getenv(envFMBW) == "" {
-		os.Setenv(envFMBW, strconv.FormatUint(uint64(*fmBandwidthFlag), 10))
-	}
-
 	if os.Getenv(envFMSquelch) == "" {
 		os.Setenv(envFMSquelch, strconv.FormatFloat(*fmSquelchFlag, 'E', -1, 32))
 	}
@@ -149,6 +155,19 @@ func SetEnv() {
 	if os.Getenv(envFMSquelchAlpha) == "" {
 		os.Setenv(envFMSquelchAlpha, strconv.FormatFloat(*fmSquelchAlphaFlag, 'E', -1, 32))
 	}
+
+	if os.Getenv(envStationName) == "" {
+		os.Setenv(envStationName, *stationNameFlag)
+	}
+
+	if os.Getenv(envWebCanControl) == "" {
+		os.Setenv(envWebCanControl, strconv.FormatBool(*webCanControlFlag))
+	}
+
+	if os.Getenv(envTCPCanControl) == "" {
+		os.Setenv(envTCPCanControl, strconv.FormatBool(*tcpCanControlFlag))
+	}
+
 	// endregion
 	// region Fill Variables
 	httpAddr = os.Getenv(envHTTPAddr)
@@ -184,11 +203,11 @@ func SetEnv() {
 		panic(err)
 	}
 	outputRate = uint(or)
-	fmbw, err := strconv.ParseUint(os.Getenv(envFMBW), 10, 32)
+	fsbw, err := strconv.ParseUint(os.Getenv(envFSBW), 10, 32)
 	if err != nil {
 		panic(err)
 	}
-	fmBandwidth = uint(fmbw)
+	filterBandwidth = uint(fsbw)
 	fmdev, err := strconv.ParseUint(os.Getenv(envFMDeviation), 10, 32)
 	if err != nil {
 		panic(err)
@@ -209,5 +228,19 @@ func SetEnv() {
 		panic(err)
 	}
 	fmSquelchAlpha = float32(fmsquelchalpha)
+
+	stationName = os.Getenv(envStationName)
+
+	webcancontrol, err := strconv.ParseBool(os.Getenv(envWebCanControl))
+	if err != nil {
+		panic(err)
+	}
+	webCanControl = webcancontrol
+
+	tcpcancontrol, err := strconv.ParseBool(os.Getenv(envTCPCanControl))
+	if err != nil {
+		panic(err)
+	}
+	tcpCanControl = tcpcancontrol
 	// endregion
 }
