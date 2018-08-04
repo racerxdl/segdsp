@@ -145,7 +145,7 @@ func main() {
 	spyserver.SetDisplayDecimationStage(uint32(displayDecimationStage))
 	spyserver.SetDisplayCenterFrequency(uint32(displayFrequency))
 	spyserver.SetDisplayRange(90)
-	spyserver.SetDisplayOffset(10)
+	spyserver.SetDisplayOffset(0)
 
 
 	if spyserver.SetDecimationStage(uint32(channelDecimationStage)) == spy2go.InvalidValue {
