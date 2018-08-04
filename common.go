@@ -57,7 +57,7 @@ var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 var stationNameFlag = flag.String("stationName", "SegDSP", "Your station name or callsign (it identifies this instance)")
 var webCanControlFlag = flag.Bool("webCanControl", false, "If Web UI Clients can control this server")
-var tcpCanControlFlag = flag.Bool("tcpCanControl", false, "If TCP Clients can control this server")
+var tcpCanControlFlag = flag.Bool("tcpCanControl", true, "If TCP Clients can control this server")
 
 // region FM Demodulator Flags
 var filterBandwidthFlag = flag.Uint("filterBandwidth", 120e3, "First Stage Filter Bandwidth in Hertz")

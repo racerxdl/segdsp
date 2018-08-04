@@ -10,7 +10,25 @@
             background-color: #001111;
         }
         .content {
+            position: relative;
             margin: auto;
+        }
+        .lockedBorder {
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            border: 2px dashed goldenrod;
+        }
+        .locked {
+            position: absolute;
+            right: -12px;
+            top: -12px;
+        }
+        .unlocked {
+            position: absolute;
+            right: -12px;
+            top: -12px;
+            display: none;
         }
     </style>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -19,6 +37,9 @@
 </head>
 <body onLoad="Init()">
     <div id="contentDiv" class="content" style="margin: auto; padding: 0; max-width: 400px">
+        <div id="lockedImg" class="unlocked">
+            <img src="/static/locked.png" width="24"/>
+        </div>
         <canvas id="fft" width="400" height="500"></canvas>
     </div>
 </body>

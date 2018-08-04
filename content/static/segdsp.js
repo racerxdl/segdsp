@@ -11,6 +11,7 @@ let socket = null;
 let fftData = [];
 let url = '';
 let deviceInfo = {
+    OutputRate: 48000,
     ChannelCenterFrequency: 0,
     CurrentSampleRate: 0,
     DeviceName: "None",
@@ -24,7 +25,8 @@ let deviceInfo = {
     DemodulatorParams: null,
     Gain: 0,
     connected: false,
-    StationName: "SegDSP"
+    StationName: "SegDSP",
+    WebCanControl: true,
 };
 
 let averageTraffic = 0;
@@ -206,9 +208,35 @@ function HandleRawData(data) {
     }
 }
 
+function addClass(el, cls) {
+    let arr = el.className.split(" ");
+    if (arr.indexOf(cls) === -1) {
+        el.className += " " + cls;
+    }
+}
+
+function removeClass(el, cls) {
+    let arr = el.className.split(" ");
+    if (arr.indexOf(cls) !== -1) {
+        arr.splice(arr.indexOf(cls), 1);
+        el.className = arr.join(' ');
+    }
+}
+
 function HandleDevice(data) {
     deviceInfo = data;
     deviceInfo.connected = true;
+
+    if (!deviceInfo.WebCanControl) {
+        addClass(document.getElementById("contentDiv"), 'lockedBorder');
+        addClass(document.getElementById("lockedImg"), 'locked');
+        removeClass(document.getElementById("lockedImg"), 'unlocked');
+    } else {
+        removeClass(document.getElementById("contentDiv"), 'lockedBorder');
+        removeClass(document.getElementById("lockedImg"), 'locked');
+        addClass(document.getElementById("lockedImg"), 'unlocked');
+    }
+
     InitWebAudio(data.OutputRate);
     canvas.width = deviceInfo.DisplayPixels + margin * 2;
     width = deviceInfo.DisplayPixels + margin * 2;

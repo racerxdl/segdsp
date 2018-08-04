@@ -36,6 +36,8 @@ func OnDeviceSync(spyserver *spy2go.Spyserver) {
 		DemodulatorMode: demodulatorMode,
 		DemodulatorParams: nil,
 		StationName: stationName,
+		WebCanControl: webCanControl,
+		TCPCanControl: tcpCanControl,
 	}
 
 	if demodulator != nil {
