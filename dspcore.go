@@ -27,6 +27,15 @@ func AddS16Fifo(data []spy2go.ComplexInt16) {
 
 	samplesFifo.Add(chunk)
 }
+func AddU8Fifo(data []spy2go.ComplexUInt8) {
+	var chunk = make([]complex64, len(data))
+	for i := 0; i < len(data); i++ {
+		chunk[i] = complex((float32(data[i].Imag) - 128) / 128.0, (float32(data[i].Real)  - 128) / 128.0)
+	}
+
+	samplesFifo.Add(chunk)
+}
+
 
 func InitDSP() {
 	samplesFifo = fifo.NewQueue()

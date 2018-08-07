@@ -6,6 +6,7 @@ import (
 
 type Squelch struct {
 	threshold float32
+	thresholddB float32
 	muted bool
 	filter *SinglePoleIIRFilter
 	avgThreshold float32
@@ -32,7 +33,12 @@ func (f *Squelch) SetAlpha(alpha float32) {
 }
 
 func (f *Squelch) SetThreshold(dB float32) {
+	f.thresholddB = dB
 	f.threshold = float32(math.Pow(10, float64(dB / 10.0)))
+}
+
+func (f *Squelch) GetThreshold() float32 {
+	return f.thresholddB
 }
 
 func (f *Squelch) Work(data []complex64) []complex64 {

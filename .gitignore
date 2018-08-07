@@ -14,3 +14,7 @@
 build
 segdsp
 segdsp.prof
+*.json
+*.float32
+*.cfile
+*.bytes

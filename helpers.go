@@ -63,6 +63,7 @@ type DeviceMessage struct {
 	StationName				string
 	WebCanControl			bool
 	TCPCanControl			bool
+	IsMuted					bool
 }
 
 func MakeFFTMessage(data []uint8) FFTMessage {

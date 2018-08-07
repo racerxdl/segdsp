@@ -12,10 +12,15 @@ import (
 	"syscall"
 	"time"
 	"github.com/racerxdl/segdsp/demodcore"
+	"github.com/racerxdl/segdsp/eventmanager"
+	"github.com/racerxdl/segdsp/recorders"
 )
 
 func OnInt16IQ(data []spy2go.ComplexInt16) {
 	go AddS16Fifo(data)
+}
+func OnUInt8IQ(data []spy2go.ComplexUInt8) {
+	go AddU8Fifo(data)
 }
 
 func OnDeviceSync(spyserver *spy2go.Spyserver) {
@@ -38,14 +43,20 @@ func OnDeviceSync(spyserver *spy2go.Spyserver) {
 		StationName: stationName,
 		WebCanControl: webCanControl,
 		TCPCanControl: tcpCanControl,
+		IsMuted: false,
 	}
 
 	if demodulator != nil {
 		d.DemodulatorParams = demodulator.GetDemodParams()
+		d.IsMuted = demodulator.IsMuted()
 	}
 
-	sendPacket := currDevice.Gain != spy2go.InvalidValue
 	currDevice = MakeDeviceMessage(d)
+	RefreshDevice()
+}
+
+func RefreshDevice() {
+	sendPacket := currDevice.Gain != spy2go.InvalidValue
 	if sendPacket {
 		m, err := json.Marshal(currDevice)
 		if err != nil {
@@ -70,6 +81,7 @@ func sendData(data interface{}) {
 	case demodcore.DemodData:
 		var b = data.(demodcore.DemodData)
 		go broadcastBMessage(b.Data.MarshalByteArray())
+		go RecordAudio(b.Data)
 		break
 	default:
 		var j = MakeDataMessage(data)
@@ -99,8 +111,24 @@ func CreateServer() *http.Server {
 	return srv
 }
 
-func main() {
+var squelchOn chan interface{}
+var squelchOff chan interface{}
 
+func OnSquelchOn(data eventmanager.SquelchEventData) {
+	log.Println("Squelch ON", data.AvgValue, data.Threshold)
+	currDevice.IsMuted = demodulator.IsMuted()
+	StopRecording()
+	RefreshDevice()
+}
+
+func OnSquelchOff(data eventmanager.SquelchEventData) {
+	log.Println("Squelch OFF", data.AvgValue, data.Threshold)
+	currDevice.IsMuted = demodulator.IsMuted()
+	StartRecording()
+	RefreshDevice()
+}
+
+func main() {
 	SetEnv()
 	log.SetFlags(0)
 
@@ -115,12 +143,42 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+
+	squelchOn = make(chan interface{})
+	squelchOff = make(chan interface{})
+
+	var ev = eventmanager.EventManager{}
+
+	ev.AddHandler(eventmanager.EvSquelchOn, squelchOn)
+	ev.AddHandler(eventmanager.EvSquelchOff, squelchOff)
+
+	go func() {
+		log.Println("Starting Handler loop")
+		for {
+			select {
+			case msg := <-squelchOn:
+				OnSquelchOn(msg.(eventmanager.SquelchEventData))
+			case msg := <-squelchOff:
+				OnSquelchOff(msg.(eventmanager.SquelchEventData))
+			}
+		}
+		log.Println("Ending Handler loop")
+	}()
+
+	recorder = &recorders.FileRecorder{}
+	recordingParams.recorderEnable = record
+
+	if recordMethod != "file" {
+		panic("Only\"file\" method is supported for recording.")
+	}
+
 	InitDSP()
 
 	var spyserver = spy2go.MakeSpyserverByFullHS(spyserverhost)
 
 	var cb = spy2go.CallbackBase{
 		OnDeviceSync: func() { OnDeviceSync(spyserver) },
+		OnUInt8IQ: OnUInt8IQ,
 		OnInt16IQ: OnInt16IQ,
 		OnFFT: OnFFT,
 	}
@@ -163,6 +221,7 @@ func main() {
 	log.Println("FFT Sample Rate: ", spyserver.GetDisplaySampleRate())
 
 	demodulator = BuildDSP(spyserver.GetSampleRate())
+	demodulator.SetEventManager(&ev)
 
 	dspCb = sendData
 

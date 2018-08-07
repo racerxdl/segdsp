@@ -5,6 +5,7 @@ import (
 	"math"
 	"github.com/racerxdl/go.fifo"
 	"log"
+	"github.com/racerxdl/segdsp/eventmanager"
 )
 
 type FMDemod struct {
@@ -23,6 +24,8 @@ type FMDemod struct {
 	sql *dsp.Squelch
 	tau float32
 	packedParams FMDemodParams
+	ev *eventmanager.EventManager
+	lastSquelch bool
 }
 
 type FMDemodParams struct {
@@ -114,6 +117,7 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 			SquelchAlpha: squelchAlpha,
 			MaxDeviation: maxDeviation,
 		},
+		lastSquelch: true,
 	}
 }
 
@@ -123,6 +127,14 @@ func MakeWBFMDemodulator(sampleRate uint32, signalBw float64, outputRate uint32)
 
 func (f *FMDemod) GetDemodParams() interface{} {
 	return f.packedParams
+}
+
+func (f *FMDemod) SetEventManager(ev *eventmanager.EventManager) {
+	f.ev = ev
+}
+
+func (f *FMDemod) IsMuted() bool {
+	return f.sql.IsMuted()
 }
 
 func (f *FMDemod) Work(data []complex64) interface{} {
@@ -138,6 +150,20 @@ func (f *FMDemod) Work(data []complex64) interface{} {
 	}
 	fmDemodData = f.finalStage.FilterOut(fmDemodData)
 
+	if f.lastSquelch != f.sql.IsMuted() && f.ev != nil {
+		var evName string
+		if f.sql.IsMuted() {
+			evName = eventmanager.EvSquelchOn
+		} else {
+			evName = eventmanager.EvSquelchOff
+		}
+		f.ev.Emit(evName, eventmanager.SquelchEventData{
+			Threshold: f.sql.GetThreshold(),
+			AvgValue: f.sql.GetAvgLevel(),
+		})
+	}
+
+	f.lastSquelch = f.sql.IsMuted()
 
 	for i := 0; i < len(fmDemodData); i++ {
 		f.outFifo.Add(fmDemodData[i])
