@@ -34,7 +34,7 @@ func StartRecording() {
 		if recorder != nil {
 			recorder.Close()
 		}
-		var filename = fmt.Sprintf(recordingParams.baseFilename, stationName, time.Now().Local().Format("20060102_0150405"))
+		var filename = fmt.Sprintf(recordingParams.baseFilename, stationName, time.Now().Local().Format("20060102_150405"))
 		var newParams = []interface{}{
 			filename,
 			recordingMetadata{

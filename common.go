@@ -32,6 +32,7 @@ const envWebCanControl = "WEB_CAN_CONTROL"
 const envTCPCanControl = "TCP_CAN_CONTROL"
 const envRecord = "RECORD"
 const envRecordMethod = "RECORD_METHOD"
+const envPreset = "PRESET"
 
 // region FM Demodulator Options
 const envFMDeviation = "FM_DEVIATION"
@@ -47,11 +48,11 @@ var addrFlag = flag.String("httpAddr", "localhost:8080", "http service address")
 var spyserverhostFlag = flag.String("spyserver", "localhost:5555", "spyserver address")
 var displayPixelsFlag = flag.Uint("displayPixels", 512, "Width in pixels of the FFT")
 
-var channelFrequencyFlag = flag.Uint("channelFrequency", 146.410e6, "Channel (IQ) Center Frequency")
-var displayFrequencyFlag = flag.Uint("fftFrequency", 146.4e6, "FFT Center Frequency")
+var channelFrequencyFlag = flag.Uint("channelFrequency", 106.300e6, "Channel (IQ) Center Frequency")
+var displayFrequencyFlag = flag.Uint("fftFrequency", 106.300e6, "FFT Center Frequency")
 
-var channelDecimationStageFlag = flag.Uint("decimationStage", 5, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
-var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 4, "FFT Decimation Stage (The actual decimation will be 2^d)")
+var channelDecimationStageFlag = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
+var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 0, "FFT Decimation Stage (The actual decimation will be 2^d)")
 
 var demodulatorModeFlag = flag.String("demodMode", modeFM, fmt.Sprintf("Demodulator Mode: %s", modes))
 var outputRateFlag = flag.Uint("outputRate", 48000, "Output Rate in Hertz")
@@ -65,11 +66,13 @@ var tcpCanControlFlag = flag.Bool("tcpCanControl", true, "If TCP Clients can con
 var recordFlag = flag.Bool("record", false, "If it should record when not squelched")
 var recordMethodFlag = flag.String("recordMethod", recorders.RecFile, "Method to use when recording")
 
+var presetFlag = flag.String("preset", "none", "Preset for Demodulator Params")
+
 // region FM Demodulator Flags
-var filterBandwidthFlag = flag.Uint("filterBandwidth", 15e3, "First Stage Filter Bandwidth in Hertz")
-var fmDeviationFlag = flag.Uint("fmDeviation", 5e3, "FM Demodulator Max Deviation in Hertz")
+var filterBandwidthFlag = flag.Uint("filterBandwidth", 120e3, "First Stage Filter Bandwidth in Hertz")
+var fmDeviationFlag = flag.Uint("fmDeviation", 75e3, "FM Demodulator Max Deviation in Hertz")
 var fmTauFlag = flag.Float64("fmTau", 75e-6, "FM Demodulator Tau in seconds (0 to disable)")
-var fmSquelchFlag = flag.Float64("fmSquelch", -73, "FM Demodulator Squelch in dB")
+var fmSquelchFlag = flag.Float64("fmSquelch", -72, "FM Demodulator Squelch in dB")
 var fmSquelchAlphaFlag = flag.Float64("fmSquelchAlpha", 0.001, "FM Demodulator Squelch Filter Alpha")
 // endregion
 
@@ -99,6 +102,7 @@ var webCanControl bool
 var tcpCanControl bool
 var record bool
 var recordMethod string
+var preset string
 // endregion
 
 func SetEnv() {
@@ -184,6 +188,10 @@ func SetEnv() {
 		os.Setenv(envRecordMethod, *recordMethodFlag)
 	}
 
+	if os.Getenv(envPreset) == "" {
+		os.Setenv(envPreset, *presetFlag)
+	}
+
 	// endregion
 	// region Fill Variables
 	httpAddr = os.Getenv(envHTTPAddr)
@@ -266,5 +274,7 @@ func SetEnv() {
 	record = recordf
 
 	recordMethod = os.Getenv(envRecordMethod)
+
+	preset = os.Getenv(envPreset)
 	// endregion
 }
