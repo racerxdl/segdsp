@@ -16,7 +16,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=build /go/src/github.com/racerxdl/segdsp/segdsp_worker .
-COPY content .
+COPY content content
 
 ENV SPYSERVER=localhost:5555
 ENV CENTER_FREQUENCY=106300000
