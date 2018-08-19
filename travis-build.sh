@@ -17,7 +17,8 @@ then
   for i in *
   do
     echo "Zipping segdsp-${i}.zip"
-    zip ../bins/segdsp-$i.zip $i/*
+    cp -Rv ../content $i/
+    zip -r ../bins/segdsp-$i.zip $i/*
   done
   cd ..
   ls -la bins
