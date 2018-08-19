@@ -18,3 +18,5 @@ segdsp.prof
 *.float32
 *.cfile
 *.bytes
+out
+bins

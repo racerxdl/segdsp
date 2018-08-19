@@ -9,12 +9,37 @@ sudo: required
 services:
   - docker
 
-before_install:
-  - docker build -t racerxdl/segdsp .
-script:
-  - docker images racerxdl/segdsp
 
-after_success:
-  - echo $COMMIT
-  - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-  - docker push racerxdl/segdsp
+jobs:
+  include:
+    # - stage: dockerBuilds
+    #   before_install:
+    #     - docker build -t racerxdl/segdsp .
+    #   script:
+    #     - docker images racerxdl/segdsp
+    #   after_success:
+    #     - echo $COMMIT
+    #     - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    #     - docker push racerxdl/segdsp
+    - stage: tagBuilds
+      language: go
+      go:
+        "1.10.x"
+      script:
+        - git describe --exact-match --tags HEAD 2>> /dev/null && export TRAVIS_TAG="`git describe --exact-match --tags HEAD`"; echo ""
+        - ./travis-build.sh
+      deploy:
+        skip_cleanup: true
+        provider: releases
+        api_key:
+          secure: "cdifHn6ogMEdX7f0BLvowq5Jqr6fYQDFnNxTiBmL3KKZ9UvVpGtaNTaBFt++xE+P7RtVL7Ipxbg0TX15KdaC4eftSS4JnrCnFg8FjGO37114qL0xmA4rnhkdMBz/TtxXKGAks0KOeYP3VraNhqjjBb+9wnFDES56OIJwHPmtX+zP9rizXwGSvLvAtvcvG2+x5zvWtOJmm7t70iRgh4120ePdPHWU5DZak8WbVWlA0qpYgMTQS7o6vqO3nNLB/UqMmGChYXR2aVE5CovDttRnCDLsDPGVuwZURSuv10bWgTUZkSJkJX8gf10Pikh8N7XqYgC0hMjTjQR14AhlfjuPofrO2kbvQygHSkXsLqx8mVeUrkUjSm+g4DPCv9ClZRZh4J8nq4Gut50Ry6OJN7CR0pdcY+phEv+OtEBzeGoAqbQO6qJKMYDvTQwDWLHuDQ+w1LLg/ARUqctmDcU0Nk8YDUfEaiYsxtfKb04po9it8BhD5PTmmqOZefBb943OzRLnNDcm7yB7pexAtj5x0t21QrecM01R5nvmX+YtPQatAp4LepgZEXYXBM0stPr6YFNw7st6MZDeX23jq4HgdRKZrOB9li0oQ/FL9bMt4B71TlJGXdP6fuI6eYLBwAbtAQojKYClngjjBbgU3L19rqNUJMSrCsuirQOHl5eeiJJXWYs="
+        file:
+          - bins/segdsp-linux-386.zip
+          - bins/segdsp-linux-amd64.zip
+          - bins/segdsp-linux-arm64.zip
+          - bins/segdsp-linux-arm.zip
+          - bins/segdsp-windows-386.zip
+          - bins/segdsp-windows-amd64.zip
+        on:
+          tags: true
+          repo: racerxdl/segdsp
