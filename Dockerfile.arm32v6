@@ -1,21 +1,10 @@
-FROM golang:alpine as build
+FROM arm32v6/alpine:latest
 
-RUN apk update
+COPY qemu-arm-static /usr/bin/
 
-RUN apk add git ca-certificates
-
-ADD . /go/src/github.com/racerxdl/segdsp
-
-WORKDIR /go/src/github.com/racerxdl/segdsp
-
-RUN go get -v
-
-RUN CGO_ENABLED=0 GOOS=linux go build -o segdsp_worker
-
-FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
-COPY --from=build /go/src/github.com/racerxdl/segdsp/segdsp_worker .
+COPY segdsp_worker_arm32v6 segdsp_worker
 COPY content .
 
 ENV SPYSERVER=localhost:5555

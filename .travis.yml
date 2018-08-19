@@ -9,18 +9,19 @@ sudo: required
 services:
   - docker
 
-
 jobs:
   include:
-    # - stage: dockerBuilds
-    #   before_install:
-    #     - docker build -t racerxdl/segdsp .
-    #   script:
-    #     - docker images racerxdl/segdsp
-    #   after_success:
-    #     - echo $COMMIT
-    #     - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-    #     - docker push racerxdl/segdsp
+    - stage: dockerBuilds
+      language: go
+      go:
+        "1.10.x"
+      before_install:
+        - docker run --rm --privileged multiarch/qemu-user-static:register
+        - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+      script:
+        - ./multi-build.sh
+      after_success:
+        - echo $COMMIT
     - stage: tagBuilds
       language: go
       go:

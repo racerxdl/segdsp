@@ -20,3 +20,6 @@ segdsp.prof
 *.bytes
 out
 bins
+qemu-*
+x86_64_*
+segdsp_worker*

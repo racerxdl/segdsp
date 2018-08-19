@@ -1,4 +1,6 @@
-FROM golang:alpine as build
+FROM amd64/golang:alpine as build
+
+COPY qemu-x86_64-static /usr/bin/
 
 RUN apk update
 
@@ -12,7 +14,10 @@ RUN go get -v
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o segdsp_worker
 
-FROM alpine:latest
+FROM amd64/alpine:latest
+
+COPY qemu-x86_64-static /usr/bin/
+
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=build /go/src/github.com/racerxdl/segdsp/segdsp_worker .
