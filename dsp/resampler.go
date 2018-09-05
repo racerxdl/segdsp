@@ -35,7 +35,14 @@ func MakeFloatResampler(filterSize int, rate float32) *FloatResampler {
 		transitionWidth = float64((bwPercent / 2.0) * halfBand)
 	}
 
-	taps = MakeLowPassFixed(float64(filterSize), float64(filterSize), bandWidth - transitionWidth, filterSize * 8)
+	if rate < 1 {
+		taps = MakeLowPassFixed(float64(filterSize), float64(filterSize), bandWidth - transitionWidth, filterSize * 8 )
+	} else {
+		taps = MakeLowPassFixed(float64(filterSize), float64(filterSize), bandWidth - transitionWidth, filterSize )
+	}
+
+	//taps = MakeLowPass(float64(filterSize), float64(filterSize), bandWidth, transitionWidth)
+
 
 	var nullTaps = make([]float32, filterSize)
 	var filters = make([]*FloatFirFilter, filterSize)

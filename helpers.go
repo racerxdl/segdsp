@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"strings"
 	"fmt"
 	"encoding/base64"
@@ -33,6 +34,7 @@ func (u JsonInt16) MarshalJSON() ([]byte, error) {
 
 type FFTMessage struct {
 	MessageType string
+	DemodOutputLevel float32
 	FFTData JsonUint8
 }
 
@@ -66,9 +68,13 @@ type DeviceMessage struct {
 	IsMuted					bool
 }
 
-func MakeFFTMessage(data []uint8) FFTMessage {
+func MakeFFTMessage(data []uint8, level float32) FFTMessage {
+	if math.IsInf(float64(level), 0) {
+		level = 0
+	}
 	return FFTMessage{
 		MessageType: "fft",
+		DemodOutputLevel: level,
 		FFTData: data,
 	}
 }

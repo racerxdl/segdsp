@@ -307,6 +307,7 @@ function HandleDevice(data) {
     document.getElementById("contentDiv").style.width = width + "px";
 
     if (deviceInfo.connected) {
+        document.title = deviceInfo.StationName;
         document.getElementById("headText").innerHTML = 'Connected to ' + deviceInfo.StationName + ' at ' + url + ' (' + deviceInfo.DeviceName + ')';
         document.getElementById("demodMode").innerHTML = deviceInfo.DemodulatorMode;
         document.getElementById("filterBw").innerHTML = toHzNotation(deviceInfo.FilterBandwidth);
@@ -329,6 +330,10 @@ function UpdateTraffic() {
     document.getElementById('avgTraffic').innerHTML = 'Avg. Traffic: '+ toBytesPerSecNotation(averageTraffic);
 
     setTimeout(UpdateTraffic, 1000);
+}
+
+function UpdateLevel(level) {
+    document.getElementById('channelLevel').innerHTML = Math.round(level).toLocaleString() + ' dB';
 }
 
 function Connect() {
@@ -356,7 +361,7 @@ function Connect() {
         try {
             const data = JSON.parse(evt.data);
             switch (data.MessageType) {
-                case 'fft': HandleFFT(data.FFTData); break;
+                case 'fft': HandleFFT(data.FFTData); UpdateLevel(data.DemodOutputLevel); break;
                 case 'data': HandleData(data.Data); break;
                 case 'device': HandleDevice(data); break;
                 default: console.log('Unknown Type: ' + data.MessageType);

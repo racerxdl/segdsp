@@ -68,7 +68,7 @@ func RefreshDevice() {
 
 func OnFFT(data []uint8) {
 	//log.Println("Received FFT! ", len(data))
-	var j = MakeFFTMessage(data)
+	var j = MakeFFTMessage(data, demodulator.GetLevel())
 	m, err := json.Marshal(j)
 	if err != nil {
 		log.Println("Error serializing JSON: ", err)

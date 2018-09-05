@@ -6,13 +6,15 @@ import (
 	"os"
 	"strconv"
 	"github.com/racerxdl/segdsp/recorders"
+	"log"
 )
 
 // region Modes
 
 const modeFM = "FM"
+const modeAM = "AM"
 
-var modes = []string {modeFM}
+var modes = []string {modeFM, modeAM}
 
 // endregion
 
@@ -34,11 +36,17 @@ const envRecord = "RECORD"
 const envRecordMethod = "RECORD_METHOD"
 const envPreset = "PRESET"
 
+const envSquelch = "SQUELCH"
+const envSquelchAlpha = "SQUELCH_ALPHA"
+
 // region FM Demodulator Options
 const envFMDeviation = "FM_DEVIATION"
 const envFMTau = "FM_TAU"
-const envFMSquelch = "FM_SQUELCH"
-const envFMSquelchAlpha = "FM_SQUELCH_ALPHA"
+// endregion
+
+// region AM Demodulator Options
+const envAMAudioCut = "AM_AUDIO_CUT"
+
 // endregion
 
 // endregion
@@ -48,11 +56,11 @@ var addrFlag = flag.String("httpAddr", "localhost:8080", "http service address")
 var spyserverhostFlag = flag.String("spyserver", "localhost:5555", "spyserver address")
 var displayPixelsFlag = flag.Uint("displayPixels", 512, "Width in pixels of the FFT")
 
-var channelFrequencyFlag = flag.Uint("channelFrequency", 106.300e6, "Channel (IQ) Center Frequency")
-var displayFrequencyFlag = flag.Uint("fftFrequency", 106.300e6, "FFT Center Frequency")
+var channelFrequencyFlag = flag.Uint("channelFrequency", 106.3e6, "Channel (IQ) Center Frequency")
+var displayFrequencyFlag = flag.Uint("fftFrequency", 106e6, "FFT Center Frequency")
 
 var channelDecimationStageFlag = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
-var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 0, "FFT Decimation Stage (The actual decimation will be 2^d)")
+var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 2, "FFT Decimation Stage (The actual decimation will be 2^d)")
 
 var demodulatorModeFlag = flag.String("demodMode", modeFM, fmt.Sprintf("Demodulator Mode: %s", modes))
 var outputRateFlag = flag.Uint("outputRate", 48000, "Output Rate in Hertz")
@@ -68,12 +76,17 @@ var recordMethodFlag = flag.String("recordMethod", recorders.RecFile, "Method to
 
 var presetFlag = flag.String("preset", "none", "Preset for Demodulator Params")
 
+var squelchFlag = flag.Float64("squelch", -72, "Demodulator Squelch in dB")
+var squelchAlphaFlag = flag.Float64("squelchAlpha", 0.001, "Demodulator Squelch Filter Alpha")
+
 // region FM Demodulator Flags
 var filterBandwidthFlag = flag.Uint("filterBandwidth", 120e3, "First Stage Filter Bandwidth in Hertz")
 var fmDeviationFlag = flag.Uint("fmDeviation", 75e3, "FM Demodulator Max Deviation in Hertz")
 var fmTauFlag = flag.Float64("fmTau", 75e-6, "FM Demodulator Tau in seconds (0 to disable)")
-var fmSquelchFlag = flag.Float64("fmSquelch", -72, "FM Demodulator Squelch in dB")
-var fmSquelchAlphaFlag = flag.Float64("fmSquelchAlpha", 0.001, "FM Demodulator Squelch Filter Alpha")
+// endregion
+
+// region AM Demodulator Flags
+var amAudioCutFlag = flag.Float64("amAudioCut", 5000, "AM Low Pass Filter Cut")
 // endregion
 
 // endregion
@@ -91,11 +104,13 @@ var displayDecimationStage uint
 var demodulatorMode string
 var outputRate uint
 var filterBandwidth uint
+var squelch float32
+var squelchAlpha float32
 
 var fmDeviation uint
 var fmTau float32
-var fmSquelch float32
-var fmSquelchAlpha float32
+
+var amAudioCut float32
 
 var stationName string
 var webCanControl bool
@@ -105,8 +120,41 @@ var recordMethod string
 var preset string
 // endregion
 
+func ApplyPreset(preset Preset) {
+	log.Printf("PRESET: Setting Output Rate to %d Hz\n", preset.outputRate)
+	log.Printf("PRESET: Setting Demod Mode to %s\n", preset.demodMode)
+	log.Printf("PRESET: Setting First Stage Filter to %f Hz\n", preset.filterBandwidth)
+
+	os.Setenv(envOutputRate, strconv.FormatUint(uint64(preset.outputRate), 10))
+	os.Setenv(envMode, preset.demodMode)
+	os.Setenv(envFSBW, strconv.FormatFloat(preset.filterBandwidth, 'E', -1, 32))
+
+	switch preset.demodMode {
+	case modeFM: ApplyFMPreset(preset)
+	case modeAM: ApplyAMPreset(preset)
+	}
+}
+
+func ApplyFMPreset(preset Preset) {
+	log.Printf("PRESET: Setting FM Tau to %f\n", preset.demodOptions["tau"].(float64))
+	log.Printf("PRESET: Setting FM Devation to %f Hz\n", preset.demodOptions["devation"].(float64))
+	os.Setenv(envFMTau, strconv.FormatFloat(preset.demodOptions["tau"].(float64), 'E', -1, 32))
+	os.Setenv(envFMDeviation, strconv.FormatFloat(preset.demodOptions["deviation"].(float64), 'E', -1, 32))
+}
+
+func ApplyAMPreset(preset Preset) {
+	log.Printf("PRESET: Setting AM Audio Cut to %f\n", preset.demodOptions["audioCut"].(float64))
+	os.Setenv(envAMAudioCut, strconv.FormatFloat(preset.demodOptions["audioCut"].(float64), 'E', -1, 32))
+}
+
 func SetEnv() {
 	flag.Parse()
+	// region Parse Preset
+	if val, ok := Presets[preset]; ok {
+		log.Printf("Selected %s preset.\n", val.name)
+		ApplyPreset(val)
+	}
+	// endregion
 	// region Fill Environment
 	if os.Getenv(envSpyserverAddr) == "" {
 		os.Setenv(envSpyserverAddr, *spyserverhostFlag)
@@ -160,12 +208,16 @@ func SetEnv() {
 		os.Setenv(envFMTau, strconv.FormatFloat(*fmTauFlag, 'E', -1, 32))
 	}
 
-	if os.Getenv(envFMSquelch) == "" {
-		os.Setenv(envFMSquelch, strconv.FormatFloat(*fmSquelchFlag, 'E', -1, 32))
+	if os.Getenv(envSquelch) == "" {
+		os.Setenv(envSquelch, strconv.FormatFloat(*squelchFlag, 'E', -1, 32))
 	}
 
-	if os.Getenv(envFMSquelchAlpha) == "" {
-		os.Setenv(envFMSquelchAlpha, strconv.FormatFloat(*fmSquelchAlphaFlag, 'E', -1, 32))
+	if os.Getenv(envSquelchAlpha) == "" {
+		os.Setenv(envSquelchAlpha, strconv.FormatFloat(*squelchAlphaFlag, 'E', -1, 32))
+	}
+
+	if os.Getenv(envAMAudioCut) == "" {
+		os.Setenv(envAMAudioCut, strconv.FormatFloat(*amAudioCutFlag, 'E', -1, 32))
 	}
 
 	if os.Getenv(envStationName) == "" {
@@ -242,16 +294,22 @@ func SetEnv() {
 		panic(err)
 	}
 	fmTau = float32(fmtau)
-	fmsquelch, err := strconv.ParseFloat(os.Getenv(envFMSquelch), 32)
+	squelchx, err := strconv.ParseFloat(os.Getenv(envSquelch), 32)
 	if err != nil {
 		panic(err)
 	}
-	fmSquelch = float32(fmsquelch)
-	fmsquelchalpha, err := strconv.ParseFloat(os.Getenv(envFMSquelchAlpha), 32)
+	squelch = float32(squelchx)
+	squelchalpha, err := strconv.ParseFloat(os.Getenv(envSquelchAlpha), 32)
 	if err != nil {
 		panic(err)
 	}
-	fmSquelchAlpha = float32(fmsquelchalpha)
+	squelchAlpha = float32(squelchalpha)
+
+	amaudiocut, err := strconv.ParseFloat(os.Getenv(envAMAudioCut), 32)
+	if err != nil {
+		panic(err)
+	}
+	amAudioCut = float32(amaudiocut)
 
 	stationName = os.Getenv(envStationName)
 

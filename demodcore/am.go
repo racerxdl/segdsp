@@ -2,44 +2,39 @@ package demodcore
 
 import (
 	"github.com/racerxdl/segdsp/dsp"
-	"math"
 	"github.com/racerxdl/go.fifo"
-	"log"
 	"github.com/racerxdl/segdsp/eventmanager"
+	"math"
+	"log"
 )
 
-type FMDemod struct {
+type AMDemod struct {
 	sampleRate float64
 	outputRate uint32
 	firstStage *dsp.FirFilter
-	secondStage *dsp.FloatFirFilter
 	signalBw float64
-	deviation float32
-	quadDemod *dsp.QuadDemod
 	decimation int
 	resampler *dsp.FloatResampler
 	finalStage *dsp.FloatFirFilter
-	deemph *dsp.FMDeemph
 	outFifo *fifo.Queue
 	sql *dsp.Squelch
-	tau float32
-	packedParams FMDemodParams
+	packedParams AMDemodParams
 	ev *eventmanager.EventManager
 	lastSquelch bool
+	ffAgc *dsp.FeedForwardAGC
 }
 
-type FMDemodParams struct {
+type AMDemodParams struct {
 	SampleRate uint32
 	SignalBandwidth float64
 	OutputRate uint32
-	Tau float32
 	Squelch float32
 	SquelchAlpha float32
-	MaxDeviation float32
+	AudioCut float32
 }
 
-func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uint32, tau, squelch, squelchAlpha, maxDeviation float32) *FMDemod {
-	var decim = int(math.Floor(float64(sampleRate) / signalBw / 2))
+func MakeCustomAMDemodulator(sampleRate uint32, signalBw float64, outputRate uint32, audioCut, squelch, squelchAlpha float32) *AMDemod {
+	var decim = int(math.Floor(float64(sampleRate) / signalBw))
 
 	if decim & 1 == 1 {
 		decim -= 1
@@ -50,97 +45,77 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 	}
 
 	var quadRate = float64(sampleRate) / float64(decim)
+	var resampleRate = float32(float64(outputRate) / quadRate)
 
 	log.Println("Decimation:", decim)
 	log.Println("Quad Rate:", quadRate)
-
-	var fmDemodGain = quadRate / ( 2 * math.Pi * float64(maxDeviation) )
-	var resampleRate = float32(float64(outputRate) / quadRate)
-
-	var stageCut = math.Min(float64(outputRate), quadRate) / 2
+	log.Println("Resample Rate:", resampleRate)
 
 	var sql = dsp.MakeSquelch(squelch, squelchAlpha)
+	var agc = dsp.MakeFeedForwardAGC(1024, 1)
 
-	return &FMDemod{
+	return &AMDemod{
 		sampleRate: float64(sampleRate),
 		firstStage: dsp.MakeFirFilter(
 			dsp.MakeLowPassFixed(
 				1,
 				float64(sampleRate),
 				signalBw / 2,
-				63,
-			),
-		),
-		secondStage: dsp.MakeFloatFirFilter(
-			dsp.MakeLowPassFixed(
-				1,
-				quadRate,
-				stageCut,
-				63,
-			),
-		),
-		tau: tau,
-		deviation: maxDeviation,
-		quadDemod: dsp.MakeQuadDemod(float32(fmDemodGain)),
-		decimation: int(decim),
-		resampler: dsp.MakeFloatResampler(32, resampleRate),
-		deemph: dsp.MakeFMDeemph(tau, float32(outputRate)),
-		finalStage: dsp.MakeFloatFirFilter(
-			dsp.MakeLowPassFixed(
-				0.25,
-				float64(outputRate),
-				float64(outputRate) / 2 - float64(outputRate) / 32,
-				63,
+				127,
 			),
 		),
 		outputRate: outputRate,
+		decimation: decim,
+		resampler: dsp.MakeFloatResampler(32, resampleRate),
+		finalStage: dsp.MakeFloatFirFilter(
+			dsp.MakeLowPassFixed(
+				1,
+				float64(outputRate),
+				float64(audioCut),
+				31,
+			),
+		),
 		outFifo: fifo.NewQueue(),
 		sql: sql,
-		packedParams: FMDemodParams{
+		packedParams: AMDemodParams{
 			SampleRate: sampleRate,
 			SignalBandwidth: signalBw,
 			OutputRate: outputRate,
-			Tau: tau,
 			Squelch: squelch,
 			SquelchAlpha: squelchAlpha,
-			MaxDeviation: maxDeviation,
+			AudioCut: audioCut,
 		},
 		lastSquelch: true,
+		ffAgc: agc,
 	}
 }
 
-func MakeWBFMDemodulator(sampleRate uint32, signalBw float64, outputRate uint32) *FMDemod {
-	return MakeCustomFMDemodulator(sampleRate, signalBw, outputRate, 75e-6, -150, 0.01, 75000)
-}
-
-func (f *FMDemod) GetLevel() float32 {
-	return f.sql.GetAvgLevel()
-}
-
-func (f *FMDemod) GetDemodParams() interface{} {
+func (f *AMDemod) GetDemodParams() interface{} {
 	return f.packedParams
 }
 
-func (f *FMDemod) SetEventManager(ev *eventmanager.EventManager) {
+func (f *AMDemod) SetEventManager(ev *eventmanager.EventManager) {
 	f.ev = ev
 }
 
-func (f *FMDemod) IsMuted() bool {
+func (f *AMDemod) IsMuted() bool {
 	return f.sql.IsMuted()
 }
 
-func (f *FMDemod) Work(data []complex64) interface{} {
+func (f *AMDemod) GetLevel() float32 {
+	return f.sql.GetAvgLevel()
+}
+
+func (f *AMDemod) Work(data []complex64) interface{} {
 	var filteredData = f.firstStage.FilterDecimateOut(data,  f.decimation)
 	filteredData = f.sql.Work(filteredData)
+	filteredData = f.ffAgc.Work(filteredData)
 
-	var fmDemodData = f.quadDemod.Work(filteredData)
+	var fmDemodData = dsp.Complex2Magnitude(filteredData)
 
-	fmDemodData = f.secondStage.FilterOut(fmDemodData)
 	fmDemodData = f.resampler.Work(fmDemodData)
+
 	fmDemodData = f.finalStage.FilterOut(fmDemodData)
-	if f.tau != 0 {
-		fmDemodData = f.deemph.Work(fmDemodData)
-	}
 
 	if f.lastSquelch != f.sql.IsMuted() && f.ev != nil {
 		var evName string
@@ -158,7 +133,7 @@ func (f *FMDemod) Work(data []complex64) interface{} {
 	f.lastSquelch = f.sql.IsMuted()
 
 	for i := 0; i < len(fmDemodData); i++ {
-		f.outFifo.Add(fmDemodData[i])
+		f.outFifo.Add(fmDemodData[i] - 1)
 	}
 
 	if f.outFifo.Len() >= 16384 {

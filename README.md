@@ -49,15 +49,16 @@ CENTER_FREQUENCY="145570000" DEMOD_MODE="FM" FM_DEVIATION="5000" FS_BANDWIDTH="1
 | `-channelFrequency`   | `CENTER_FREQUENCY`      | number |                  | Channel (IQ) Center Frequency in Hz                               | 106300000       |
 | `-cpuprofile`         |                         | string |                  | Write cpu profile to specified file                               |                 |
 | `-decimationStage`    | `DECIMATION_STAGE`      | number |                  | Channel (IQ) Decimation Stage (The actual decimation will be 2^d) | 3               |
-| `-demodMode`          | `DEMOD_MODE`            | string | `FM`             | Demodulator Mode: [FM]                                            | FM              |
+| `-demodMode`          | `DEMOD_MODE`            | string | `FM`, `AM`       | Demodulator Mode: [FM]                                            | FM              |
 | `-displayPixels`      | `DISPLAY_PIXELS`        | number |                  | Width in pixels of the FFT                                        | 512             |
 | `-fftDecimationStage` | `FFT_DECIMATION_STAGE`  | number |                  | FFT Decimation Stage (The actual decimation will be 2^d)          | 0               |
 | `-fftFrequency`       | `FFT_FREQUENCY`         | number |                  | FFT Center Frequency in Hz                                        | 106300000       |
 | `-filterBandwidth`    | `FS_BANDWIDTH`          | number |                  | First Stage Filter Bandwidth in Hert                              | 120000          |
+| `-squelch`            | `SQUELCH`               | number |                  | Demodulator Squelch in dB                                         | -72             |
+| `-squelchAlpha`       | `SQUELCH_ALPHA`         | number |                  | Demodulator Squelch Filter Alpha                                  | 0.001           |
 | `-fmDeviation`        | `FM_DEVIATION`          | number |                  | FM Demodulator Max Deviation in Hertz                             | 75000           |
-| `-fmSquelch`          | `FM_SQUELCH`            | number |                  | FM Demodulator Squelch in dB                                      | -72             |
-| `-fmSquelchAlpha`     | `FM_SQUELCH_ALPHA`      | number |                  | FM Demodulator Squelch Filter Alpha                               | 0.001           |
 | `-fmTau`              | `FM_TAU`                | number |                  | FM Demodulator Tau in seconds (0 to disable)                      | 0.0000075       |
+| `-amAudioCut`         | `AM_AUDIO_CUT`          | number |                  | AM Demodulator Audio Low Pass Cut                                 | 5000            |
 | `-httpAddr`           | `HTTP_ADDRESS`          | string |                  | HTTP Service Address                                              | localhost:8080  |
 | `-outputRate`         | `OUTPUT_RATE`           | number |                  | Output Rate in Hz                                                 | 48000           |
 | `-record`             | `RECORD`                |  bool  | `true`, `false`  | If it should record output when not squelched                     | false           |
