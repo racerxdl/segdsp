@@ -5,5 +5,5 @@ const EvSquelchOff = "squelchOffEvent"
 
 type SquelchEventData struct {
 	Threshold float32
-	AvgValue float32
+	AvgValue  float32
 }

@@ -1,17 +1,17 @@
 package main
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"math"
 	"strings"
-	"fmt"
-	"encoding/base64"
-	"bytes"
-	"encoding/json"
 )
 
-type JsonUint8 []uint8
+type jsonUint8s []uint8
 
-func (u JsonUint8) MarshalJSON() ([]byte, error) {
+func (u jsonUint8s) MarshalJSON() ([]byte, error) {
 	buf := bytes.NewBufferString("")
 	enc := base64.NewEncoder(base64.StdEncoding, buf)
 	enc.Write(u)
@@ -19,9 +19,9 @@ func (u JsonUint8) MarshalJSON() ([]byte, error) {
 	return json.Marshal(string(buf.Bytes()))
 }
 
-type JsonInt16 []int16
+type jsonInt16s []int16
 
-func (u JsonInt16) MarshalJSON() ([]byte, error) {
+func (u jsonInt16s) MarshalJSON() ([]byte, error) {
 	var result string
 	if u == nil {
 		result = "null"
@@ -31,62 +31,61 @@ func (u JsonInt16) MarshalJSON() ([]byte, error) {
 	return []byte(result), nil
 }
 
-
-type FFTMessage struct {
-	MessageType string
+type fftMessage struct {
+	MessageType      string
 	DemodOutputLevel float32
-	FFTData JsonUint8
+	FFTData          jsonUint8s
 }
 
-type DataMessage struct {
+type dataMessage struct {
 	MessageType string
-	Data interface{}
+	Data        interface{}
 }
 
-type DeviceMessage struct {
-	MessageType 			string
+type deviceMessage struct {
+	MessageType string
 
-	DeviceName				string
-	DisplayBandwidth		uint32
-	DisplayCenterFrequency  uint32
-	DisplayOffset			int32
-	DisplayRange			int32
-	DisplayPixels			uint32
+	DeviceName             string
+	DisplayBandwidth       uint32
+	DisplayCenterFrequency uint32
+	DisplayOffset          int32
+	DisplayRange           int32
+	DisplayPixels          uint32
 
-	ChannelCenterFrequency  uint32
-	CurrentSampleRate		uint32
-	Gain					uint32
-	OutputRate				uint32
+	ChannelCenterFrequency uint32
+	CurrentSampleRate      uint32
+	Gain                   uint32
+	OutputRate             uint32
 
-	FilterBandwidth			uint32
-	DemodulatorMode			string
-	DemodulatorParams		interface{}
+	FilterBandwidth   uint32
+	DemodulatorMode   string
+	DemodulatorParams interface{}
 
-	StationName				string
-	WebCanControl			bool
-	TCPCanControl			bool
-	IsMuted					bool
+	StationName   string
+	WebCanControl bool
+	TCPCanControl bool
+	IsMuted       bool
 }
 
-func MakeFFTMessage(data []uint8, level float32) FFTMessage {
+func makeFFTMessage(data []uint8, level float32) fftMessage {
 	if math.IsInf(float64(level), 0) {
 		level = 0
 	}
-	return FFTMessage{
-		MessageType: "fft",
+	return fftMessage{
+		MessageType:      "fft",
 		DemodOutputLevel: level,
-		FFTData: data,
+		FFTData:          data,
 	}
 }
 
-func MakeDataMessage(data interface{}) DataMessage {
-	return DataMessage{
+func makeDataMessage(data interface{}) dataMessage {
+	return dataMessage{
 		MessageType: "data",
-		Data: data,
+		Data:        data,
 	}
 }
 
-func MakeDeviceMessage(d DeviceMessage) DeviceMessage {
+func makeDeviceMessage(d deviceMessage) deviceMessage {
 	d.MessageType = "device"
 
 	return d

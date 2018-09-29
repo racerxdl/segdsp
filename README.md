@@ -1,4 +1,4 @@
-[![Build Status](https://api.travis-ci.org/racerxdl/segdsp.svg?branch=master)](https://travis-ci.org/racerxdl/segdsp) [![Apache License](https://img.shields.io/badge/license-Apache-blue.svg)](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
+[![Build Status](https://api.travis-ci.org/racerxdl/segdsp.svg?branch=master)](https://travis-ci.org/racerxdl/segdsp) [![Apache License](https://img.shields.io/badge/license-Apache-blue.svg)](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)) [![Go Report](https://goreportcard.com/badge/github.com/racerxdl/segdsp)](https://goreportcard.com/report/github.com/racerxdl/segdsp)
 
 # SegDSP - Future of RF Monitoring (WIP)
 

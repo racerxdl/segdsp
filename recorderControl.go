@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/racerxdl/segdsp/recorders"
 	"sync"
-	"fmt"
 	"time"
 )
 
@@ -11,24 +11,24 @@ var recorder recorders.BaseRecorder
 var recordMutex = sync.Mutex{}
 
 var recordingParams = struct {
-	baseFilename string
-	params []interface{}
+	baseFilename   string
+	params         []interface{}
 	recorderEnable bool
-	recording bool
+	recording      bool
 }{
-	baseFilename: "%s-%s",
-	params: make([]interface{}, 0),
+	baseFilename:   "%s-%s",
+	params:         make([]interface{}, 0),
 	recorderEnable: false,
-	recording: false,
+	recording:      false,
 }
 
 type recordingMetadata struct {
-	DemodParams interface{}
+	DemodParams  interface{}
 	BaseFilename string
-	Timestamp time.Time
+	Timestamp    time.Time
 }
 
-func StartRecording() {
+func startRecording() {
 	recordMutex.Lock()
 	if recordingParams.recorderEnable {
 		if recorder != nil {
@@ -38,9 +38,9 @@ func StartRecording() {
 		var newParams = []interface{}{
 			filename,
 			recordingMetadata{
-				DemodParams: demodulator.GetDemodParams(),
+				DemodParams:  demodulator.GetDemodParams(),
 				BaseFilename: filename,
-				Timestamp: time.Now().Local(),
+				Timestamp:    time.Now().Local(),
 			},
 		}
 
@@ -50,7 +50,7 @@ func StartRecording() {
 	recordMutex.Unlock()
 }
 
-func RecordIQ(data []complex64) {
+func recordIQ(data []complex64) {
 	recordMutex.Lock()
 	if recordingParams.recorderEnable && recorder != nil && recordingParams.recording {
 		go recorder.WriteIQ(data)
@@ -58,7 +58,7 @@ func RecordIQ(data []complex64) {
 	recordMutex.Unlock()
 }
 
-func RecordAudio(data []float32) {
+func recordAudio(data []float32) {
 	recordMutex.Lock()
 	if recordingParams.recorderEnable && recorder != nil && recordingParams.recording {
 		go recorder.WriteAudio(data)
@@ -66,7 +66,7 @@ func RecordAudio(data []float32) {
 	recordMutex.Unlock()
 }
 
-func RecordData(data []byte) {
+func recordData(data []byte) {
 	recordMutex.Lock()
 	if recordingParams.recorderEnable && recorder != nil && recordingParams.recording {
 		go recorder.WriteData(data)
@@ -74,7 +74,7 @@ func RecordData(data []byte) {
 	recordMutex.Unlock()
 }
 
-func StopRecording() {
+func stopRecording() {
 	recordMutex.Lock()
 	recorder.Close()
 	recordingParams.recording = false

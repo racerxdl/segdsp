@@ -3,17 +3,17 @@ package dsp
 import "math"
 
 type FMDeemph struct {
-	tau float32
+	tau        float32
 	sampleRate float32
-	iir *IIRFilter
+	iir        *IIRFilter
 }
 
 func MakeFMDeemph(tau, sampleRate float32) *FMDeemph {
 	var p = 1 / tau
 
-	var ca = 2 * float64(sampleRate) * math.Tan(float64(p / (sampleRate * 2)))
+	var ca = 2 * float64(sampleRate) * math.Tan(float64(p/(sampleRate*2)))
 
-	var k = - ca / (2 * float64(sampleRate))
+	var k = -ca / (2 * float64(sampleRate))
 
 	var a1 = float32((1.0 + k) / (1.0 - k))
 	var b0 = float32(-k / (1.0 - k))
@@ -22,9 +22,9 @@ func MakeFMDeemph(tau, sampleRate float32) *FMDeemph {
 	var ataps = []float32{1, -a1}
 
 	return &FMDeemph{
-		tau: tau,
+		tau:        tau,
 		sampleRate: sampleRate,
-		iir: MakeIIRFilter(btaps, ataps),
+		iir:        MakeIIRFilter(btaps, ataps),
 	}
 }
 

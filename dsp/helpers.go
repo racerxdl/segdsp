@@ -9,7 +9,6 @@ func Min(a, b int) int {
 	return b
 }
 
-
 func DotProduct(result *complex64, input []complex64, taps []float32) {
 	var length = Min(len(taps), len(input))
 	var res [2]float32
@@ -72,12 +71,12 @@ func MultiplyConjungateInline(vecA, vecB []complex64, length int) {
 }
 
 func Modulus(c complex64) float32 {
-	return float32(math.Sqrt(float64(real(c) * real(c) + imag(c) * imag(c))))
+	return float32(math.Sqrt(float64(real(c)*real(c) + imag(c)*imag(c))))
 }
 
 func Divide(c complex64, f float32) complex64 {
 	var b = 1 / f
-	return complex(real(c) * b, imag(c) * b)
+	return complex(real(c)*b, imag(c)*b)
 }
 
 func Argument(c complex64) float32 {

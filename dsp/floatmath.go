@@ -102,7 +102,6 @@ func Atan(x float32) float32 {
 	return -satan(-x)
 }
 
-
 func Conj(x complex64) complex64 { return complex(real(x), -imag(x)) }
 
 func IsNaN(f float32) bool {
@@ -126,7 +125,7 @@ func IsInf(f float32, sign int) bool {
 }
 
 func Signbit(x float32) bool {
-	return math.Float32bits(x) & (1<<31) != 0
+	return math.Float32bits(x)&(1<<31) != 0
 }
 func Copysign(x, y float32) float32 {
 	const sign = 1 << 31

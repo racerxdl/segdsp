@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/racerxdl/go.fifo"
-	"github.com/racerxdl/spy2go"
 	"github.com/racerxdl/segdsp/demodcore"
+	"github.com/racerxdl/spy2go"
 	"runtime"
 	"time"
 )
@@ -19,36 +19,35 @@ var count = 0
 
 var dspCb func(interface{})
 
-func AddS16Fifo(data []spy2go.ComplexInt16) {
+func addS16Fifo(data []spy2go.ComplexInt16) {
 	var chunk = make([]complex64, len(data))
 	for i := 0; i < len(data); i++ {
-		chunk[i] = complex(float32(data[i].Imag) / 32768.0, float32(data[i].Real) / 32768.0)
+		chunk[i] = complex(float32(data[i].Imag)/32768.0, float32(data[i].Real)/32768.0)
 	}
 
 	samplesFifo.Add(chunk)
 }
-func AddU8Fifo(data []spy2go.ComplexUInt8) {
+func addU8Fifo(data []spy2go.ComplexUInt8) {
 	var chunk = make([]complex64, len(data))
 	for i := 0; i < len(data); i++ {
-		chunk[i] = complex((float32(data[i].Imag) - 128) / 128.0, (float32(data[i].Real)  - 128) / 128.0)
+		chunk[i] = complex((float32(data[i].Imag)-128)/128.0, (float32(data[i].Real)-128)/128.0)
 	}
 
 	samplesFifo.Add(chunk)
 }
 
-
-func InitDSP() {
+func initDSP() {
 	samplesFifo = fifo.NewQueue()
 }
 
-func StartDSP() {
-	if ! running {
+func startDSP() {
+	if !running {
 		running = true
 		go dspLoop()
 	}
 }
 
-func StopDSP() {
+func stopDSP() {
 	if running {
 		running = false
 	}

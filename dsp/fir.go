@@ -3,16 +3,16 @@ package dsp
 // region Complex Fir Filter
 
 type FirFilter struct {
-	taps []float32
+	taps          []float32
 	sampleHistory []complex64
-	tapsLen int
+	tapsLen       int
 }
 
 func MakeFirFilter(taps []float32) *FirFilter {
 	return &FirFilter{
-		taps: taps,
+		taps:          taps,
 		sampleHistory: make([]complex64, len(taps)),
-		tapsLen: len(taps),
+		tapsLen:       len(taps),
 	}
 }
 
@@ -21,7 +21,7 @@ func (f *FirFilter) Filter(data []complex64, length int) {
 	for i := 0; i < length; i++ {
 		DotProduct(&data[i], samples[i:i+f.tapsLen], f.taps)
 	}
-	f.sampleHistory = data[len(data) - f.tapsLen:]
+	f.sampleHistory = data[len(data)-f.tapsLen:]
 }
 
 func (f *FirFilter) FilterOut(data []complex64) []complex64 {
@@ -42,7 +42,7 @@ func (f *FirFilter) FilterDecimate(data []complex64, decimate int, length int) {
 		DotProduct(&data[i], samples[j:], f.taps)
 		j += decimate
 	}
-	f.sampleHistory = data[len(data) - f.tapsLen:]
+	f.sampleHistory = data[len(data)-f.tapsLen:]
 }
 
 func (f *FirFilter) FilterDecimateOut(data []complex64, decimate int) []complex64 {
@@ -57,7 +57,7 @@ func (f *FirFilter) FilterDecimateOut(data []complex64, decimate int) []complex6
 		}
 		output[i] = DotProductResult(sl, f.taps)
 	}
-	f.sampleHistory = samples[len(samples) - f.tapsLen:]
+	f.sampleHistory = samples[len(samples)-f.tapsLen:]
 	return output
 }
 
@@ -68,17 +68,17 @@ func (f *FirFilter) SetTaps(taps []float32) {
 // endregion
 // region Float Fir Filter
 
-
 type FloatFirFilter struct {
-	taps []float32
+	taps          []float32
 	sampleHistory []float32
-	tapsLen int
+	tapsLen       int
 }
+
 func MakeFloatFirFilter(taps []float32) *FloatFirFilter {
 	return &FloatFirFilter{
-		taps: taps,
+		taps:          taps,
 		sampleHistory: make([]float32, len(taps)),
-		tapsLen: len(taps),
+		tapsLen:       len(taps),
 	}
 }
 
@@ -87,7 +87,7 @@ func (f *FloatFirFilter) Filter(data []float32, length int) {
 	for i := 0; i < length; i++ {
 		DotProductFloat(&data[i], samples[i:], f.taps)
 	}
-	f.sampleHistory = data[len(data) - f.tapsLen:]
+	f.sampleHistory = data[len(data)-f.tapsLen:]
 }
 
 func (f *FloatFirFilter) FilterSingle(data []float32) float32 {
@@ -104,7 +104,7 @@ func (f *FloatFirFilter) FilterDecimate(data []float32, decimate int, length int
 			break
 		}
 	}
-	f.sampleHistory = data[len(data) - f.tapsLen:]
+	f.sampleHistory = data[len(data)-f.tapsLen:]
 }
 
 func (f *FloatFirFilter) FilterDecimateOut(data []float32, decimate int) []float32 {
@@ -115,7 +115,7 @@ func (f *FloatFirFilter) FilterDecimateOut(data []float32, decimate int) []float
 		var srcIdx = decimate * i
 		output[i] = DotProductFloatResult(samples[srcIdx:], f.taps)
 	}
-	f.sampleHistory = samples[len(samples) - f.tapsLen:]
+	f.sampleHistory = samples[len(samples)-f.tapsLen:]
 	return output
 }
 func (f *FloatFirFilter) FilterOut(data []float32) []float32 {
@@ -125,7 +125,7 @@ func (f *FloatFirFilter) FilterOut(data []float32) []float32 {
 	for i := 0; i < length; i++ {
 		output[i] = DotProductFloatResult(samples[i:], f.taps)
 	}
-	f.sampleHistory = samples[len(samples) - f.tapsLen:]
+	f.sampleHistory = samples[len(samples)-f.tapsLen:]
 	return output
 }
 

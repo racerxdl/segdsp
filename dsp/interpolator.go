@@ -1,19 +1,19 @@
 package dsp
 
 type Interpolator struct {
-	fir *FirFilter
+	fir                *FirFilter
 	interpolationRatio int
 }
 
 func MakeInterpolator(interpolationRatio int) *Interpolator {
 	return &Interpolator{
-		fir: MakeFirFilter(MakeLowPassFixed(1,1, float64(interpolationRatio) / 2, 63)),
+		fir:                MakeFirFilter(MakeLowPassFixed(1, 1, float64(interpolationRatio)/2, 63)),
 		interpolationRatio: interpolationRatio,
 	}
 }
 
 func (f *Interpolator) Work(data []complex64) []complex64 {
-	var output = make([]complex64, len(data) * f.interpolationRatio)
+	var output = make([]complex64, len(data)*f.interpolationRatio)
 
 	for i := 0; i < len(data); i++ {
 		var idx = i * f.interpolationRatio
@@ -27,21 +27,20 @@ func (f *Interpolator) Work(data []complex64) []complex64 {
 	return output
 }
 
-
 type FloatInterpolator struct {
-	fir *FloatFirFilter
+	fir                *FloatFirFilter
 	interpolationRatio int
 }
 
 func MakeFloatInterpolator(interpolationRatio int) *FloatInterpolator {
 	return &FloatInterpolator{
-		fir: MakeFloatFirFilter(MakeLowPassFixed(1,1, float64(interpolationRatio) / 2, 63)),
+		fir:                MakeFloatFirFilter(MakeLowPassFixed(1, 1, float64(interpolationRatio)/2, 63)),
 		interpolationRatio: interpolationRatio,
 	}
 }
 
 func (f *FloatInterpolator) Work(data []float32) []float32 {
-	var output = make([]float32, len(data) * f.interpolationRatio)
+	var output = make([]float32, len(data)*f.interpolationRatio)
 
 	for i := 0; i < len(data); i++ {
 		var idx = i * f.interpolationRatio

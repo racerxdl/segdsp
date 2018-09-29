@@ -1,42 +1,42 @@
 package demodcore
 
 import (
-	"github.com/racerxdl/segdsp/dsp"
 	"github.com/racerxdl/go.fifo"
+	"github.com/racerxdl/segdsp/dsp"
 	"github.com/racerxdl/segdsp/eventmanager"
-	"math"
 	"log"
+	"math"
 )
 
 type AMDemod struct {
-	sampleRate float64
-	outputRate uint32
-	firstStage *dsp.FirFilter
-	signalBw float64
-	decimation int
-	resampler *dsp.FloatResampler
-	finalStage *dsp.FloatFirFilter
-	outFifo *fifo.Queue
-	sql *dsp.Squelch
+	sampleRate   float64
+	outputRate   uint32
+	firstStage   *dsp.FirFilter
+	signalBw     float64
+	decimation   int
+	resampler    *dsp.FloatResampler
+	finalStage   *dsp.FloatFirFilter
+	outFifo      *fifo.Queue
+	sql          *dsp.Squelch
 	packedParams AMDemodParams
-	ev *eventmanager.EventManager
-	lastSquelch bool
-	ffAgc *dsp.FeedForwardAGC
+	ev           *eventmanager.EventManager
+	lastSquelch  bool
+	ffAgc        *dsp.FeedForwardAGC
 }
 
 type AMDemodParams struct {
-	SampleRate uint32
+	SampleRate      uint32
 	SignalBandwidth float64
-	OutputRate uint32
-	Squelch float32
-	SquelchAlpha float32
-	AudioCut float32
+	OutputRate      uint32
+	Squelch         float32
+	SquelchAlpha    float32
+	AudioCut        float32
 }
 
 func MakeCustomAMDemodulator(sampleRate uint32, signalBw float64, outputRate uint32, audioCut, squelch, squelchAlpha float32) *AMDemod {
 	var decim = int(math.Floor(float64(sampleRate) / signalBw))
 
-	if decim & 1 == 1 {
+	if decim&1 == 1 {
 		decim -= 1
 	}
 
@@ -60,13 +60,13 @@ func MakeCustomAMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 			dsp.MakeLowPassFixed(
 				1,
 				float64(sampleRate),
-				signalBw / 2,
+				signalBw/2,
 				127,
 			),
 		),
 		outputRate: outputRate,
 		decimation: decim,
-		resampler: dsp.MakeFloatResampler(32, resampleRate),
+		resampler:  dsp.MakeFloatResampler(32, resampleRate),
 		finalStage: dsp.MakeFloatFirFilter(
 			dsp.MakeLowPassFixed(
 				1,
@@ -76,17 +76,17 @@ func MakeCustomAMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 			),
 		),
 		outFifo: fifo.NewQueue(),
-		sql: sql,
+		sql:     sql,
 		packedParams: AMDemodParams{
-			SampleRate: sampleRate,
+			SampleRate:      sampleRate,
 			SignalBandwidth: signalBw,
-			OutputRate: outputRate,
-			Squelch: squelch,
-			SquelchAlpha: squelchAlpha,
-			AudioCut: audioCut,
+			OutputRate:      outputRate,
+			Squelch:         squelch,
+			SquelchAlpha:    squelchAlpha,
+			AudioCut:        audioCut,
 		},
 		lastSquelch: true,
-		ffAgc: agc,
+		ffAgc:       agc,
 	}
 }
 
@@ -107,7 +107,7 @@ func (f *AMDemod) GetLevel() float32 {
 }
 
 func (f *AMDemod) Work(data []complex64) interface{} {
-	var filteredData = f.firstStage.FilterDecimateOut(data,  f.decimation)
+	var filteredData = f.firstStage.FilterDecimateOut(data, f.decimation)
 	filteredData = f.sql.Work(filteredData)
 	filteredData = f.ffAgc.Work(filteredData)
 
@@ -126,7 +126,7 @@ func (f *AMDemod) Work(data []complex64) interface{} {
 		}
 		f.ev.Emit(evName, eventmanager.SquelchEventData{
 			Threshold: f.sql.GetThreshold(),
-			AvgValue: f.sql.GetAvgLevel(),
+			AvgValue:  f.sql.GetAvgLevel(),
 		})
 	}
 
@@ -145,8 +145,8 @@ func (f *AMDemod) Work(data []complex64) interface{} {
 
 		return DemodData{
 			OutputRate: f.outputRate,
-			Level: f.sql.GetAvgLevel(),
-			Data: outBuff,
+			Level:      f.sql.GetAvgLevel(),
+			Data:       outBuff,
 		}
 	}
 

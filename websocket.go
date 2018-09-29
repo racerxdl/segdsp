@@ -1,11 +1,11 @@
 package main
 
 import (
-	"net/http"
-	"log"
-	"github.com/gorilla/websocket"
 	"container/list"
 	"encoding/json"
+	"github.com/gorilla/websocket"
+	"log"
+	"net/http"
 	"runtime"
 )
 
@@ -13,7 +13,7 @@ var chanList = list.New()
 
 type conn struct {
 	stringc chan string
-	bytec chan []byte
+	bytec   chan []byte
 }
 
 func closeN(c *list.Element) {
@@ -54,7 +54,7 @@ func handleMessages(c *websocket.Conn) {
 	wsMutex.Lock()
 	var li = chanList.PushBack(conn{
 		stringc: cChannel,
-		bytec: bChannel,
+		bytec:   bChannel,
 	})
 	wsMutex.Unlock()
 	defer closeN(li)
@@ -80,20 +80,20 @@ func handleMessages(c *websocket.Conn) {
 		//	break
 		//}
 		select {
-			case msg := <-cChannel:
-				err = c.WriteMessage(websocket.TextMessage, []byte(msg))
-				if err != nil {
-					log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
-					running = false
-					break
-				}
-			case msg := <-bChannel:
-				err = c.WriteMessage(websocket.BinaryMessage, msg)
-				if err != nil {
-					log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
-					running = false
-					break
-				}
+		case msg := <-cChannel:
+			err = c.WriteMessage(websocket.TextMessage, []byte(msg))
+			if err != nil {
+				log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
+				running = false
+				break
+			}
+		case msg := <-bChannel:
+			err = c.WriteMessage(websocket.BinaryMessage, msg)
+			if err != nil {
+				log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
+				running = false
+				break
+			}
 		}
 
 		runtime.Gosched()

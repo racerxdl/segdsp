@@ -1,23 +1,23 @@
 package recorders
 
 import (
-	"os"
-	"fmt"
-	"encoding/json"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"log"
+	"os"
 )
 
 type FileRecorder struct {
 	baseFilename string
-	iqFile *os.File
-	audioFile *os.File
-	dataFile *os.File
-	audioAsWav bool
+	iqFile       *os.File
+	audioFile    *os.File
+	dataFile     *os.File
+	audioAsWav   bool
 
 	audioFilename string
-	iqFilename string
-	dataFilename string
+	iqFilename    string
+	dataFilename  string
 }
 
 func (f *FileRecorder) Open(params []interface{}) bool {

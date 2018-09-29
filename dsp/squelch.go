@@ -5,10 +5,10 @@ import (
 )
 
 type Squelch struct {
-	threshold float32
-	thresholddB float32
-	muted bool
-	filter *SinglePoleIIRFilter
+	threshold    float32
+	thresholddB  float32
+	muted        bool
+	filter       *SinglePoleIIRFilter
 	avgThreshold float32
 }
 
@@ -34,7 +34,7 @@ func (f *Squelch) SetAlpha(alpha float32) {
 
 func (f *Squelch) SetThreshold(dB float32) {
 	f.thresholddB = dB
-	f.threshold = float32(math.Pow(10, float64(dB / 10.0)))
+	f.threshold = float32(math.Pow(10, float64(dB/10.0)))
 }
 
 func (f *Squelch) GetThreshold() float32 {
@@ -47,7 +47,7 @@ func (f *Squelch) Work(data []complex64) []complex64 {
 	var avg = float32(0)
 	for i := 0; i < len(data); i++ {
 		v := data[i]
-		mag := real(v) * real(v) + imag(v) * imag(v)
+		mag := real(v)*real(v) + imag(v)*imag(v)
 		v2 := f.filter.Filter(mag)
 		avg += v2
 		out[i] = complex(0, 0)

@@ -1,13 +1,13 @@
 package dsp
 
 type RationalResampler struct {
-	decimator *Decimator
+	decimator    *Decimator
 	interpolator *Interpolator
 }
 
-func MakeRationalResampler(interpolationRatio, decimationRatio int) *RationalResampler{
+func MakeRationalResampler(interpolationRatio, decimationRatio int) *RationalResampler {
 	return &RationalResampler{
-		decimator: MakeDecimator(decimationRatio),
+		decimator:    MakeDecimator(decimationRatio),
 		interpolator: MakeInterpolator(interpolationRatio),
 	}
 }
@@ -18,13 +18,13 @@ func (f *RationalResampler) Work(data []complex64) []complex64 {
 }
 
 type FloatRationalResampler struct {
-	decimator *FloatDecimator
+	decimator    *FloatDecimator
 	interpolator *FloatInterpolator
 }
 
-func MakeFloatRationalResampler(interpolationRatio, decimationRatio int) *FloatRationalResampler{
+func MakeFloatRationalResampler(interpolationRatio, decimationRatio int) *FloatRationalResampler {
 	return &FloatRationalResampler{
-		decimator: MakeFloatDecimator(decimationRatio),
+		decimator:    MakeFloatDecimator(decimationRatio),
 		interpolator: MakeFloatInterpolator(interpolationRatio),
 	}
 }

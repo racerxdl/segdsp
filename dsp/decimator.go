@@ -1,14 +1,13 @@
 package dsp
 
-
 type Decimator struct {
-	fir *FirFilter
+	fir             *FirFilter
 	decimationRatio int
 }
 
 func MakeDecimator(decimationRatio int) *Decimator {
 	return &Decimator{
-		fir: MakeFirFilter(MakeLowPassFixed(1,1, 1 / (2 * float64(decimationRatio)), 127)),
+		fir:             MakeFirFilter(MakeLowPassFixed(1, 1, 1/(2*float64(decimationRatio)), 127)),
 		decimationRatio: decimationRatio,
 	}
 }
@@ -17,15 +16,14 @@ func (f *Decimator) Work(data []complex64) []complex64 {
 	return f.fir.FilterDecimateOut(data, f.decimationRatio)
 }
 
-
 type FloatDecimator struct {
-	fir *FloatFirFilter
+	fir             *FloatFirFilter
 	decimationRatio int
 }
 
 func MakeFloatDecimator(decimationRatio int) *FloatDecimator {
 	return &FloatDecimator{
-		fir: MakeFloatFirFilter(MakeLowPassFixed(1,1, 1 / (2 * float64(decimationRatio)), 127)),
+		fir:             MakeFloatFirFilter(MakeLowPassFixed(1, 1, 1/(2*float64(decimationRatio)), 127)),
 		decimationRatio: decimationRatio,
 	}
 }

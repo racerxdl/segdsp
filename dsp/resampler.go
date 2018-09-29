@@ -8,18 +8,18 @@ const bwPercent = 0.80
 
 // FloatResampler is a Polyphase Resampler based on GNU Radio Implementation
 type FloatResampler struct {
-	internalBuffer []float32
-	taps [][]float32
-	diffTaps [][]float32
-	filters []*FloatFirFilter
-	diffFilters []*FloatFirFilter
-	filterSize int
-	tapsPerFilter uint32
-	decimationRate uint32
-	filterRate float32
-	lastFilter int
+	internalBuffer       []float32
+	taps                 [][]float32
+	diffTaps             [][]float32
+	filters              []*FloatFirFilter
+	diffFilters          []*FloatFirFilter
+	filterSize           int
+	tapsPerFilter        uint32
+	decimationRate       uint32
+	filterRate           float32
+	lastFilter           int
 	estimatedPhaseChange float32
-	accumulator float32
+	accumulator          float32
 }
 
 func MakeFloatResampler(filterSize int, rate float32) *FloatResampler {
@@ -36,13 +36,12 @@ func MakeFloatResampler(filterSize int, rate float32) *FloatResampler {
 	}
 
 	if rate < 1 {
-		taps = MakeLowPassFixed(float64(filterSize), float64(filterSize), bandWidth - transitionWidth, filterSize * 8 )
+		taps = MakeLowPassFixed(float64(filterSize), float64(filterSize), bandWidth-transitionWidth, filterSize*8)
 	} else {
-		taps = MakeLowPassFixed(float64(filterSize), float64(filterSize), bandWidth - transitionWidth, filterSize )
+		taps = MakeLowPassFixed(float64(filterSize), float64(filterSize), bandWidth-transitionWidth, filterSize)
 	}
 
 	//taps = MakeLowPass(float64(filterSize), float64(filterSize), bandWidth, transitionWidth)
-
 
 	var nullTaps = make([]float32, filterSize)
 	var filters = make([]*FloatFirFilter, filterSize)
@@ -54,12 +53,12 @@ func MakeFloatResampler(filterSize int, rate float32) *FloatResampler {
 	}
 
 	var resampler = FloatResampler{
-		filterSize: filterSize,
-		lastFilter: (len(taps) / 2) % filterSize,
-		accumulator: 0,
+		filterSize:     filterSize,
+		lastFilter:     (len(taps) / 2) % filterSize,
+		accumulator:    0,
 		internalBuffer: make([]float32, 0),
-		filters: filters,
-		diffFilters: diffFilters,
+		filters:        filters,
+		diffFilters:    diffFilters,
 	}
 	resampler.setRate(rate)
 	resampler.setTaps(taps)
@@ -70,7 +69,7 @@ func MakeFloatResampler(filterSize int, rate float32) *FloatResampler {
 	var accInt = int64(acc)
 	var accFrac = acc - float64(accInt)
 
-	var endFilter = int64(math.Round(math.Mod(float64(resampler.lastFilter) - float64(iDelay) * float64(resampler.decimationRate) + float64(accInt), float64(filterSize))))
+	var endFilter = int64(math.Round(math.Mod(float64(resampler.lastFilter)-float64(iDelay)*float64(resampler.decimationRate)+float64(accInt), float64(filterSize))))
 
 	resampler.estimatedPhaseChange = float32(float64(resampler.lastFilter) - (float64(endFilter) + float64(accFrac)))
 
@@ -79,7 +78,7 @@ func MakeFloatResampler(filterSize int, rate float32) *FloatResampler {
 
 func (f *FloatResampler) setRate(rate float32) {
 	f.decimationRate = uint32(math.Floor(float64(f.filterSize) / float64(rate)))
-	f.filterRate = float32(float64(f.filterSize) / float64(rate) - float64(f.decimationRate))
+	f.filterRate = float32(float64(f.filterSize)/float64(rate) - float64(f.decimationRate))
 }
 
 func (f *FloatResampler) setTaps(taps []float32) {
@@ -93,8 +92,8 @@ func (f *FloatResampler) setTaps(taps []float32) {
 }
 
 func (f *FloatResampler) createTaps(taps []float32, ourTaps [][]float32, filter []*FloatFirFilter) {
-	f.tapsPerFilter = uint32(math.Ceil( float64(len(taps)) / float64(f.filterSize) ))
-	var tmpTaps = make([]float32, f.filterSize * int(f.tapsPerFilter))
+	f.tapsPerFilter = uint32(math.Ceil(float64(len(taps)) / float64(f.filterSize)))
+	var tmpTaps = make([]float32, f.filterSize*int(f.tapsPerFilter))
 
 	copy(tmpTaps, taps)
 
@@ -105,14 +104,14 @@ func (f *FloatResampler) createTaps(taps []float32, ourTaps [][]float32, filter 
 	for i := 0; i < int(f.filterSize); i++ {
 		ourTaps[i] = make([]float32, f.tapsPerFilter)
 		for j := 0; j < int(f.tapsPerFilter); j++ {
-			ourTaps[i][j] = tmpTaps[i + j * f.filterSize]
+			ourTaps[i][j] = tmpTaps[i+j*f.filterSize]
 		}
 		filter[i].SetTaps(ourTaps[i])
 	}
 }
 
 func (f *FloatResampler) filter(input []float32, length int) (int, []float32) {
-	var output = make([]float32, length * 4)
+	var output = make([]float32, length*4)
 	var read = 0
 	var wrote = 0
 	var j = f.lastFilter
@@ -122,7 +121,7 @@ func (f *FloatResampler) filter(input []float32, length int) (int, []float32) {
 			var o0 = f.filters[j].FilterSingle(input[read:])
 			var o1 = f.diffFilters[j].FilterSingle(input[read:])
 
-			output[wrote] = o0 + o1 * f.accumulator
+			output[wrote] = o0 + o1*f.accumulator
 			wrote++
 
 			f.accumulator += f.filterRate

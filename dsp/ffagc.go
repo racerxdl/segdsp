@@ -4,8 +4,8 @@ import "math"
 
 type FeedForwardAGC struct {
 	sampleHistory []complex64
-	reference float64
-	numSamples int
+	reference     float64
+	numSamples    int
 }
 
 const maxGain = float64(1e-4)
@@ -13,8 +13,8 @@ const maxGain = float64(1e-4)
 func MakeFeedForwardAGC(numSamples int, reference float32) *FeedForwardAGC {
 	return &FeedForwardAGC{
 		sampleHistory: make([]complex64, numSamples),
-		reference: float64(reference),
-		numSamples: numSamples,
+		reference:     float64(reference),
+		numSamples:    numSamples,
 	}
 }
 
@@ -30,7 +30,7 @@ func (f *FeedForwardAGC) Work(input []complex64) []complex64 {
 		}
 
 		gain = f.reference / maxEnv
-		output[i] = complex(float32(gain) * real(samples[i]), float32(gain) * imag(samples[i]))
+		output[i] = complex(float32(gain)*real(samples[i]), float32(gain)*imag(samples[i]))
 	}
 
 	f.sampleHistory = samples[len(samples)-f.numSamples:]
@@ -43,8 +43,8 @@ func envelope(c complex64) float64 {
 	imagAbs := math.Abs(float64(real(c)))
 
 	if realAbs > imagAbs {
-		return realAbs + 0.4 * imagAbs
+		return realAbs + 0.4*imagAbs
 	} else {
-		return imagAbs + 0.4 * realAbs
+		return imagAbs + 0.4*realAbs
 	}
 }

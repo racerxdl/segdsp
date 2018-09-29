@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
-	"strconv"
 	"github.com/racerxdl/segdsp/recorders"
 	"log"
+	"os"
+	"strconv"
 )
 
 // region Modes
@@ -14,7 +14,7 @@ import (
 const modeFM = "FM"
 const modeAM = "AM"
 
-var modes = []string {modeFM, modeAM}
+var modes = []string{modeFM, modeAM}
 
 // endregion
 
@@ -42,6 +42,7 @@ const envSquelchAlpha = "SQUELCH_ALPHA"
 // region FM Demodulator Options
 const envFMDeviation = "FM_DEVIATION"
 const envFMTau = "FM_TAU"
+
 // endregion
 
 // region AM Demodulator Options
@@ -74,7 +75,7 @@ var tcpCanControlFlag = flag.Bool("tcpCanControl", true, "If TCP Clients can con
 var recordFlag = flag.Bool("record", false, "If it should record when not squelched")
 var recordMethodFlag = flag.String("recordMethod", recorders.RecFile, "Method to use when recording")
 
-var presetFlag = flag.String("preset", "none", "Preset for Demodulator Params")
+var presetFlag = flag.String("preset", "none", "presetStruct for Demodulator Params")
 
 var squelchFlag = flag.Float64("squelch", -72, "Demodulator Squelch in dB")
 var squelchAlphaFlag = flag.Float64("squelchAlpha", 0.001, "Demodulator Squelch Filter Alpha")
@@ -83,10 +84,12 @@ var squelchAlphaFlag = flag.Float64("squelchAlpha", 0.001, "Demodulator Squelch 
 var filterBandwidthFlag = flag.Uint("filterBandwidth", 120e3, "First Stage Filter Bandwidth in Hertz")
 var fmDeviationFlag = flag.Uint("fmDeviation", 75e3, "FM Demodulator Max Deviation in Hertz")
 var fmTauFlag = flag.Float64("fmTau", 75e-6, "FM Demodulator Tau in seconds (0 to disable)")
+
 // endregion
 
 // region AM Demodulator Flags
 var amAudioCutFlag = flag.Float64("amAudioCut", 5000, "AM Low Pass Filter Cut")
+
 // endregion
 
 // endregion
@@ -118,9 +121,10 @@ var tcpCanControl bool
 var record bool
 var recordMethod string
 var preset string
+
 // endregion
 
-func ApplyPreset(preset Preset) {
+func applyPreset(preset presetStruct) {
 	log.Printf("PRESET: Setting Output Rate to %d Hz\n", preset.outputRate)
 	log.Printf("PRESET: Setting Demod Mode to %s\n", preset.demodMode)
 	log.Printf("PRESET: Setting First Stage Filter to %f Hz\n", preset.filterBandwidth)
@@ -130,29 +134,31 @@ func ApplyPreset(preset Preset) {
 	os.Setenv(envFSBW, strconv.FormatFloat(preset.filterBandwidth, 'E', -1, 32))
 
 	switch preset.demodMode {
-	case modeFM: ApplyFMPreset(preset)
-	case modeAM: ApplyAMPreset(preset)
+	case modeFM:
+		applyFMPreset(preset)
+	case modeAM:
+		applyAMPreset(preset)
 	}
 }
 
-func ApplyFMPreset(preset Preset) {
+func applyFMPreset(preset presetStruct) {
 	log.Printf("PRESET: Setting FM Tau to %f\n", preset.demodOptions["tau"].(float64))
 	log.Printf("PRESET: Setting FM Devation to %f Hz\n", preset.demodOptions["devation"].(float64))
 	os.Setenv(envFMTau, strconv.FormatFloat(preset.demodOptions["tau"].(float64), 'E', -1, 32))
 	os.Setenv(envFMDeviation, strconv.FormatFloat(preset.demodOptions["deviation"].(float64), 'E', -1, 32))
 }
 
-func ApplyAMPreset(preset Preset) {
+func applyAMPreset(preset presetStruct) {
 	log.Printf("PRESET: Setting AM Audio Cut to %f\n", preset.demodOptions["audioCut"].(float64))
 	os.Setenv(envAMAudioCut, strconv.FormatFloat(preset.demodOptions["audioCut"].(float64), 'E', -1, 32))
 }
 
-func SetEnv() {
+func setEnv() {
 	flag.Parse()
-	// region Parse Preset
-	if val, ok := Presets[preset]; ok {
+	// region Parse presetStruct
+	if val, ok := presets[preset]; ok {
 		log.Printf("Selected %s preset.\n", val.name)
-		ApplyPreset(val)
+		applyPreset(val)
 	}
 	// endregion
 	// region Fill Environment

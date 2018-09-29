@@ -1,8 +1,8 @@
 package dsp
 
 type SinglePoleIIRFilter struct {
-	alpha float32
-	alpham1 float32
+	alpha          float32
+	alpham1        float32
 	previousOutput float32
 }
 
@@ -12,14 +12,14 @@ func MakeSinglePoleIIRFilter(alpha float32) *SinglePoleIIRFilter {
 	}
 
 	return &SinglePoleIIRFilter{
-		alpha: alpha,
-		alpham1: 1.0 - alpha,
+		alpha:          alpha,
+		alpham1:        1.0 - alpha,
 		previousOutput: 0,
 	}
 }
 
 func (f *SinglePoleIIRFilter) Filter(input float32) float32 {
-	output := f.alpha * input + f.alpham1 * f.previousOutput
+	output := f.alpha*input + f.alpham1*f.previousOutput
 	f.previousOutput = output
 	return output
 }
@@ -34,7 +34,7 @@ func (f *SinglePoleIIRFilter) FilterArray(input []float32) []float32 {
 
 func (f *SinglePoleIIRFilter) SetTaps(alpha float32) {
 	f.alpha = alpha
-	f.alpham1 =  1.0 - alpha
+	f.alpham1 = 1.0 - alpha
 }
 
 func (f *SinglePoleIIRFilter) GetPreviousOutput() float32 {
@@ -45,10 +45,10 @@ type IIRFilter struct {
 	fftaps []float32
 	fbtaps []float32
 
-	latestN int
-	latestM int
+	latestN    int
+	latestM    int
 	prevOutput []float32
-	prevInput []float32
+	prevInput  []float32
 }
 
 func MakeIIRFilter(ataps, btaps []float32) *IIRFilter {
@@ -63,12 +63,12 @@ func MakeIIRFilter(ataps, btaps []float32) *IIRFilter {
 	}
 
 	return &IIRFilter{
-		fftaps: ataps,
-		fbtaps: btaps,
-		latestM: 0,
-		latestN: 0,
-		prevInput: make([]float32, 2 * n),
-		prevOutput: make([]float32, 2 * m),
+		fftaps:     ataps,
+		fbtaps:     btaps,
+		latestM:    0,
+		latestN:    0,
+		prevInput:  make([]float32, 2*n),
+		prevOutput: make([]float32, 2*m),
 	}
 }
 
@@ -94,10 +94,10 @@ func (f *IIRFilter) Filter(input float32) float32 {
 	var acc = f.fftaps[0] * input
 
 	for i := 1; i < n; i++ {
-		acc += f.fftaps[i] * f.prevInput[latestN + i]
+		acc += f.fftaps[i] * f.prevInput[latestN+i]
 	}
 	for i := 1; i < m; i++ {
-		acc += f.fbtaps[i] * f.prevOutput[latestM + i]
+		acc += f.fbtaps[i] * f.prevOutput[latestM+i]
 	}
 
 	f.prevOutput[latestM] = acc
