@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-const fifoSize = 1024 * 1024
-
 var samplesFifo *fifo.Queue
 var demodulator demodcore.DemodCore
 var running = false
@@ -69,7 +67,7 @@ func dspRun() {
 
 	var t0 = time.Now()
 	var out = demodulator.Work(buffer)
-	var d = time.Now().Sub(t0)
+	var d = time.Since(t0)
 	delta += d.Seconds()
 	count++
 

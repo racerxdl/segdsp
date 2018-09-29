@@ -21,6 +21,9 @@ func (u JsonFloat32) MarshalJSON() ([]byte, error) {
 
 func (u JsonFloat32) MarshalByteArray() []byte {
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.LittleEndian, u)
+	err := binary.Write(buf, binary.LittleEndian, u)
+	if err != nil {
+		panic(err)
+	}
 	return buf.Bytes()
 }

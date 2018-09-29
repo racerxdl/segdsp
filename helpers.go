@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"math"
-	"strings"
 )
 
 type jsonUint8s []uint8
@@ -14,22 +12,25 @@ type jsonUint8s []uint8
 func (u jsonUint8s) MarshalJSON() ([]byte, error) {
 	buf := bytes.NewBufferString("")
 	enc := base64.NewEncoder(base64.StdEncoding, buf)
-	enc.Write(u)
-	enc.Close()
-	return json.Marshal(string(buf.Bytes()))
-}
-
-type jsonInt16s []int16
-
-func (u jsonInt16s) MarshalJSON() ([]byte, error) {
-	var result string
-	if u == nil {
-		result = "null"
-	} else {
-		result = strings.Join(strings.Fields(fmt.Sprintf("%d", u)), ",")
+	_, err := enc.Write(u)
+	if err != nil {
+		panic(err)
 	}
-	return []byte(result), nil
+	enc.Close()
+	return json.Marshal(buf.String())
 }
+
+//type jsonInt16s []int16
+//
+//func (u jsonInt16s) MarshalJSON() ([]byte, error) {
+//	var result string
+//	if u == nil {
+//		result = "null"
+//	} else {
+//		result = strings.Join(strings.Fields(fmt.Sprintf("%d", u)), ",")
+//	}
+//	return []byte(result), nil
+//}
 
 type fftMessage struct {
 	MessageType      string

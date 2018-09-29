@@ -44,7 +44,12 @@ func (f *FileRecorder) Open(params []interface{}) bool {
 		panic(err)
 	}
 
-	metaFile.Write(metadataJson)
+	_, err = metaFile.Write(metadataJson)
+
+	if err != nil {
+		panic(err)
+	}
+
 	metaFile.Close()
 
 	f.baseFilename = baseFilename
@@ -85,7 +90,10 @@ func (f *FileRecorder) WriteIQ(data []complex64) {
 		}
 	}
 
-	binary.Write(f.iqFile, binary.LittleEndian, data)
+	err := binary.Write(f.iqFile, binary.LittleEndian, data)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (f *FileRecorder) WriteAudio(data []float32) {
@@ -99,7 +107,10 @@ func (f *FileRecorder) WriteAudio(data []float32) {
 		}
 	}
 
-	binary.Write(f.audioFile, binary.LittleEndian, data)
+	err := binary.Write(f.audioFile, binary.LittleEndian, data)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (f *FileRecorder) WriteData(data []byte) {
@@ -112,5 +123,8 @@ func (f *FileRecorder) WriteData(data []byte) {
 		}
 	}
 
-	f.dataFile.Write(data)
+	_, err := f.dataFile.Write(data)
+	if err != nil {
+		panic(err)
+	}
 }

@@ -50,13 +50,13 @@ func startRecording() {
 	recordMutex.Unlock()
 }
 
-func recordIQ(data []complex64) {
-	recordMutex.Lock()
-	if recordingParams.recorderEnable && recorder != nil && recordingParams.recording {
-		go recorder.WriteIQ(data)
-	}
-	recordMutex.Unlock()
-}
+//func recordIQ(data []complex64) {
+//	recordMutex.Lock()
+//	if recordingParams.recorderEnable && recorder != nil && recordingParams.recording {
+//		go recorder.WriteIQ(data)
+//	}
+//	recordMutex.Unlock()
+//}
 
 func recordAudio(data []float32) {
 	recordMutex.Lock()
@@ -66,13 +66,13 @@ func recordAudio(data []float32) {
 	recordMutex.Unlock()
 }
 
-func recordData(data []byte) {
-	recordMutex.Lock()
-	if recordingParams.recorderEnable && recorder != nil && recordingParams.recording {
-		go recorder.WriteData(data)
-	}
-	recordMutex.Unlock()
-}
+//func recordData(data []byte) {
+//	recordMutex.Lock()
+//	if recordingParams.recorderEnable && recorder != nil && recordingParams.recording {
+//		go recorder.WriteData(data)
+//	}
+//	recordMutex.Unlock()
+//}
 
 func stopRecording() {
 	recordMutex.Lock()

@@ -106,6 +106,7 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 			MaxDeviation:    maxDeviation,
 		},
 		lastSquelch: true,
+		signalBw:    signalBw,
 	}
 }
 

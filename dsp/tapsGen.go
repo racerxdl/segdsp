@@ -165,7 +165,7 @@ func MakeLowPassFixed(gain, sampleRate, cutFrequency float64, length int) []floa
 	var sum = 0.0
 
 	for i := 0; i < length; i++ {
-		var val = float64(0.0)
+		var val float64
 		if i == center {
 			val = 2 * math.Pi * float64(frequency)
 		} else {

@@ -87,6 +87,7 @@ func MakeCustomAMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 		},
 		lastSquelch: true,
 		ffAgc:       agc,
+		signalBw:    signalBw,
 	}
 }
 

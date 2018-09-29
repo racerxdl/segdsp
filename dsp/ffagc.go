@@ -19,8 +19,8 @@ func MakeFeedForwardAGC(numSamples int, reference float32) *FeedForwardAGC {
 }
 
 func (f *FeedForwardAGC) Work(input []complex64) []complex64 {
+	var gain float64
 	output := make([]complex64, len(input))
-	gain := float64(0.0)
 	samples := append(f.sampleHistory, input...)
 
 	for i := 0; i < len(output); i++ {

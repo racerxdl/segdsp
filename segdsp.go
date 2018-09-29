@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/racerxdl/segdsp/demodcore"
@@ -82,7 +83,6 @@ func sendData(data interface{}) {
 		var b = data.(demodcore.DemodData)
 		go broadcastBMessage(b.Data.MarshalByteArray())
 		go recordAudio(b.Data)
-		break
 	default:
 		var j = makeDataMessage(data)
 		m, err := json.Marshal(j)
@@ -90,7 +90,6 @@ func sendData(data interface{}) {
 			log.Println("Error serializing JSON: ", err)
 		}
 		go broadcastMessage(string(m))
-		break
 	}
 	//log.Println("Sending buffer")
 }
@@ -129,6 +128,7 @@ func onSquelchOff(data eventmanager.SquelchEventData) {
 }
 
 func main() {
+	var err error
 	setEnv()
 	log.SetFlags(0)
 
@@ -139,7 +139,10 @@ func main() {
 			return
 		}
 		log.Println("Starting CPU Profile")
-		pprof.StartCPUProfile(f)
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			panic(err)
+		}
 		defer pprof.StopCPUProfile()
 	}
 
@@ -161,7 +164,7 @@ func main() {
 				onSquelchOff(msg.(eventmanager.SquelchEventData))
 			}
 		}
-		log.Println("Ending Handler loop")
+		//log.Println("Ending Handler loop")
 	}()
 
 	recorder = &recorders.FileRecorder{}
@@ -241,7 +244,10 @@ func main() {
 
 	<-done
 
-	srv.Shutdown(nil)
+	err = srv.Shutdown(context.TODO())
+	if err != nil {
+		log.Println(err)
+	}
 
 	log.Print("Stopping")
 	spyserver.Stop()
