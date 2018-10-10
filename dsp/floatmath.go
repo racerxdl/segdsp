@@ -5,9 +5,9 @@ import "math"
 // All Functions here are from Standard Go Library but ported to float32
 
 const (
-	mask     = 0x7FF
-	shift    = 32 - 8 - 1
-	bias     = 255
+	mask  = 0x7FF
+	shift = 32 - 8 - 1
+	bias  = 255
 	//signMask = 1 << 31
 	//fracMask = 1<<shift - 1
 )
