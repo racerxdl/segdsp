@@ -35,6 +35,10 @@ func (f *FirFilter) FilterOut(data []complex64) []complex64 {
 	return output
 }
 
+func (f *FirFilter) FilterSingle(data []complex64) complex64 {
+	return DotProductResult(data, f.taps)
+}
+
 func (f *FirFilter) FilterDecimate(data []complex64, decimate int, length int) {
 	var samples = append(f.sampleHistory, data...)
 	var j = 0

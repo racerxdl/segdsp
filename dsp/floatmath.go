@@ -4,6 +4,14 @@ import "math"
 
 // All Functions here are from Standard Go Library but ported to float32
 
+const (
+	mask     = 0x7FF
+	shift    = 32 - 8 - 1
+	bias     = 255
+	signMask = 1 << 31
+	fracMask = 1<<shift - 1
+)
+
 /*
 	Floating-point arctangent.
 */
@@ -172,4 +180,57 @@ func Atan2(y, x float32) float32 {
 		return q - math.Pi
 	}
 	return q
+}
+
+func Abs(x float32) float32 {
+	return math.Float32frombits(math.Float32bits(x) &^ (1 << 31))
+}
+
+func Clip(v, max float32) float32 {
+	return 0.5 * (Abs(v+max) - Abs(v-max))
+}
+
+func Modf(f float32) (int float32, frac float32) {
+	if f < 1 {
+		switch {
+		case f < 0:
+			int, frac = Modf(-f)
+			return -int, -frac
+		case f == 0:
+			return f, f // Return -0, -0 when f == -0
+		}
+		return 0, f
+	}
+
+	x := math.Float32bits(f)
+	e := uint(x>>shift)&mask - bias
+
+	// Keep the top 8+e bits, the integer part; clear the rest.
+	if e < 32-8 {
+		x &^= 1<<(32-8-e) - 1
+	}
+	int = math.Float32frombits(x)
+	frac = f - int
+	return
+}
+
+// Floor returns the greatest integer value less than or equal to x.
+//
+// Special cases are:
+//	Floor(±0) = ±0
+//	Floor(±Inf) = ±Inf
+//	Floor(NaN) = NaN
+func Floor(x float32) float32 {
+	if x == 0 || IsNaN(x) || IsInf(x, 0) {
+		return x
+	}
+	if x < 0 {
+		d, fract := Modf(-x)
+		if fract != 0.0 {
+			d = d + 1
+		}
+		return -d
+	}
+	d, _ := Modf(x)
+	return d
 }
