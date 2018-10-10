@@ -8,8 +8,8 @@ const (
 	mask     = 0x7FF
 	shift    = 32 - 8 - 1
 	bias     = 255
-	signMask = 1 << 31
-	fracMask = 1<<shift - 1
+	//signMask = 1 << 31
+	//fracMask = 1<<shift - 1
 )
 
 /*

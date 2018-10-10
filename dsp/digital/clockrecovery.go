@@ -8,7 +8,6 @@ const ccHistoryLength = 3
 const fudgeFactor = 16
 
 type ComplexClockRecovery struct {
-	lastSample         complex64
 	consumed           int
 	sampleHistoryCount int
 	sampleHistory      []complex64
@@ -104,7 +103,7 @@ func slicer(sample complex64) complex64 {
 		i = 1
 	}
 
-	return complex(r, i)
+	return complex64(complex(r, i))
 }
 
 func (ccr *ComplexClockRecovery) internalWork(input []complex64) []complex64 {
