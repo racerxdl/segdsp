@@ -2,13 +2,13 @@ package dsp
 
 type Rotator struct {
 	phaseIncrement complex64
-	counter int
-	lastPhase complex64
+	counter        int
+	lastPhase      complex64
 }
 
 func MakeRotator() *Rotator {
 	return &Rotator{
-		counter: 0,
+		counter:   0,
 		lastPhase: 0,
 	}
 }
@@ -18,7 +18,7 @@ func (r *Rotator) SetPhase(p complex64) {
 }
 
 func (r *Rotator) SetPhaseIncrement(increment complex64) {
-	r.phaseIncrement = complex(real(increment) / ComplexAbs(increment), imag(increment) / ComplexAbs(increment))
+	r.phaseIncrement = complex(real(increment)/ComplexAbs(increment), imag(increment)/ComplexAbs(increment))
 }
 
 func (r *Rotator) rotate(d complex64) complex64 {
@@ -28,8 +28,8 @@ func (r *Rotator) rotate(d complex64) complex64 {
 
 	r.lastPhase = r.lastPhase * r.phaseIncrement
 
-	if r.counter % 512 == 0 {
-		r.lastPhase = complex(real(r.lastPhase) / ComplexAbs(r.lastPhase), imag(r.lastPhase) / ComplexAbs(r.lastPhase))
+	if r.counter%512 == 0 {
+		r.lastPhase = complex(real(r.lastPhase)/ComplexAbs(r.lastPhase), imag(r.lastPhase)/ComplexAbs(r.lastPhase))
 	}
 
 	return z

@@ -15,8 +15,8 @@ func ComplexDotProduct(result *complex64, input []complex64, taps []complex64) {
 	var res = complex64(complex(0, 0))
 
 	for i := 0; i < length; i++ {
-		var r = real(input[i]) * real(taps[i]) - imag(input[i]) * imag(taps[i])
-		var i = real(input[i]) * imag(taps[i]) + imag(input[i]) * real(taps[i])
+		var r = real(input[i])*real(taps[i]) - imag(input[i])*imag(taps[i])
+		var i = real(input[i])*imag(taps[i]) + imag(input[i])*real(taps[i])
 
 		res += complex(r, i)
 	}
@@ -30,8 +30,8 @@ func ComplexDotProductResult(input []complex64, taps []complex64) complex64 {
 	var res = complex64(complex(0, 0))
 
 	for i := 0; i < length; i++ {
-		var r = real(input[i]) * real(taps[i]) - imag(input[i]) * imag(taps[i])
-		var i = real(input[i]) * imag(taps[i]) + imag(input[i]) * real(taps[i])
+		var r = real(input[i])*real(taps[i]) - imag(input[i])*imag(taps[i])
+		var i = real(input[i])*imag(taps[i]) + imag(input[i])*real(taps[i])
 
 		res += complex(r, i)
 	}

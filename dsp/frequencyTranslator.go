@@ -6,21 +6,25 @@ import (
 )
 
 type FrequencyTranslator struct {
-	filter *CTFirFilter
-	baseTaps []complex64
+	filter          *CTFirFilter
+	baseTaps        []complex64
 	centerFrequency float32
-	sampleRate float32
-	decimation int
-	rotator *Rotator
+	sampleRate      float32
+	decimation      int
+	rotator         *Rotator
 }
 
 func MakeFrequencyTranslatorComplexTaps(decimation int, centerFrequency, sampleRate float32, taps []complex64) *FrequencyTranslator {
-	return &FrequencyTranslator{
-		baseTaps: taps,
-		sampleRate: sampleRate,
+	var ft = FrequencyTranslator{
+		baseTaps:        taps,
+		sampleRate:      sampleRate,
 		centerFrequency: centerFrequency,
-		decimation: decimation,
+		decimation:      decimation,
 	}
+
+	ft.updateFilter()
+
+	return &ft
 }
 
 func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32, taps []float32) *FrequencyTranslator {
@@ -30,13 +34,17 @@ func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32
 		baseTaps[i] = complex(taps[i], 0)
 	}
 
-	return &FrequencyTranslator{
-		baseTaps: baseTaps,
-		sampleRate: sampleRate,
+	var ft = FrequencyTranslator{
+		baseTaps:        baseTaps,
+		sampleRate:      sampleRate,
 		centerFrequency: centerFrequency,
-		decimation: decimation,
-		rotator: MakeRotator(),
+		decimation:      decimation,
+		rotator:         MakeRotator(),
 	}
+
+	ft.updateFilter()
+
+	return &ft
 }
 
 func (ft *FrequencyTranslator) updateFilter() {
@@ -44,10 +52,10 @@ func (ft *FrequencyTranslator) updateFilter() {
 	var shift = 2 * math.Pi * (ft.centerFrequency / ft.sampleRate)
 
 	for i := 0; i < len(newTaps); i++ {
-		newTaps[i] = complex64(complex128(ft.baseTaps[i]) * cmplx.Exp(complex(0, float64(i) * float64(shift))))
+		newTaps[i] = complex64(complex128(ft.baseTaps[i]) * cmplx.Exp(complex(0, float64(i)*float64(shift))))
 	}
 
-	ft.rotator.SetPhaseIncrement(cmplx.Exp(complex(0, float64(-shift * float32(ft.decimation)))))
+	ft.rotator.SetPhaseIncrement(complex64(cmplx.Exp(complex(0, float64(-shift*float32(ft.decimation))))))
 
 	ft.filter = MakeCTFirFilter(newTaps)
 }

@@ -110,7 +110,6 @@ func Atan(x float32) float32 {
 	return -satan(-x)
 }
 
-
 // Hypot returns Sqrt(p*p + q*q), taking care to avoid
 // unnecessary overflow and underflow.
 //
@@ -142,7 +141,6 @@ func Hypot(p, q float32) float32 {
 	q = q / p
 	return p * float32(math.Sqrt(float64(1+q*q)))
 }
-
 
 func ComplexAbs(x complex64) float32 { return Hypot(real(x), imag(x)) }
 
