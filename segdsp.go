@@ -7,7 +7,8 @@ import (
 	"github.com/racerxdl/segdsp/demodcore"
 	"github.com/racerxdl/segdsp/eventmanager"
 	"github.com/racerxdl/segdsp/recorders"
-	"github.com/racerxdl/spy2go"
+	"github.com/racerxdl/spy2go/spyserver"
+	"github.com/racerxdl/spy2go/spytypes"
 	"log"
 	"net/http"
 	"os"
@@ -17,26 +18,35 @@ import (
 	"time"
 )
 
-func onInt16IQ(data []spy2go.ComplexInt16) {
-	go addS16Fifo(data)
-}
-func onUInt8IQ(data []spy2go.ComplexUInt8) {
-	go addU8Fifo(data)
+type segdspCallback struct {
+	ss *spyserver.Spyserver
 }
 
-func onDeviceSync(spyserver *spy2go.Spyserver) {
+func (cb *segdspCallback) OnData(dType int, data interface{}) {
+	if dType == spytypes.SamplesComplex32 {
+		go addS16Fifo(data.([]spytypes.ComplexInt16))
+	} else if dType == spytypes.SamplesComplexUInt8 {
+		go addU8Fifo(data.([]spytypes.ComplexUInt8))
+	} else if dType == spytypes.DeviceSync {
+		onDeviceSync(cb.ss)
+	} else if dType == spytypes.FFTUInt8 {
+		onFFT(data.([]byte))
+	}
+}
+
+func onDeviceSync(ss *spyserver.Spyserver) {
 	var d = deviceMessage{
-		DeviceName: spyserver.GetName(),
+		DeviceName: ss.GetName(),
 
-		DisplayCenterFrequency: spyserver.GetDisplayCenterFrequency(),
-		DisplayBandwidth:       spyserver.GetDisplayBandwidth(),
-		DisplayOffset:          spyserver.GetDisplayOffset(),
-		DisplayRange:           spyserver.GetDisplayRange(),
-		DisplayPixels:          spyserver.GetDisplayPixels(),
+		DisplayCenterFrequency: ss.GetDisplayCenterFrequency(),
+		DisplayBandwidth:       ss.GetDisplayBandwidth(),
+		DisplayOffset:          ss.GetDisplayOffset(),
+		DisplayRange:           ss.GetDisplayRange(),
+		DisplayPixels:          ss.GetDisplayPixels(),
 
-		CurrentSampleRate:      spyserver.GetSampleRate(),
-		ChannelCenterFrequency: spyserver.GetCenterFrequency(),
-		Gain:              spyserver.GetGain(),
+		CurrentSampleRate:      ss.GetSampleRate(),
+		ChannelCenterFrequency: ss.GetCenterFrequency(),
+		Gain:              ss.GetGain(),
 		OutputRate:        uint32(outputRate),
 		FilterBandwidth:   uint32(filterBandwidth),
 		DemodulatorMode:   demodulatorMode,
@@ -57,7 +67,7 @@ func onDeviceSync(spyserver *spy2go.Spyserver) {
 }
 
 func refreshDevice() {
-	sendPacket := currDevice.Gain != spy2go.InvalidValue
+	sendPacket := currDevice.Gain != spyserver.InvalidValue
 	if sendPacket {
 		m, err := json.Marshal(currDevice)
 		if err != nil {
@@ -176,51 +186,47 @@ func main() {
 
 	initDSP()
 
-	var spyserver = spy2go.MakeSpyserverByFullHS(spyserverhost)
-
-	var cb = spy2go.CallbackBase{
-		OnDeviceSync: func() { onDeviceSync(spyserver) },
-		OnUInt8IQ:    onUInt8IQ,
-		OnInt16IQ:    onInt16IQ,
-		OnFFT:        onFFT,
+	var ss = spyserver.MakeSpyserverByFullHS(spyserverhost)
+	var cb = segdspCallback{
+		ss: ss,
 	}
 
-	spyserver.SetCallback(&cb)
+	ss.SetCallback(&cb)
 
-	spyserver.Connect()
-	defer spyserver.Disconnect()
+	ss.Connect()
+	defer ss.Disconnect()
 
-	log.Println(fmt.Sprintf("Device: %s", spyserver.GetName()))
-	var srs = spyserver.GetAvailableSampleRates()
+	log.Println(fmt.Sprintf("Device: %s", ss.GetName()))
+	var srs = ss.GetAvailableSampleRates()
 
 	log.Println("Available SampleRates:")
 	for i := 0; i < len(srs); i++ {
 		log.Println(fmt.Sprintf("		%f msps (dec stage %d)", float32(srs[i])/1e6, i))
 	}
 
-	spyserver.SetStreamingMode(spy2go.StreamModeFFTIQ)
-	//spyserver.SetStreamingMode(spy2go.StreamModeIQOnly)
-	spyserver.SetDisplayPixels(uint32(displayPixels))
-	spyserver.SetDisplayDecimationStage(uint32(displayDecimationStage))
-	spyserver.SetDisplayCenterFrequency(uint32(displayFrequency))
-	spyserver.SetDisplayRange(90)
-	spyserver.SetDisplayOffset(0)
+	ss.SetStreamingMode(spyserver.StreamModeFFTIQ)
+	//ss.SetStreamingMode(spy2go.StreamModeIQOnly)
+	ss.SetDisplayPixels(uint32(displayPixels))
+	ss.SetDisplayDecimationStage(uint32(displayDecimationStage))
+	ss.SetDisplayCenterFrequency(uint32(displayFrequency))
+	ss.SetDisplayRange(90)
+	ss.SetDisplayOffset(0)
 
-	if spyserver.SetDecimationStage(uint32(channelDecimationStage)) == spy2go.InvalidValue {
+	if ss.SetDecimationStage(uint32(channelDecimationStage)) == spyserver.InvalidValue {
 		log.Println("Error setting sample rate.")
 	}
-	if spyserver.SetCenterFrequency(uint32(channelFrequency)) == spy2go.InvalidValue {
+	if ss.SetCenterFrequency(uint32(channelFrequency)) == spyserver.InvalidValue {
 		log.Println("Error setting center frequency.")
 	}
 
 	time.Sleep(10 * time.Millisecond)
 
-	log.Println("IQ Sample Rate: ", spyserver.GetSampleRate())
-	log.Println("IQ Center Frequency ", spyserver.GetCenterFrequency())
-	log.Println("FFT Center Frequency ", spyserver.GetDisplayCenterFrequency())
-	log.Println("FFT Sample Rate: ", spyserver.GetDisplaySampleRate())
+	log.Println("IQ Sample Rate: ", ss.GetSampleRate())
+	log.Println("IQ Center Frequency ", ss.GetCenterFrequency())
+	log.Println("FFT Center Frequency ", ss.GetDisplayCenterFrequency())
+	log.Println("FFT Sample Rate: ", ss.GetDisplaySampleRate())
 
-	demodulator = buildDSP(spyserver.GetSampleRate())
+	demodulator = buildDSP(ss.GetSampleRate())
 	demodulator.SetEventManager(&ev)
 
 	dspCb = sendData
@@ -240,7 +246,7 @@ func main() {
 	startDSP()
 
 	log.Println("Starting")
-	spyserver.Start()
+	ss.Start()
 
 	<-done
 
@@ -250,7 +256,7 @@ func main() {
 	}
 
 	log.Print("Stopping")
-	spyserver.Stop()
+	ss.Stop()
 	stopDSP()
 
 	fmt.Println("Work Done")

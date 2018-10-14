@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/racerxdl/go.fifo"
 	"github.com/racerxdl/segdsp/demodcore"
-	"github.com/racerxdl/spy2go"
+	"github.com/racerxdl/spy2go/spytypes"
 	"runtime"
 	"time"
 )
@@ -17,7 +17,7 @@ var count = 0
 
 var dspCb func(interface{})
 
-func addS16Fifo(data []spy2go.ComplexInt16) {
+func addS16Fifo(data []spytypes.ComplexInt16) {
 	var chunk = make([]complex64, len(data))
 	for i := 0; i < len(data); i++ {
 		chunk[i] = complex(float32(data[i].Imag)/32768.0, float32(data[i].Real)/32768.0)
@@ -25,7 +25,7 @@ func addS16Fifo(data []spy2go.ComplexInt16) {
 
 	samplesFifo.Add(chunk)
 }
-func addU8Fifo(data []spy2go.ComplexUInt8) {
+func addU8Fifo(data []spytypes.ComplexUInt8) {
 	var chunk = make([]complex64, len(data))
 	for i := 0; i < len(data); i++ {
 		chunk[i] = complex((float32(data[i].Imag)-128)/128.0, (float32(data[i].Real)-128)/128.0)
