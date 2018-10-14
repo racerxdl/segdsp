@@ -110,6 +110,42 @@ func Atan(x float32) float32 {
 	return -satan(-x)
 }
 
+
+// Hypot returns Sqrt(p*p + q*q), taking care to avoid
+// unnecessary overflow and underflow.
+//
+// Special cases are:
+//	Hypot(±Inf, q) = +Inf
+//	Hypot(p, ±Inf) = +Inf
+//	Hypot(NaN, q) = NaN
+//	Hypot(p, NaN) = NaN
+func Hypot(p, q float32) float32 {
+	// special cases
+	switch {
+	case IsInf(p, 0) || IsInf(q, 0):
+		return float32(math.Inf(1))
+	case IsNaN(p) || IsNaN(q):
+		return float32(math.NaN())
+	}
+	if p < 0 {
+		p = -p
+	}
+	if q < 0 {
+		q = -q
+	}
+	if p < q {
+		p, q = q, p
+	}
+	if p == 0 {
+		return 0
+	}
+	q = q / p
+	return p * float32(math.Sqrt(float64(1+q*q)))
+}
+
+
+func ComplexAbs(x complex64) float32 { return Hypot(real(x), imag(x)) }
+
 func Conj(x complex64) complex64 { return complex(real(x), -imag(x)) }
 
 func IsNaN(f float32) bool {

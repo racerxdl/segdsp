@@ -9,6 +9,36 @@ func Min(a, b int) int {
 	return b
 }
 
+func ComplexDotProduct(result *complex64, input []complex64, taps []complex64) {
+	var length = Min(len(taps), len(input))
+
+	var res = complex64(complex(0, 0))
+
+	for i := 0; i < length; i++ {
+		var r = real(input[i]) * real(taps[i]) - imag(input[i]) * imag(taps[i])
+		var i = real(input[i]) * imag(taps[i]) + imag(input[i]) * real(taps[i])
+
+		res += complex(r, i)
+	}
+
+	*result = res
+}
+
+func ComplexDotProductResult(input []complex64, taps []complex64) complex64 {
+	var length = Min(len(taps), len(input))
+
+	var res = complex64(complex(0, 0))
+
+	for i := 0; i < length; i++ {
+		var r = real(input[i]) * real(taps[i]) - imag(input[i]) * imag(taps[i])
+		var i = real(input[i]) * imag(taps[i]) + imag(input[i]) * real(taps[i])
+
+		res += complex(r, i)
+	}
+
+	return res
+}
+
 func DotProduct(result *complex64, input []complex64, taps []float32) {
 	var length = Min(len(taps), len(input))
 	var res [2]float32
