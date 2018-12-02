@@ -65,3 +65,30 @@ CENTER_FREQUENCY="145570000" DEMOD_MODE="FM" FM_DEVIATION="5000" FS_BANDWIDTH="1
 | `-recordMethod`       | `RECORD_METHOD`         | string | `file`           | Method to use when recording                                      | file            |
 | `-spyserver`          | `SPYSERVER`             | string |                  | SpyServer Address                                                 | localhost:5555  |
 | `-stationName`        | `STATION_NAME`          | string |                  | Name of the Station                                               | SegDSP          |
+
+## Git Hooks
+
+### pre-commit
+
+Inside the project repository create the following file:
+
+```bash
+touch .git/hooks/pre-commit
+```
+
+And paste this code inside it:
+
+```bash
+#!/bin/bash
+
+echo "Formatting code"
+go fmt ./...
+exit 0
+```
+
+And give execute permission:
+
+```bash
+chmod +x .git/hooks/pre-commit
+```
+
