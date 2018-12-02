@@ -1,0 +1,23 @@
+//+build !noasm
+//+build !appengine
+
+package {PACKAGE}
+
+import (
+  "unsafe"
+)
+
+//go:noescape
+func _multiplyConjugate{SUBARCHTITLE}(vecA, vecB, output unsafe.Pointer, length uint)
+
+func MultiplyConjugate{SUBARCHTITLE}(vecA, vecB []complex64, length int) []complex64 {{
+  var output = make([]complex64, length)
+
+  var vecAPtr = unsafe.Pointer(&vecA[0])
+  var vecBPtr = unsafe.Pointer(&vecB[0])
+  var outPtr = unsafe.Pointer(&output[0])
+
+  _multiplyConjugate{SUBARCHTITLE}(vecAPtr, vecBPtr, outPtr, uint(length))
+
+  return output
+}}
