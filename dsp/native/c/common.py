@@ -9,11 +9,12 @@ baseC2GoAsm = "c2goasm -s -c -a {IN} {OUT}"
 baseFlags = "-O2 -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti -S"
 baseClang = "clang -D__SUBARCH__={SUBARCH} {BASE_FLAGS} {SUBARCHFLAGS} -masm=intel {CFILE} -o {GENASMFOLDER}/{ASMFILE}"
 
-def initFolders():
+def initFolders(mainArch):
   if os.path.exists(genasmFolder):
     shutil.rmtree(genasmFolder)
 
   os.mkdir(genasmFolder)
+  os.mkdir(os.path.join("..", mainArch))
 
 def fixFile(filename):
   f = open(filename, "r")

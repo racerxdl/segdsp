@@ -97,7 +97,7 @@ sources = [
   }
 ]
 
-initFolders()
+initFolders(mainArch)
 
 for source in sources:
   for subarch in subarchs:

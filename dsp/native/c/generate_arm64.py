@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+'''
+  This is a sketch for the future. Currently c2goasm does not support ARM64 so this is useless.
+'''
+
 from common import *
 
 mainArch = "arm64"
@@ -8,9 +12,9 @@ outputFolder = "../%s" %mainArch
 
 subarchs = [
   {
-    "name": "aarch64",
-    "subarchtitle": "arm64",
-    "flags": "-I/usr/include/aarch64-linux-gnu/ -target aarch64-none-eabi"
+    "name": "neon",
+    "subarchtitle": "Neon",
+    "flags": "-funsafe-math-optimizations -ftree-vectorize"
   }
 ]
 
@@ -52,7 +56,11 @@ sources = [
   }
 ]
 
-initFolders()
+print "ARM64 support is still lacking at c2goasm. This won't work"
+
+exit(1)
+
+initFolders(mainArch)
 
 for source in sources:
   for subarch in subarchs:
