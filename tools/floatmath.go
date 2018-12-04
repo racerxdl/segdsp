@@ -1,6 +1,9 @@
-package dsp
+package tools
 
-import "math"
+import (
+	"log"
+	"math"
+)
 
 // All Functions here are from Standard Go Library but ported to float32
 
@@ -10,6 +13,8 @@ const (
 	bias  = 255
 	//signMask = 1 << 31
 	//fracMask = 1<<shift - 1
+
+	epsilon = 1e-6
 )
 
 /*
@@ -267,4 +272,52 @@ func Floor(x float32) float32 {
 	}
 	d, _ := Modf(x)
 	return d
+}
+
+func FloatEqual(a, b float32) bool {
+	return Abs(a-b) <= epsilon || Abs(1-a/b) <= epsilon
+}
+
+func ComplexEqual(a, b complex64) bool {
+	// Safe Compare two complexes within
+	// This is needed here because multiplying using SIMD might generate slightly different value
+	return FloatEqual(real(a), real(b)) && FloatEqual(imag(a), imag(b))
+}
+
+func Complex64ArrayEqual(a, b []complex64) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(a); i++ {
+		if !ComplexEqual(a[i], b[i]) {
+			log.Println("Error at", i)
+			log.Printf("Expected %v got %v\n", a[i], b[i])
+			return false
+		}
+	}
+
+	return true
+}
+func Complex64Array2Equal(a, b [][]complex64) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(a); i++ {
+		if !Complex64ArrayEqual(a[i], b[i]) {
+			log.Println("A Error at", i)
+			return false
+		}
+	}
+
+	return true
+}
+
+func ComplexPhase(c complex64) float32 {
+	return Atan2(imag(c), real(c))
+}
+
+func ComplexToPolar(c complex64) (r, θ float32) {
+	return ComplexAbs(c), ComplexPhase(c)
 }

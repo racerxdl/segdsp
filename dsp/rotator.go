@@ -1,5 +1,7 @@
 package dsp
 
+import "github.com/racerxdl/segdsp/tools"
+
 type Rotator struct {
 	phaseIncrement complex64
 	counter        int
@@ -18,7 +20,7 @@ func (r *Rotator) SetPhase(p complex64) {
 }
 
 func (r *Rotator) SetPhaseIncrement(increment complex64) {
-	r.phaseIncrement = complex(real(increment)/ComplexAbs(increment), imag(increment)/ComplexAbs(increment))
+	r.phaseIncrement = complex(real(increment)/tools.ComplexAbs(increment), imag(increment)/tools.ComplexAbs(increment))
 }
 
 func (r *Rotator) rotate(d complex64) complex64 {
@@ -29,7 +31,7 @@ func (r *Rotator) rotate(d complex64) complex64 {
 	r.lastPhase = r.lastPhase * r.phaseIncrement
 
 	if r.counter%512 == 0 {
-		r.lastPhase = complex(real(r.lastPhase)/ComplexAbs(r.lastPhase), imag(r.lastPhase)/ComplexAbs(r.lastPhase))
+		r.lastPhase = complex(real(r.lastPhase)/tools.ComplexAbs(r.lastPhase), imag(r.lastPhase)/tools.ComplexAbs(r.lastPhase))
 	}
 
 	return z
