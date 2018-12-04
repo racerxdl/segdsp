@@ -1,7 +1,7 @@
 package digital
 
 import (
-	"github.com/racerxdl/segdsp/dsp"
+	"github.com/racerxdl/segdsp/tools"
 )
 
 const ccHistoryLength = 3
@@ -131,21 +131,21 @@ func (ccr *ComplexClockRecovery) internalWork(input []complex64) []complex64 {
 		ccr.c1T = ccr.c0T
 		ccr.c0T = complexSlicer(ccr.p0T)
 
-		x = (ccr.c0T - ccr.c2T) * dsp.Conj(ccr.p1T)
-		y = (ccr.p0T - ccr.p2T) * dsp.Conj(ccr.c1T)
+		x = (ccr.c0T - ccr.c2T) * tools.Conj(ccr.p1T)
+		y = (ccr.p0T - ccr.p2T) * tools.Conj(ccr.c1T)
 		u = y - x
 
 		mmVal = real(u)
 		output = append(output, ccr.p0T)
 
-		mmVal = dsp.Clip(mmVal, 1.0)
+		mmVal = tools.Clip(mmVal, 1.0)
 
 		ccr.omega = ccr.omega + ccr.gainOmega*mmVal
-		ccr.omega = ccr.omegaMidValue + dsp.Clip(ccr.omega-ccr.omegaMidValue, ccr.omegaLimit)
+		ccr.omega = ccr.omegaMidValue + tools.Clip(ccr.omega-ccr.omegaMidValue, ccr.omegaLimit)
 
 		ccr.mu = ccr.mu + ccr.omega + ccr.gainMu*mmVal
-		inputIndex += int(dsp.Floor(ccr.mu))
-		ccr.mu -= dsp.Floor(ccr.mu)
+		inputIndex += int(tools.Floor(ccr.mu))
+		ccr.mu -= tools.Floor(ccr.mu)
 
 		if inputIndex < 0 {
 			inputIndex = 0
@@ -278,11 +278,11 @@ func (ccr *FloatClockRecovery) internalWork(input []float32) []float32 {
 		ccr.lastSample = o
 
 		ccr.omega = ccr.omega + ccr.gainOmega*mmVal
-		ccr.omega = ccr.omegaMidValue + dsp.Clip(ccr.omega-ccr.omegaMidValue, ccr.omegaLimit)
+		ccr.omega = ccr.omegaMidValue + tools.Clip(ccr.omega-ccr.omegaMidValue, ccr.omegaLimit)
 
 		ccr.mu = ccr.mu + ccr.omega + ccr.gainMu*mmVal
-		inputIndex += int(dsp.Floor(ccr.mu))
-		ccr.mu -= dsp.Floor(ccr.mu)
+		inputIndex += int(tools.Floor(ccr.mu))
+		ccr.mu -= tools.Floor(ccr.mu)
 
 		if inputIndex < 0 {
 			inputIndex = 0

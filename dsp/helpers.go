@@ -2,6 +2,7 @@ package dsp
 
 import (
 	"github.com/racerxdl/segdsp/dsp/native"
+	"github.com/racerxdl/segdsp/tools"
 	"math"
 )
 
@@ -114,7 +115,7 @@ func genericDotProductFloatResult(input []float32, taps []float32) float32 {
 func genericMultiplyConjugate(vecA, vecB []complex64, length int) []complex64 {
 	var output = make([]complex64, length)
 	for i := 0; i < length; i++ {
-		output[i] = vecA[i] * Conj(vecB[i])
+		output[i] = vecA[i] * tools.Conj(vecB[i])
 	}
 
 	return output
@@ -125,7 +126,7 @@ func genericMultiplyConjugate(vecA, vecB []complex64, length int) []complex64 {
 // This is the Generic Function in case no SIMD alternative is available
 func genericMultiplyConjugateInline(vecA, vecB []complex64, length int) {
 	for i := 0; i < length; i++ {
-		vecA[i] = vecA[i] * Conj(vecB[i])
+		vecA[i] = vecA[i] * tools.Conj(vecB[i])
 	}
 }
 

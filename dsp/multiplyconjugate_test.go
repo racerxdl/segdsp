@@ -2,24 +2,17 @@ package dsp
 
 import (
 	"github.com/racerxdl/segdsp/dsp/native"
+	"github.com/racerxdl/segdsp/tools"
 	"math/rand"
 	"testing"
 )
-
-const epsilon = 10e-6
-
-func CompareComplex(a, b complex64) bool {
-	// Safe Compare two complexes within
-	// This is needed here because multiplying using SIMD might generate slightly different value
-	return Abs(real(a)-real(b)) < epsilon && Abs(imag(a)-imag(b)) < epsilon
-}
 
 func Equal(a, b []complex64, t *testing.T) bool {
 	if len(a) != len(b) {
 		return false
 	}
 	for i, v := range a {
-		if !CompareComplex(v, b[i]) {
+		if !tools.ComplexEqual(v, b[i]) {
 			t.Errorf("Difference at %d: Expected %v got %v\n", i, v, b[i])
 			// return false
 		}
