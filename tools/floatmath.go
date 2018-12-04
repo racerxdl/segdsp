@@ -174,6 +174,7 @@ func IsInf(f float32, sign int) bool {
 func Signbit(x float32) bool {
 	return math.Float32bits(x)&(1<<31) != 0
 }
+
 func Copysign(x, y float32) float32 {
 	const sign = 1 << 31
 	return math.Float32frombits(math.Float32bits(x)&^sign | math.Float32bits(y)&sign)
@@ -274,14 +275,14 @@ func Floor(x float32) float32 {
 	return d
 }
 
-func FloatEqual(a, b float32) bool {
+func AlmostFloatEqual(a, b float32) bool {
 	return Abs(a-b) <= epsilon || Abs(1-a/b) <= epsilon
 }
 
 func ComplexEqual(a, b complex64) bool {
 	// Safe Compare two complexes within
 	// This is needed here because multiplying using SIMD might generate slightly different value
-	return FloatEqual(real(a), real(b)) && FloatEqual(imag(a), imag(b))
+	return AlmostFloatEqual(real(a), real(b)) && AlmostFloatEqual(imag(a), imag(b))
 }
 
 func Complex64ArrayEqual(a, b []complex64) bool {
