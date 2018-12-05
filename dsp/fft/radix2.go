@@ -171,11 +171,9 @@ func log2(v uint) uint {
 // reverseBits returns the first s bits of v in reverse order
 // from: http://graphics.stanford.edu/~seander/bithacks.html#BitReverseObvious
 func reverseBits(v, s uint) uint {
-	var r uint
-
 	// Since we aren't reversing all the bits in v (just the first s bits),
 	// we only need the first bit of v instead of a full copy.
-	r = v & 1
+	var r = v & 1
 	s--
 
 	for v >>= 1; v != 0; v >>= 1 {

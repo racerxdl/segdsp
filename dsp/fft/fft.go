@@ -136,35 +136,3 @@ func computeFFT2(x [][]complex64, fftFunc func([]complex64) []complex64) [][]com
 
 	return r
 }
-
-// decrDim decrements an element of x by 1, skipping all -1s, and wrapping up to d.
-// If a value is 0, it will be reset to its correspending value in d, and will carry one from the next non -1 value to the right.
-// Returns true if decremented, else false.
-func decrDim(x, d []int) bool {
-	for n, v := range x {
-		if v == -1 {
-			continue
-		} else if v == 0 {
-			i := n
-			// find the next element to decrement
-			for ; i < len(x); i++ {
-				if x[i] == -1 {
-					continue
-				} else if x[i] == 0 {
-					x[i] = d[i]
-				} else {
-					x[i] -= 1
-					return true
-				}
-			}
-
-			// no decrement
-			return false
-		} else {
-			x[n] -= 1
-			return true
-		}
-	}
-
-	return false
-}
