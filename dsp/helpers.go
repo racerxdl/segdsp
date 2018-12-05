@@ -156,7 +156,11 @@ func init() {
 		MultiplyConjugateInline = genericMultiplyConjugateInline
 	}
 
-	ComplexDotProductResult = genericComplexDotProductResult
+	if native.GetNativeDotProductComplexComplex() != nil {
+		ComplexDotProductResult = native.GetNativeDotProductComplexComplex()
+	} else {
+		ComplexDotProductResult = genericComplexDotProductResult
+	}
 }
 
 // endregion

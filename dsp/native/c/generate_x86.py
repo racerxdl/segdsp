@@ -39,6 +39,11 @@ sources = [
     "filename": "dotprod_native_float.c",
     "function": "DotProductNativeFloat",
     "cFunction": "dotProductFloat",
+  },
+  {
+    "filename": "dotprod_native_complex_complex.c",
+    "function": "DotProductNativeComplexComplex",
+    "cFunction": "dotProductComplexComplex",
   }
 ]
 

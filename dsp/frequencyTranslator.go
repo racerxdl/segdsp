@@ -66,3 +66,21 @@ func (ft *FrequencyTranslator) Work(data []complex64) []complex64 {
 
 	return out
 }
+
+func (ft *FrequencyTranslator) SetFrequency(frequency float32) {
+	ft.centerFrequency = frequency
+	ft.updateFilter()
+}
+
+func (ft *FrequencyTranslator) SetDecimation(decimation int) {
+	ft.decimation = decimation
+	ft.updateFilter()
+}
+
+func (ft *FrequencyTranslator) GetDecimation() int {
+	return ft.decimation
+}
+
+func (ft *FrequencyTranslator) GetFrequency() float32 {
+	return ft.centerFrequency
+}
