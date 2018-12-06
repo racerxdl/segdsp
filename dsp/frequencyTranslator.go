@@ -33,7 +33,7 @@ func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32
 func (ft *FrequencyTranslator) updateFilter() {
 	var shift = float64(2 * math.Pi * (ft.centerFrequency / ft.sampleRate))
 
-	ft.rotator.SetPhaseIncrement(complex64(cmplx.Exp(complex(0, -shift*float64(ft.decimation)))))
+	ft.rotator.SetPhaseIncrement(complex64(cmplx.Exp(complex(0, -shift))))
 
 	ft.filter = MakeFirFilter(ft.baseTaps)
 	ft.needsUpdate = false
