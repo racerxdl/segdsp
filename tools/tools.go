@@ -44,3 +44,29 @@ func ToComplex64Array2(x [][]float32) [][]complex64 {
 	}
 	return y
 }
+
+func ReverseFloat32Taps(input []float32) []float32 {
+	if len(input) == 0 {
+		return input
+	}
+	var reversed = make([]float32, len(input))
+	var j = 0
+	for i := len(input) - 1; i >= 0; i-- {
+		reversed[j] = input[i]
+		j++
+	}
+	return reversed
+}
+
+func ReverseComplex64Taps(input []complex64) []complex64 {
+	if len(input) == 0 {
+		return input
+	}
+	var reversed = make([]complex64, len(input))
+	var j = 0
+	for i := len(input) - 1; i >= 0; i-- {
+		reversed[j] = input[i]
+		j++
+	}
+	return reversed
+}

@@ -2,7 +2,7 @@
 #define GENFUN(x, y) _GENFUN(x, y)
 
 void GENFUN(dotProductComplexComplex, __SUBARCH__)(float *result, float *input, const float *taps, unsigned int length) {
-    unsigned int cBlocks = length / 16;
+    unsigned int cBlocks = length / 2;
     float sum0[2] = {0, 0};
     float sum1[2] = {0, 0};
 
@@ -14,10 +14,15 @@ void GENFUN(dotProductComplexComplex, __SUBARCH__)(float *result, float *input, 
         sum0[1] += iPtr[0] * tPtr[1] + iPtr[1] * tPtr[0];
         sum1[0] += iPtr[2] * tPtr[2] - iPtr[3] * tPtr[3];
         sum1[1] += iPtr[2] * tPtr[3] + iPtr[3] * tPtr[2];
+
         iPtr += 4;
         tPtr += 4;
     }
 
     result[0] = sum0[0] + sum1[0];
     result[1] = sum0[1] + sum1[1];
+
+    if (length % 1 != 0) {
+      result[0] += input[length - 1] * taps[length - 1];
+    }
 }

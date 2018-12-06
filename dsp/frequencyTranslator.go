@@ -6,23 +6,33 @@ import (
 )
 
 type FrequencyTranslator struct {
-	filter          *FirFilter
-	baseTaps        []float32
+	filter          *CTFirFilter
+	sampleHistory   []complex64
+	baseTaps        []complex64
 	centerFrequency float32
 	sampleRate      float32
 	decimation      int
 	rotator         *Rotator
 	needsUpdate     bool
+	tapsLen         int
 }
 
 func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32, taps []float32) *FrequencyTranslator {
+	var baseTaps = make([]complex64, len(taps))
+
+	for i := 0; i < len(taps); i++ {
+		baseTaps[i] = complex(taps[i], 0)
+	}
+
 	var ft = FrequencyTranslator{
-		baseTaps:        taps,
+		baseTaps:        baseTaps,
 		sampleRate:      sampleRate,
 		centerFrequency: centerFrequency,
 		decimation:      decimation,
 		rotator:         MakeRotator(),
 		needsUpdate:     true,
+		sampleHistory:   make([]complex64, len(taps)),
+		tapsLen:         len(taps),
 	}
 
 	ft.updateFilter()
@@ -31,11 +41,20 @@ func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32
 }
 
 func (ft *FrequencyTranslator) updateFilter() {
-	var shift = float64(2 * math.Pi * (ft.centerFrequency / ft.sampleRate))
+	var newTaps = make([]complex64, len(ft.baseTaps))
 
-	ft.rotator.SetPhaseIncrement(complex64(cmplx.Exp(complex(0, -shift))))
+	var fDecimation = float64(ft.decimation)
+	var shift = float64(2 * math.Pi * ft.centerFrequency / ft.sampleRate)
 
-	ft.filter = MakeFirFilter(ft.baseTaps)
+	ft.rotator.SetPhaseIncrement(complex64(cmplx.Exp(complex(0, -shift*fDecimation))))
+
+	for i := 0; i < len(newTaps); i++ {
+		var fi = float64(i)
+		newTaps[i] = complex64(complex128(ft.baseTaps[i]) * cmplx.Exp(complex(0, fi*shift)))
+	}
+
+	ft.filter = MakeCTFirFilter(newTaps)
+
 	ft.needsUpdate = false
 }
 
@@ -44,14 +63,21 @@ func (ft *FrequencyTranslator) Work(data []complex64) []complex64 {
 		ft.updateFilter()
 	}
 
-	var out = ft.rotator.Work(data)
-	if ft.decimation != 1 {
-		out = ft.filter.FilterOut(out)
-	} else {
-		out = ft.filter.FilterDecimateOut(out, ft.decimation)
+	var samples = append(ft.sampleHistory, data...)
+	var length = len(data) / ft.decimation
+	var output = make([]complex64, length)
+	for i := 0; i < length; i++ {
+		var srcIdx = ft.decimation * i
+		var sl = samples[srcIdx:]
+		if len(sl) < ft.tapsLen {
+			break
+		}
+		output[i] = ft.filter.FilterSingle(sl)
+		output[i] = ft.rotator.rotate(output[i])
 	}
+	ft.sampleHistory = samples[len(samples)-ft.tapsLen:]
 
-	return out
+	return output
 }
 
 func (ft *FrequencyTranslator) SetFrequency(frequency float32) {

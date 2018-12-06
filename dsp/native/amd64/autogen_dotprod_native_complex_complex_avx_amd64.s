@@ -8,7 +8,7 @@ TEXT ·_dotProductComplexComplexAVX(SB), $0-32
     MOVQ taps+16(FP), DX
     MOVQ length+24(FP), CX
 
-    LONG $0xc057f8c5; WORD $0xe9c1; BYTE $0x04
+    LONG $0xc057f8c5; WORD $0xe9d1
 	JE LBB0_3
     WORD $0xc031
 LBB0_2:
