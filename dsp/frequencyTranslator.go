@@ -6,40 +6,23 @@ import (
 )
 
 type FrequencyTranslator struct {
-	filter          *CTFirFilter
-	baseTaps        []complex64
+	filter          *FirFilter
+	baseTaps        []float32
 	centerFrequency float32
 	sampleRate      float32
 	decimation      int
 	rotator         *Rotator
+	needsUpdate     bool
 }
 
-func MakeFrequencyTranslatorComplexTaps(decimation int, centerFrequency, sampleRate float32, taps []complex64) *FrequencyTranslator {
+func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32, taps []float32) *FrequencyTranslator {
 	var ft = FrequencyTranslator{
 		baseTaps:        taps,
 		sampleRate:      sampleRate,
 		centerFrequency: centerFrequency,
 		decimation:      decimation,
-	}
-
-	ft.updateFilter()
-
-	return &ft
-}
-
-func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32, taps []float32) *FrequencyTranslator {
-	var baseTaps = make([]complex64, len(taps))
-
-	for i := 0; i < len(taps); i++ {
-		baseTaps[i] = complex(taps[i], 0)
-	}
-
-	var ft = FrequencyTranslator{
-		baseTaps:        baseTaps,
-		sampleRate:      sampleRate,
-		centerFrequency: centerFrequency,
-		decimation:      decimation,
 		rotator:         MakeRotator(),
+		needsUpdate:     true,
 	}
 
 	ft.updateFilter()
@@ -48,33 +31,37 @@ func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32
 }
 
 func (ft *FrequencyTranslator) updateFilter() {
-	var newTaps = make([]complex64, len(ft.baseTaps))
-	var shift = 2 * math.Pi * (ft.centerFrequency / ft.sampleRate)
+	var shift = float64(2 * math.Pi * (ft.centerFrequency / ft.sampleRate))
 
-	for i := 0; i < len(newTaps); i++ {
-		newTaps[i] = complex64(complex128(ft.baseTaps[i]) * cmplx.Exp(complex(0, float64(i)*float64(shift))))
-	}
+	ft.rotator.SetPhaseIncrement(complex64(cmplx.Exp(complex(0, -shift*float64(ft.decimation)))))
 
-	ft.rotator.SetPhaseIncrement(complex64(cmplx.Exp(complex(0, float64(-shift*float32(ft.decimation))))))
-
-	ft.filter = MakeCTFirFilter(newTaps)
+	ft.filter = MakeFirFilter(ft.baseTaps)
+	ft.needsUpdate = false
 }
 
 func (ft *FrequencyTranslator) Work(data []complex64) []complex64 {
-	var out = ft.filter.FilterDecimateOut(data, ft.decimation)
-	out = ft.rotator.Work(out)
+	if ft.needsUpdate {
+		ft.updateFilter()
+	}
+
+	var out = ft.rotator.Work(data)
+	if ft.decimation != 1 {
+		out = ft.filter.FilterOut(out)
+	} else {
+		out = ft.filter.FilterDecimateOut(out, ft.decimation)
+	}
 
 	return out
 }
 
 func (ft *FrequencyTranslator) SetFrequency(frequency float32) {
 	ft.centerFrequency = frequency
-	ft.updateFilter()
+	ft.needsUpdate = true
 }
 
 func (ft *FrequencyTranslator) SetDecimation(decimation int) {
 	ft.decimation = decimation
-	ft.updateFilter()
+	ft.needsUpdate = true
 }
 
 func (ft *FrequencyTranslator) GetDecimation() int {

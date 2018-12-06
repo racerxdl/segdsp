@@ -322,3 +322,8 @@ func ComplexPhase(c complex64) float32 {
 func ComplexToPolar(c complex64) (r, θ float32) {
 	return ComplexAbs(c), ComplexPhase(c)
 }
+
+func ComplexNormalize(c complex64) complex64 {
+	abs := ComplexAbs(c)
+	return complex(real(c)/abs, imag(c)/abs)
+}

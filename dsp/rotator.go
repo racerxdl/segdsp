@@ -10,17 +10,18 @@ type Rotator struct {
 
 func MakeRotator() *Rotator {
 	return &Rotator{
-		counter:   0,
-		lastPhase: 0,
+		counter:        0,
+		lastPhase:      complex(1, 0),
+		phaseIncrement: complex(1, 0),
 	}
 }
 
 func (r *Rotator) SetPhase(p complex64) {
-	r.lastPhase = p
+	r.lastPhase = tools.ComplexNormalize(p)
 }
 
 func (r *Rotator) SetPhaseIncrement(increment complex64) {
-	r.phaseIncrement = complex(real(increment)/tools.ComplexAbs(increment), imag(increment)/tools.ComplexAbs(increment))
+	r.phaseIncrement = tools.ComplexNormalize(increment)
 }
 
 func (r *Rotator) rotate(d complex64) complex64 {
@@ -31,7 +32,7 @@ func (r *Rotator) rotate(d complex64) complex64 {
 	r.lastPhase = r.lastPhase * r.phaseIncrement
 
 	if r.counter%512 == 0 {
-		r.lastPhase = complex(real(r.lastPhase)/tools.ComplexAbs(r.lastPhase), imag(r.lastPhase)/tools.ComplexAbs(r.lastPhase))
+		r.lastPhase = tools.ComplexNormalize(r.lastPhase)
 	}
 
 	return z
