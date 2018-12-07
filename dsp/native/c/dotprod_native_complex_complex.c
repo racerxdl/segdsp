@@ -23,6 +23,7 @@ void GENFUN(dotProductComplexComplex, __SUBARCH__)(float *result, float *input, 
     result[1] = sum0[1] + sum1[1];
 
     if (length % 1 != 0) {
-      result[0] += input[length - 1] * taps[length - 1];
+      result[0] += input[2 * (length - 1)] * taps[2 * (length - 1)];
+      result[1] += input[2 * (length - 1) + 1] * taps[2 * (length - 1) + 1];
     }
 }

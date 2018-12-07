@@ -16,6 +16,8 @@ trashR =[
   re.compile(r".*.size.*"),
   re.compile(r".*.ident.*"),
   re.compile(r".*section.*"),
+  re.compile(r".*#APP.*"),
+  re.compile(r".*#NO_APP.*"),
 ]
 
 def cleanupFileTrash(data):

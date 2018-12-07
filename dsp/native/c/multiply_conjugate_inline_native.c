@@ -2,10 +2,6 @@
 #define GENFUN(x, y) _GENFUN(x, y)
 
 void GENFUN(multiplyConjugateInline, __SUBARCH__)(float *vecA, float *vecB, unsigned int length) {
-
-    float *aPtr = (float *)vecA;
-    float *bPtr = (float *)vecB;
-
     for (unsigned int i = 0; i < length; i++) {
       // A = (Ar) + (Ai)i
       // B = (Br) + (Bi)i

@@ -30,6 +30,11 @@ var MultiplyConjugate func(vecA, vecB []complex64, length int) []complex64
 // vecA[i] = vecA[i] * Conj(vecB[i])
 var MultiplyConjugateInline func(vecA, vecB []complex64, length int)
 
+// RotateComplex performs the phase rotation of each input items by phase and then increments phase
+// out[i] = input[i] * phase
+// phase = phase * phaseIncrement
+var RotateComplex func(input []complex64, phase *complex64, phaseIncrement complex64, length int) []complex64
+
 // ComplexDotProduct performs the Dot Product between two complex vectors and store the result at *result
 func ComplexDotProduct(result *complex64, input []complex64, taps []complex64) {
 	*result = ComplexDotProductResult(input, taps)
@@ -109,7 +114,7 @@ func genericDotProductFloatResult(input []float32, taps []float32) float32 {
 	return res
 }
 
-// MultiplyConjugate performs the Multply by conjugate for each item from vecA and vecB
+// genericMultiplyConjugate performs the Multply by conjugate for each item from vecA and vecB
 // output[i] = vecA[i] * Conj(vecB[i])
 // This is the Generic Function in case no SIMD alternative is available
 func genericMultiplyConjugate(vecA, vecB []complex64, length int) []complex64 {
@@ -121,13 +126,33 @@ func genericMultiplyConjugate(vecA, vecB []complex64, length int) []complex64 {
 	return output
 }
 
-// MultiplyConjugateInline performs the Multply by conjugate for each item from vecA and vecB with the result in vecA
+// genericMultiplyConjugateInline performs the Multply by conjugate for each item from vecA and vecB with the result in vecA
 // vecA[i] = vecA[i] * Conj(vecB[i])
 // This is the Generic Function in case no SIMD alternative is available
 func genericMultiplyConjugateInline(vecA, vecB []complex64, length int) {
 	for i := 0; i < length; i++ {
 		vecA[i] = vecA[i] * tools.Conj(vecB[i])
 	}
+}
+
+// genericRotateComplex performs the phase rotation of each input items by phase and then increments phase
+// out[i] = input[i] * phase
+// phase = phase * phaseIncrement
+// This is the Generic Function in case no SIMD alternative is available
+func genericRotateComplex(input []complex64, phase *complex64, phaseIncrement complex64, length int) []complex64 {
+	var out = make([]complex64, length)
+	var counter = 0
+
+	for i := 0; i < length; i++ {
+		counter++
+		out[i] = input[i] * (*phase)
+		*phase = *phase * phaseIncrement
+		if counter%512 == 0 {
+			*phase = tools.ComplexNormalize(*phase)
+		}
+	}
+
+	return out
 }
 
 // init initializes the Helper function placeholders with SIMD Alternatives when available
@@ -160,6 +185,12 @@ func init() {
 		ComplexDotProductResult = native.GetNativeDotProductComplexComplex()
 	} else {
 		ComplexDotProductResult = genericComplexDotProductResult
+	}
+
+	if native.GetRotateComplex() != nil {
+		RotateComplex = native.GetRotateComplex()
+	} else {
+		RotateComplex = genericRotateComplex
 	}
 }
 

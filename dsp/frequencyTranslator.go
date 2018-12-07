@@ -64,17 +64,13 @@ func (ft *FrequencyTranslator) Work(data []complex64) []complex64 {
 	}
 
 	var samples = append(ft.sampleHistory, data...)
-	var length = len(data) / ft.decimation
-	var output = make([]complex64, length)
-	for i := 0; i < length; i++ {
-		var srcIdx = ft.decimation * i
-		var sl = samples[srcIdx:]
-		if len(sl) < ft.tapsLen {
-			break
-		}
-		output[i] = ft.filter.FilterSingle(sl)
-		output[i] = ft.rotator.rotate(output[i])
+	var output []complex64
+	if ft.decimation > 1 {
+		output = ft.filter.FilterDecimateOut(samples, ft.decimation)
+	} else {
+		output = ft.filter.FilterOut(samples)
 	}
+	output = ft.rotator.Work(output)
 	ft.sampleHistory = samples[len(samples)-ft.tapsLen:]
 
 	return output

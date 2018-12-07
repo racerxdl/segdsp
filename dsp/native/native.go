@@ -2,6 +2,22 @@
 
 package native
 
+func DotProductComplex(input []complex64, taps []float32) complex64 {
+	panic("No native function available for arch")
+}
+
+func DotProductFloat(input []float32, taps []float32) float32 {
+	panic("No native function available for arch")
+}
+
+func GetNativeDotProductComplex() func(input []complex64, taps []float32) complex64 {
+	return nil
+}
+
+func GetNativeDotProductFloat() func(input []float32, taps []float32) float32 {
+	return nil
+}
+
 func MultiplyConjugate(vecA, vecB []complex64) {
 	panic("No native function available for arch")
 }
@@ -23,5 +39,9 @@ func GetMultiplyConjugateInline() func(vecA, vecB []complex64, length int) {
 }
 
 func GetMultiplyConjugate() func(vecA, vecB []complex64, length int) []complex64 {
+	return nil
+}
+
+func GetRotateComplex() func(input []complex64, phase *complex64, phaseIncrement complex64, length int) []complex64 {
 	return nil
 }

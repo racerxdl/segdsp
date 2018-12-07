@@ -24,7 +24,7 @@ func (r *Rotator) SetPhaseIncrement(increment complex64) {
 	r.phaseIncrement = tools.ComplexNormalize(increment)
 }
 
-func (r *Rotator) rotate(d complex64) complex64 {
+func (r *Rotator) Rotate(d complex64) complex64 {
 	r.counter++
 
 	var z = d * r.lastPhase
@@ -39,11 +39,10 @@ func (r *Rotator) rotate(d complex64) complex64 {
 }
 
 func (r *Rotator) Work(data []complex64) []complex64 {
-	var out = make([]complex64, len(data))
-
-	for i := 0; i < len(data); i++ {
-		out[i] = r.rotate(data[i])
-	}
-
-	return out
+	return RotateComplex(data, &r.lastPhase, r.phaseIncrement, len(data))
+	//var out = make([]complex64, len(data))
+	//for i := 0; i < len(data); i++ {
+	//	out[i] = r.rotate(data[i])
+	//}
+	//return out
 }

@@ -44,6 +44,11 @@ sources = [
     "filename": "dotprod_native_complex_complex.c",
     "function": "DotProductNativeComplexComplex",
     "cFunction": "dotProductComplexComplex",
+  },
+  {
+    "filename": "rotate_complex.c",
+    "function": "RotateNativeComplex",
+    "cFunction": "rotateComplex",
   }
 ]
 
