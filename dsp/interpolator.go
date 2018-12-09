@@ -7,7 +7,7 @@ type Interpolator struct {
 
 func MakeInterpolator(interpolationRatio int) *Interpolator {
 	return &Interpolator{
-		fir:                MakeFirFilter(MakeLowPassFixed(1, 1, float64(interpolationRatio)/2, 63)),
+		fir:                MakeFirFilter(MakeLowPassFixed(1, 1, 1/float64(interpolationRatio*2), 63)),
 		interpolationRatio: interpolationRatio,
 	}
 }
@@ -34,7 +34,7 @@ type FloatInterpolator struct {
 
 func MakeFloatInterpolator(interpolationRatio int) *FloatInterpolator {
 	return &FloatInterpolator{
-		fir:                MakeFloatFirFilter(MakeLowPassFixed(1, 1, float64(interpolationRatio)/2, 63)),
+		fir:                MakeFloatFirFilter(MakeLowPassFixed(1, 1, 1/float64(interpolationRatio*2), 63)),
 		interpolationRatio: interpolationRatio,
 	}
 }
