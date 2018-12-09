@@ -167,7 +167,7 @@ function DrawFFT() {
     ctx.restore();
     // endregion
     // region Draw dB Label
-    const min = -deviceInfo.DisplayOffset;
+    const min = deviceInfo.DisplayOffset;
     const max = min - deviceInfo.DisplayRange;
     const dbPerPixel = (max - min) / fftHeight;
 
