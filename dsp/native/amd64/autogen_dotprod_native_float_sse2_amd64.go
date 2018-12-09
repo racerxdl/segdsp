@@ -18,6 +18,10 @@ func DotProductNativeFloatSSE2(input []float32, taps []float32) float32 {
 	var tapsPtr = unsafe.Pointer(&taps[0])
 	var cLen = uint(len(taps))
 
+	if cLen > uint(len(input)) {
+		cLen = uint(len(input))
+	}
+
 	_dotProductFloatSSE2(resPtr, inputPtr, tapsPtr, cLen)
 
 	return res[0]

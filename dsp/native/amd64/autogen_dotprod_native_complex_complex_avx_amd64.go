@@ -18,6 +18,10 @@ func DotProductNativeComplexComplexAVX(input []complex64, taps []complex64) comp
 	var tapsPtr = unsafe.Pointer(&taps[0])
 	var cLen = uint(len(taps))
 
+	if cLen > uint(len(input)) {
+		cLen = uint(len(input))
+	}
+
 	_dotProductComplexComplexAVX(resPtr, inputPtr, tapsPtr, cLen)
 
 	return complex(res[0], res[1])
