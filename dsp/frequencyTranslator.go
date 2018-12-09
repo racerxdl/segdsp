@@ -73,7 +73,7 @@ func (ft *FrequencyTranslator) Work(data []complex64) []complex64 {
 	output = ft.rotator.Work(output)
 	ft.sampleHistory = samples[len(samples)-ft.tapsLen:]
 
-	return output
+	return output[:len(data)]
 }
 
 func (ft *FrequencyTranslator) SetFrequency(frequency float32) {

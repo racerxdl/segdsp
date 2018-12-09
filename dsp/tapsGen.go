@@ -2,20 +2,6 @@ package dsp
 
 import "math"
 
-// Default hamming window
-
-func hammingWindow(nTaps int) []float64 {
-	var taps = make([]float64, nTaps)
-
-	var M = float64(nTaps - 1)
-
-	for i := 0; i < nTaps; i++ {
-		taps[i] = 0.5 - 0.5*math.Cos((2*math.Pi*float64(i))/M)
-	}
-
-	return taps
-}
-
 func computeNTaps(sampleRate, transitionWidth float64) int {
 	var maxAttenuation = 53.0
 	var nTaps = int(maxAttenuation * sampleRate / (22.0 * transitionWidth))
@@ -84,7 +70,7 @@ func MakeRRC(gain, sampleRate, symbolRate, alpha float64, nTaps int) []float32 {
 func MakeLowPass(gain, sampleRate, cutFrequency, transitionWidth float64) []float32 {
 	var nTaps = computeNTaps(sampleRate, transitionWidth)
 	var taps = make([]float32, nTaps)
-	var w = hammingWindow(nTaps)
+	var w = HammingWindow(nTaps)
 
 	var M = (nTaps - 1) / 2
 	var fwT0 = 2 * math.Pi * cutFrequency / sampleRate
@@ -114,7 +100,7 @@ func MakeLowPass(gain, sampleRate, cutFrequency, transitionWidth float64) []floa
 func MakeLowPass2(gain, sampleRate, cutFrequency, transitionWidth, attenuation float64) []float32 {
 	var nTaps = computeNTapsAtt(sampleRate, transitionWidth, attenuation)
 	var taps = make([]float32, nTaps)
-	var w = hammingWindow(nTaps)
+	var w = HammingWindow(nTaps)
 
 	var M = (nTaps - 1) / 2
 	var fwT0 = 2 * math.Pi * cutFrequency / sampleRate

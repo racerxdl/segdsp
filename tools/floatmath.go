@@ -149,6 +149,10 @@ func Hypot(p, q float32) float32 {
 
 func ComplexAbs(x complex64) float32 { return Hypot(real(x), imag(x)) }
 
+func ComplexAbsSquared(x complex64) float32 {
+	return real(x)*real(x) + imag(x)*imag(x)
+}
+
 func Conj(x complex64) complex64 { return complex(real(x), -imag(x)) }
 
 func IsNaN(f float32) bool {
