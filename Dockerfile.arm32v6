@@ -7,7 +7,7 @@ WORKDIR /root/
 COPY segdsp_worker_arm32v6 segdsp_worker
 COPY content content
 
-ENV SPYSERVER=localhost:5555
+ENV RADIOSERVER=localhost:4050
 ENV CENTER_FREQUENCY=106300000
 ENV FFT_FREQUENCY=106300000
 ENV HTTP_ADDRESS=localhost:8080

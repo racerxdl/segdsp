@@ -19,7 +19,7 @@ var modes = []string{modeFM, modeAM}
 // endregion
 
 // region Environment Variables
-const envSpyserverAddr = "SPYSERVER"
+const envRadioServerAddr = "RADIOSERVER"
 const envCenterFrequency = "CENTER_FREQUENCY"
 const envFFTFrequency = "FFT_FREQUENCY"
 const envHTTPAddr = "HTTP_ADDRESS"
@@ -54,14 +54,14 @@ const envAMAudioCut = "AM_AUDIO_CUT"
 // region Arguments
 
 var addrFlag = flag.String("httpAddr", "localhost:8080", "http service address")
-var spyserverhostFlag = flag.String("spyserver", "localhost:5555", "spyserver address")
+var radioserverhostFlag = flag.String("radioserver", "localhost:4050", "radioserver address")
 var displayPixelsFlag = flag.Uint("displayPixels", 512, "Width in pixels of the FFT")
 
 var channelFrequencyFlag = flag.Uint("channelFrequency", 106.3e6, "Channel (IQ) Center Frequency")
 var displayFrequencyFlag = flag.Uint("fftFrequency", 106e6, "FFT Center Frequency")
 
 var channelDecimationStageFlag = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
-var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 2, "FFT Decimation Stage (The actual decimation will be 2^d)")
+var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 1, "FFT Decimation Stage (The actual decimation will be 2^d)")
 
 var demodulatorModeFlag = flag.String("demodMode", modeFM, fmt.Sprintf("Demodulator Mode: %s", modes))
 var outputRateFlag = flag.Uint("outputRate", 48000, "Output Rate in Hertz")
@@ -95,7 +95,7 @@ var amAudioCutFlag = flag.Float64("amAudioCut", 5000, "AM Low Pass Filter Cut")
 // endregion
 // region Variables
 var httpAddr string
-var spyserverhost string
+var radioserverhost string
 var displayPixels uint
 
 var channelFrequency uint
@@ -162,8 +162,8 @@ func setEnv() {
 	}
 	// endregion
 	// region Fill Environment
-	if os.Getenv(envSpyserverAddr) == "" {
-		os.Setenv(envSpyserverAddr, *spyserverhostFlag)
+	if os.Getenv(envRadioServerAddr) == "" {
+		os.Setenv(envRadioServerAddr, *radioserverhostFlag)
 	}
 
 	if os.Getenv(envCenterFrequency) == "" {
@@ -253,7 +253,7 @@ func setEnv() {
 	// endregion
 	// region Fill Variables
 	httpAddr = os.Getenv(envHTTPAddr)
-	spyserverhost = os.Getenv(envSpyserverAddr)
+	radioserverhost = os.Getenv(envRadioServerAddr)
 	dp, err := strconv.ParseUint(os.Getenv(envDisplayPixels), 10, 16)
 	if err != nil {
 		panic(err)

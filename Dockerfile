@@ -18,7 +18,7 @@ WORKDIR /root/
 COPY --from=build /go/src/github.com/racerxdl/segdsp/segdsp_worker .
 COPY content content
 
-ENV SPYSERVER=localhost:5555
+ENV radioserver=localhost:5555
 ENV CENTER_FREQUENCY=106300000
 ENV FFT_FREQUENCY=106300000
 ENV HTTP_ADDRESS=localhost:8080

@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/racerxdl/radioserver/client"
+	"github.com/racerxdl/radioserver/protocol"
 	"github.com/racerxdl/segdsp/demodcore"
+	"github.com/racerxdl/segdsp/dsp/fft"
 	"github.com/racerxdl/segdsp/eventmanager"
 	"github.com/racerxdl/segdsp/recorders"
-	"github.com/racerxdl/spy2go/spyserver"
-	"github.com/racerxdl/spy2go/spytypes"
+	"github.com/racerxdl/segdsp/tools"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,35 +21,37 @@ import (
 	"time"
 )
 
+var displayRange = 120
+var displayOffset = -50
+
 type segdspCallback struct {
-	ss *spyserver.Spyserver
+	rs *client.RadioClient
 }
 
 func (cb *segdspCallback) OnData(dType int, data interface{}) {
-	if dType == spytypes.SamplesComplex32 {
-		go addS16Fifo(data.([]spytypes.ComplexInt16))
-	} else if dType == spytypes.SamplesComplexUInt8 {
-		go addU8Fifo(data.([]spytypes.ComplexUInt8))
-	} else if dType == spytypes.DeviceSync {
-		onDeviceSync(cb.ss)
-	} else if dType == spytypes.FFTUInt8 {
-		onFFT(data.([]byte))
+	switch dType {
+	case client.SamplesComplex32:
+		go addS16Fifo(data.([]client.ComplexInt16))
+	case client.SmartSamplesComplex32:
+		go onSmartIQ(cb.rs, data.([]client.ComplexInt16))
+	case client.DeviceSync:
+		onDeviceSync(cb.rs)
 	}
 }
 
-func onDeviceSync(ss *spyserver.Spyserver) {
+func onDeviceSync(rs *client.RadioClient) {
 	var d = deviceMessage{
-		DeviceName: ss.GetName(),
+		DeviceName: rs.GetName(),
 
-		DisplayCenterFrequency: ss.GetDisplayCenterFrequency(),
-		DisplayBandwidth:       ss.GetDisplayBandwidth(),
-		DisplayOffset:          ss.GetDisplayOffset(),
-		DisplayRange:           ss.GetDisplayRange(),
-		DisplayPixels:          ss.GetDisplayPixels(),
+		DisplayCenterFrequency: rs.GetSmartCenterFrequency(),
+		DisplayBandwidth:       rs.GetSampleRate(),
+		DisplayOffset:          int32(displayOffset),
+		DisplayRange:           int32(displayRange),
+		DisplayPixels:          uint32(displayPixels),
 
-		CurrentSampleRate:      ss.GetSampleRate(),
-		ChannelCenterFrequency: ss.GetCenterFrequency(),
-		Gain:              ss.GetGain(),
+		CurrentSampleRate:      rs.GetSampleRate(),
+		ChannelCenterFrequency: rs.GetCenterFrequency(),
+		Gain:              rs.GetGain(),
 		OutputRate:        uint32(outputRate),
 		FilterBandwidth:   uint32(filterBandwidth),
 		DemodulatorMode:   demodulatorMode,
@@ -67,7 +72,7 @@ func onDeviceSync(ss *spyserver.Spyserver) {
 }
 
 func refreshDevice() {
-	sendPacket := currDevice.Gain != spyserver.InvalidValue
+	sendPacket := currDevice.Gain != protocol.Invalid
 	if sendPacket {
 		m, err := json.Marshal(currDevice)
 		if err != nil {
@@ -75,6 +80,46 @@ func refreshDevice() {
 		}
 		go broadcastMessage(string(m))
 	}
+}
+
+func onSmartIQ(rs *client.RadioClient, data []client.ComplexInt16) {
+	var samples = make([]complex64, len(data))
+	var scale = 256 / float32(displayRange)
+
+	for i, v := range data {
+		var a = float32(v.Real)
+		var b = float32(v.Imag)
+		samples[i] = complex(a/32768, b/32768)
+	}
+	fftCData := fft.FFT(samples[:displayPixels])
+
+	var l = len(fftCData)
+	var scaledV float32
+	var fftSamples = make([]uint8, len(fftCData))
+	var lastV [2]float32
+	var cV = 0
+	for i, v := range fftCData {
+		var m = float64(tools.ComplexAbsSquared(v) * (1.0 / float32(rs.GetSmartSampleRate())))
+		var v = float32(10 * math.Log10(m))
+
+		if i > 0 {
+			v = (lastV[0] + lastV[1]*2 + v*4) / 7
+			cV++
+			cV %= 2
+		}
+		lastV[cV] = v
+
+		// FFT is symmetric
+		var oI = (i + l/2) % l
+		scaledV = 255 + ((v - float32(displayOffset)) * scale)
+		if scaledV < 0 {
+			scaledV = 0
+		} else if scaledV > 255 {
+			scaledV = 255
+		}
+		fftSamples[oI] = uint8(scaledV)
+	}
+	onFFT(fftSamples)
 }
 
 func onFFT(data []uint8) {
@@ -101,7 +146,6 @@ func sendData(data interface{}) {
 		}
 		go broadcastMessage(string(m))
 	}
-	//log.Println("Sending buffer")
 }
 
 func createServer() *http.Server {
@@ -185,48 +229,43 @@ func main() {
 	}
 
 	initDSP()
-
-	var ss = spyserver.MakeSpyserverByFullHS(spyserverhost)
+	var rs = client.MakeRadioClientByFullHS(radioserverhost)
 	var cb = segdspCallback{
-		ss: ss,
+		rs: rs,
 	}
 
-	ss.SetCallback(&cb)
+	rs.SetCallback(&cb)
 
-	ss.Connect()
-	defer ss.Disconnect()
+	rs.Connect()
+	defer rs.Disconnect()
 
-	log.Println(fmt.Sprintf("Device: %s", ss.GetName()))
-	var srs = ss.GetAvailableSampleRates()
+	log.Println(fmt.Sprintf("Device: %s", rs.GetName()))
+	var srs = rs.GetAvailableSampleRates()
 
 	log.Println("Available SampleRates:")
 	for i := 0; i < len(srs); i++ {
 		log.Println(fmt.Sprintf("		%f msps (dec stage %d)", float32(srs[i])/1e6, i))
 	}
 
-	ss.SetStreamingMode(spyserver.StreamModeFFTIQ)
-	//ss.SetStreamingMode(spy2go.StreamModeIQOnly)
-	ss.SetDisplayPixels(uint32(displayPixels))
-	ss.SetDisplayDecimationStage(uint32(displayDecimationStage))
-	ss.SetDisplayCenterFrequency(uint32(displayFrequency))
-	ss.SetDisplayRange(90)
-	ss.SetDisplayOffset(0)
+	rs.SetStreamingMode(protocol.TypeCombined)
+	rs.SetSmartDecimation(uint32(displayDecimationStage))
+	rs.SetSmartCenterFrequency(uint32(displayFrequency))
 
-	if ss.SetDecimationStage(uint32(channelDecimationStage)) == spyserver.InvalidValue {
+	if rs.SetDecimationStage(uint32(channelDecimationStage)) == protocol.Invalid {
 		log.Println("Error setting sample rate.")
 	}
-	if ss.SetCenterFrequency(uint32(channelFrequency)) == spyserver.InvalidValue {
+	if rs.SetCenterFrequency(uint32(channelFrequency)) == protocol.Invalid {
 		log.Println("Error setting center frequency.")
 	}
 
 	time.Sleep(10 * time.Millisecond)
 
-	log.Println("IQ Sample Rate: ", ss.GetSampleRate())
-	log.Println("IQ Center Frequency ", ss.GetCenterFrequency())
-	log.Println("FFT Center Frequency ", ss.GetDisplayCenterFrequency())
-	log.Println("FFT Sample Rate: ", ss.GetDisplaySampleRate())
+	log.Println("IQ Sample Rate: ", rs.GetSampleRate())
+	log.Println("IQ Center Frequency ", rs.GetCenterFrequency())
+	log.Println("SmartIQ Center Frequency ", rs.GetSmartCenterFrequency())
+	log.Println("SmartIQ Sample Rate: ", rs.GetSmartSampleRate())
 
-	demodulator = buildDSP(ss.GetSampleRate())
+	demodulator = buildDSP(rs.GetSampleRate())
 	demodulator.SetEventManager(&ev)
 
 	dspCb = sendData
@@ -246,7 +285,7 @@ func main() {
 	startDSP()
 
 	log.Println("Starting")
-	ss.Start()
+	rs.Start()
 
 	<-done
 
@@ -256,7 +295,7 @@ func main() {
 	}
 
 	log.Print("Stopping")
-	ss.Stop()
+	rs.Stop()
 	stopDSP()
 
 	fmt.Println("Work Done")

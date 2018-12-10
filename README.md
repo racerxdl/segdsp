@@ -63,7 +63,7 @@ CENTER_FREQUENCY="145570000" DEMOD_MODE="FM" FM_DEVIATION="5000" FS_BANDWIDTH="1
 | `-outputRate`         | `OUTPUT_RATE`           | number |                  | Output Rate in Hz                                                 | 48000           |
 | `-record`             | `RECORD`                |  bool  | `true`, `false`  | If it should record output when not squelched                     | false           |
 | `-recordMethod`       | `RECORD_METHOD`         | string | `file`           | Method to use when recording                                      | file            |
-| `-spyserver`          | `SPYSERVER`             | string |                  | SpyServer Address                                                 | localhost:5555  |
+| `-radioserver`        | `RADIOSERVER`           | string |                  | radioserver Address                                                 | localhost:5555  |
 | `-stationName`        | `STATION_NAME`          | string |                  | Name of the Station                                               | SegDSP          |
 
 ## Git Hooks
