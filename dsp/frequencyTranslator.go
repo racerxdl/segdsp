@@ -62,7 +62,7 @@ func (ft *FrequencyTranslator) Work(data []complex64) []complex64 {
 	if ft.needsUpdate {
 		ft.updateFilter()
 	}
-
+	var outLength = len(data) / ft.decimation
 	var samples = append(ft.sampleHistory, data...)
 	var output []complex64
 	if ft.decimation > 1 {
@@ -73,9 +73,7 @@ func (ft *FrequencyTranslator) Work(data []complex64) []complex64 {
 	output = ft.rotator.Work(output)
 	ft.sampleHistory = samples[len(samples)-ft.tapsLen:]
 
-	var cut = Min(len(data), len(output))
-
-	return output[:cut]
+	return output[:outLength]
 }
 
 func (ft *FrequencyTranslator) SetFrequency(frequency float32) {
