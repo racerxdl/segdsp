@@ -1,7 +1,6 @@
 package demodcore
 
 import (
-	"github.com/racerxdl/go.fifo"
 	"github.com/racerxdl/segdsp/dsp"
 	"github.com/racerxdl/segdsp/eventmanager"
 	"log"
@@ -9,23 +8,24 @@ import (
 )
 
 type FMDemod struct {
-	sampleRate   float64
-	outputRate   uint32
-	firstStage   *dsp.FirFilter
-	secondStage  *dsp.FloatFirFilter
-	signalBw     float64
-	deviation    float32
-	quadDemod    *dsp.QuadDemod
-	decimation   int
-	resampler    *dsp.FloatResampler
-	finalStage   *dsp.FloatFirFilter
-	deemph       *dsp.FMDeemph
-	outFifo      *fifo.Queue
-	sql          *dsp.Squelch
-	tau          float32
-	packedParams FMDemodParams
-	ev           *eventmanager.EventManager
-	lastSquelch  bool
+	sampleRate      float64
+	outputRate      uint32
+	firstStage      *dsp.FirFilter
+	secondStage     *dsp.FloatFirFilter
+	signalBw        float64
+	deviation       float32
+	quadDemod       *dsp.QuadDemod
+	decimation      int
+	resampler       *dsp.FloatResampler
+	finalStage      *dsp.FloatFirFilter
+	deemph          *dsp.FMDeemph
+	sql             *dsp.Squelch
+	tau             float32
+	packedParams    FMDemodParams
+	ev              *eventmanager.EventManager
+	lastSquelch     bool
+	outputBuffer    []float32
+	outputBufferPos int
 }
 
 type FMDemodParams struct {
@@ -57,12 +57,16 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 	var fmDemodGain = quadRate / (2 * math.Pi * float64(maxDeviation))
 	var resampleRate = float32(float64(outputRate) / quadRate)
 
+	log.Println("Resample Rate: ", resampleRate)
+
 	var stageCut = math.Min(float64(outputRate), quadRate) / 2
 
 	var sql = dsp.MakeSquelch(squelch, squelchAlpha)
 
 	return &FMDemod{
-		sampleRate: float64(sampleRate),
+		outputBufferPos: 0,
+		outputBuffer:    make([]float32, 16384),
+		sampleRate:      float64(sampleRate),
 		firstStage: dsp.MakeFirFilter(
 			dsp.MakeLowPassFixed(
 				1,
@@ -94,7 +98,6 @@ func MakeCustomFMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 			),
 		),
 		outputRate: outputRate,
-		outFifo:    fifo.NewQueue(),
 		sql:        sql,
 		packedParams: FMDemodParams{
 			SampleRate:      sampleRate,
@@ -158,23 +161,29 @@ func (f *FMDemod) Work(data []complex64) interface{} {
 
 	f.lastSquelch = f.sql.IsMuted()
 
-	for i := 0; i < len(fmDemodData); i++ {
-		f.outFifo.Add(fmDemodData[i])
-	}
+	if f.outputBufferPos+len(fmDemodData) >= len(f.outputBuffer) {
+		// We have more samples than we need to return. Let's break
+		var diff = len(f.outputBuffer) - f.outputBufferPos
+		copy(f.outputBuffer[f.outputBufferPos:], fmDemodData[:diff])
+		var outBuf = make([]float32, len(f.outputBuffer))
+		copy(outBuf, f.outputBuffer)
 
-	if f.outFifo.Len() >= 16384 {
-		var outBuff = make([]float32, 16384)
-
-		for i := 0; i < 16384; i++ {
-			outBuff[i] = f.outFifo.Next().(float32)
-		}
+		// Now we have a outBuf ready to delivery, but we need to process remaining samples
+		fmDemodData = fmDemodData[diff:]
+		f.outputBufferPos = 0
+		copy(f.outputBuffer, fmDemodData)
+		f.outputBufferPos += len(fmDemodData)
 
 		return DemodData{
 			OutputRate: f.outputRate,
 			Level:      f.sql.GetAvgLevel(),
-			Data:       outBuff,
+			Data:       outBuf,
 		}
-	}
+	} else {
+		// We dont have enough to overflow, let's just append
+		copy(f.outputBuffer[f.outputBufferPos:], fmDemodData)
+		f.outputBufferPos += len(fmDemodData)
 
-	return nil
+		return nil
+	}
 }

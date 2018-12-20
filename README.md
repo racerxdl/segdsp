@@ -16,6 +16,10 @@ All `master` branch builds is uploaded to dockerhub with the name `racerxdl/segd
 
 Please check the [Releases](https://github.com/racerxdl/segdsp/releases) for binary releases.
 
+## Nice Sample using SegDSP as a Library
+
+Here is a nice sample using segdsp as a library: https://github.com/racerxdl/segdsp-sample
+
 ## Running
 
 SegDSP is pretty straightforward to run if you know what you want to capture. It accepts both Environment Variables (suitable for docker containers) or just normal command line arguments.

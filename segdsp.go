@@ -21,8 +21,12 @@ import (
 	"time"
 )
 
-var displayRange = 120
+var displayRange = 90
 var displayOffset = -50
+var lastFFT []float32
+var fftSamples []uint8
+var fftSamplesF []float32
+var smartIqSamples []complex64
 
 type segdspCallback struct {
 	rs *client.RadioClient
@@ -44,7 +48,7 @@ func onDeviceSync(rs *client.RadioClient) {
 		DeviceName: rs.GetName(),
 
 		DisplayCenterFrequency: rs.GetSmartCenterFrequency(),
-		DisplayBandwidth:       rs.GetSampleRate(),
+		DisplayBandwidth:       rs.GetSmartSampleRate(),
 		DisplayOffset:          int32(displayOffset),
 		DisplayRange:           int32(displayRange),
 		DisplayPixels:          uint32(displayPixels),
@@ -83,32 +87,45 @@ func refreshDevice() {
 }
 
 func onSmartIQ(rs *client.RadioClient, data []client.ComplexInt16) {
-	var samples = make([]complex64, len(data))
 	var scale = 256 / float32(displayRange)
+	data = data[:displayPixels]
+	if smartIqSamples == nil || len(smartIqSamples) != len(data) {
+		smartIqSamples = make([]complex64, len(data))
+	}
 
 	for i, v := range data {
 		var a = float32(v.Real)
 		var b = float32(v.Imag)
-		samples[i] = complex(a/32768, b/32768)
+		smartIqSamples[i] = complex(a/32768, b/32768)
 	}
-	fftCData := fft.FFT(samples[:displayPixels])
+
+	fftCData := fft.FFT(smartIqSamples)
 
 	var l = len(fftCData)
 	var scaledV float32
-	var fftSamples = make([]uint8, len(fftCData))
-	var lastV [2]float32
-	var cV = 0
+
+	if fftSamples == nil || len(fftSamples) != len(fftCData) {
+		fftSamples = make([]uint8, len(fftCData))
+		fftSamplesF = make([]float32, len(fftCData))
+	}
+
+	if lastFFT == nil || len(lastFFT) != len(fftSamples) {
+		lastFFT = make([]float32, len(fftCData))
+	}
+
 	for i, v := range fftCData {
 		var m = float64(tools.ComplexAbsSquared(v) * (1.0 / float32(rs.GetSmartSampleRate())))
-		var v = float32(10 * math.Log10(m))
+		var o = float32(10 * math.Log10(m))
+		fftSamplesF[i] = o
+	}
 
-		if i > 0 {
-			v = (lastV[0] + lastV[1]*2 + v*4) / 7
-			cV++
-			cV %= 2
-		}
-		lastV[cV] = v
+	for i := range fftSamplesF {
+		fftSamplesF[i] = (lastFFT[i] + fftSamplesF[i]) / 2
+	}
 
+	copy(lastFFT, fftSamplesF)
+
+	for i, v := range fftSamplesF {
 		// FFT is symmetric
 		var oI = (i + l/2) % l
 		scaledV = 255 + ((v - float32(displayOffset)) * scale)
