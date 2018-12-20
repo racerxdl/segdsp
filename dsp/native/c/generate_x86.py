@@ -49,6 +49,11 @@ sources = [
     "filename": "rotate_complex.c",
     "function": "RotateNativeComplex",
     "cFunction": "rotateComplex",
+  },
+  {
+    "filename": "firfilter.c",
+    "function": "FirFilter",
+    "cFunction": "firFilter",
   }
 ]
 
