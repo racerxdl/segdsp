@@ -35,6 +35,22 @@ func (f *CTFirFilter) FilterOut(data []complex64) []complex64 {
 	return output
 }
 
+func (f *CTFirFilter) FilterBuffer(input, output []complex64) int {
+	var samples = append(f.sampleHistory, input...)
+	var length = len(samples) - f.tapsLen
+
+	if len(output) < length {
+		panic("There is not enough space in output buffer")
+	}
+
+	for i := 0; i < length; i++ {
+		output[i] = ComplexDotProductResult(samples[i:], f.taps)
+	}
+	f.sampleHistory = samples[length:]
+
+	return length
+}
+
 func (f *CTFirFilter) FilterSingle(data []complex64) complex64 {
 	return ComplexDotProductResult(data, f.taps)
 }
@@ -63,6 +79,26 @@ func (f *CTFirFilter) FilterDecimateOut(data []complex64, decimate int) []comple
 	}
 	f.sampleHistory = samples[len(samples)-f.tapsLen:]
 	return output
+}
+
+func (f *CTFirFilter) FilterDecimateBuffer(input, output []complex64, decimate int) int {
+	var samples = append(f.sampleHistory, input...)
+	var length = len(input) / decimate
+
+	if len(output) < length {
+		panic("There is not enough space in output buffer")
+	}
+
+	for i := 0; i < length; i++ {
+		var srcIdx = decimate * i
+		var sl = samples[srcIdx:]
+		if len(sl) < len(f.taps) {
+			break
+		}
+		output[i] = ComplexDotProductResult(sl, f.taps)
+	}
+	f.sampleHistory = samples[len(samples)-f.tapsLen:]
+	return length
 }
 
 func (f *CTFirFilter) SetTaps(taps []complex64) {

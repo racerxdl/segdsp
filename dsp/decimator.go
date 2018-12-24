@@ -16,6 +16,10 @@ func (f *Decimator) Work(data []complex64) []complex64 {
 	return f.fir.FilterDecimateOut(data, f.decimationRatio)
 }
 
+func (f *Decimator) WorkBuffer(input, output []complex64) int {
+	return f.fir.FilterDecimateBuffer(input, output, f.decimationRatio)
+}
+
 type FloatDecimator struct {
 	fir             *FloatFirFilter
 	decimationRatio int
@@ -30,4 +34,8 @@ func MakeFloatDecimator(decimationRatio int) *FloatDecimator {
 
 func (f *FloatDecimator) Work(data []float32) []float32 {
 	return f.fir.FilterDecimateOut(data, f.decimationRatio)
+}
+
+func (f *FloatDecimator) WorkBuffer(input, output []float32) int {
+	return f.fir.FilterDecimateBuffer(input, output, f.decimationRatio)
 }
