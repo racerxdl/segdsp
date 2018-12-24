@@ -38,6 +38,29 @@ func (f *FeedForwardAGC) Work(input []complex64) []complex64 {
 	return output
 }
 
+func (f *FeedForwardAGC) WorkBuffer(input, output []complex64) int {
+	var gain float64
+	samples := append(f.sampleHistory, input...)
+
+	if len(output) < len(input) {
+		panic("There is not enough space in output buffer")
+	}
+
+	for i := 0; i < len(input); i++ {
+		maxEnv := maxGain
+		for j := 0; j < len(f.sampleHistory); j++ {
+			maxEnv = math.Max(maxEnv, envelope(samples[i+j]))
+		}
+
+		gain = f.reference / maxEnv
+		output[i] = complex(float32(gain)*real(samples[i]), float32(gain)*imag(samples[i]))
+	}
+
+	f.sampleHistory = samples[len(samples)-f.numSamples:]
+
+	return len(input)
+}
+
 func envelope(c complex64) float64 {
 	realAbs := math.Abs(float64(real(c)))
 	imagAbs := math.Abs(float64(real(c)))

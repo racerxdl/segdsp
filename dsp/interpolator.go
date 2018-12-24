@@ -27,6 +27,24 @@ func (f *Interpolator) Work(data []complex64) []complex64 {
 	return output
 }
 
+func (f *Interpolator) WorkBuffer(input, output []complex64) int {
+	var oLen = len(input) * f.interpolationRatio
+	if len(output) < oLen {
+		panic("Output buffer does not have enough length")
+	}
+	for i := 0; i < len(input); i++ {
+		var idx = i * f.interpolationRatio
+		output[idx] = input[i]
+		for j := 1; j < f.interpolationRatio; j++ {
+			output[idx+j] = complex(0, 0)
+		}
+	}
+
+	f.fir.Filter(output, oLen)
+
+	return oLen
+}
+
 type FloatInterpolator struct {
 	fir                *FloatFirFilter
 	interpolationRatio int
@@ -52,4 +70,21 @@ func (f *FloatInterpolator) Work(data []float32) []float32 {
 
 	f.fir.Filter(output, len(output))
 	return output
+}
+
+func (f *FloatInterpolator) WorkBuffer(input, output []float32) int {
+	var oLen = len(input) * f.interpolationRatio
+	if len(output) < oLen {
+		panic("There is not enough space in output buffer")
+	}
+	for i := 0; i < len(input); i++ {
+		var idx = i * f.interpolationRatio
+		output[idx] = input[i]
+		for j := 1; j < f.interpolationRatio; j++ {
+			output[idx+j] = complex(0, 0)
+		}
+	}
+
+	f.fir.Filter(output, oLen)
+	return oLen
 }
