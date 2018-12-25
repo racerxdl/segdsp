@@ -164,8 +164,6 @@ func (f *FloatResampler) filterBuffer(input, output []float32, length int) (read
 
 	f.lastFilter = j
 
-	output = output[:wrote]
-
 	return read, wrote
 }
 
