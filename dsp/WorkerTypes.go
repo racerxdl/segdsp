@@ -17,3 +17,9 @@ type Complex2Float32Worker interface {
 	WorkBuffer(input []complex64, output []float32) int
 	PredictOutputSize(inputLength int) int
 }
+
+type Float322ByteWorker interface {
+	Work(input []float32) []byte
+	WorkBuffer(input []float32, output []byte) int
+	PredictOutputSize(inputLength int) int
+}

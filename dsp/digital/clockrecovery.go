@@ -115,14 +115,15 @@ func NewComplexClockRecovery(omega, gainOmega, mu, gainMu, omegaRelativeLimit fl
 	return ccr
 }
 
-func (ccr *ComplexClockRecovery) internalWork(input []complex64) []complex64 {
-	var output = make([]complex64, 0)
+func (ccr *ComplexClockRecovery) internalWorkBuffer(input, output []complex64) int {
 	var inputIndex = 0
 	var nInput = len(input) - ccr.interp.GetNTaps() - fudgeFactor
+	var nOutput = len(output)
 	var mmVal float32
 	var u, x, y complex64
+	var outputIndex = 0
 
-	for inputIndex < nInput {
+	for inputIndex < nInput && outputIndex < nOutput {
 		ccr.p2T = ccr.p1T
 		ccr.p1T = ccr.p0T
 		ccr.p0T = ccr.interp.Interpolate(input[inputIndex:], ccr.mu)
@@ -136,7 +137,8 @@ func (ccr *ComplexClockRecovery) internalWork(input []complex64) []complex64 {
 		u = y - x
 
 		mmVal = real(u)
-		output = append(output, ccr.p0T)
+		output[outputIndex] = ccr.p0T
+		outputIndex++
 
 		mmVal = tools.Clip(mmVal, 1.0)
 
@@ -158,17 +160,20 @@ func (ccr *ComplexClockRecovery) internalWork(input []complex64) []complex64 {
 		panic("Consumed more samples than input!")
 	}
 
-	return output
+	return outputIndex
 }
 
 func (ccr *ComplexClockRecovery) Work(input []complex64) []complex64 {
 	var buff = make([]complex64, len(input)+ccr.sampleHistoryCount)
-	copy(buff, ccr.sampleHistory[:ccr.sampleHistoryCount])
-	copy(buff[ccr.sampleHistoryCount:], input)
+	l := ccr.WorkBuffer(input, buff)
+	return buff[:l]
+}
 
-	var symbols = ccr.internalWork(buff)
+func (ccr *ComplexClockRecovery) WorkBuffer(input, output []complex64) int {
+	var s = append(ccr.sampleHistory, input...)
+	var symbols = ccr.internalWorkBuffer(s, output)
 
-	ccr.sampleHistoryCount = len(buff) - ccr.consumed
+	ccr.sampleHistoryCount = len(s) - ccr.consumed
 
 	if ccr.sampleHistoryCount < ccHistoryLength {
 		ccr.sampleHistoryCount = ccHistoryLength
@@ -178,9 +183,13 @@ func (ccr *ComplexClockRecovery) Work(input []complex64) []complex64 {
 		ccr.sampleHistory = make([]complex64, ccr.sampleHistoryCount)
 	}
 
-	copy(ccr.sampleHistory, buff[len(buff)-ccr.sampleHistoryCount:])
+	copy(ccr.sampleHistory, s[len(s)-ccr.sampleHistoryCount:])
 
 	return symbols
+}
+
+func (ccr *ComplexClockRecovery) PredictOutputSize(inputLength int) int {
+	return inputLength + ccr.sampleHistoryCount
 }
 
 // endregion
@@ -264,15 +273,17 @@ func NewFloatClockRecovery(omega, gainOmega, mu, gainMu, omegaRelativeLimit floa
 	return ccr
 }
 
-func (ccr *FloatClockRecovery) internalWork(input []float32) []float32 {
-	var output = make([]float32, 0)
+func (ccr *FloatClockRecovery) internalWorkBuffer(input, output []float32) int {
 	var inputIndex = 0
 	var nInput = len(input) - ccr.interp.GetNTaps() - fudgeFactor
 	var mmVal float32
+	var nOutput = len(output)
+	var outputIndex = 0
 
-	for inputIndex < nInput {
+	for inputIndex < nInput && outputIndex < nOutput {
 		var o = ccr.interp.Interpolate(input[inputIndex:], ccr.mu)
-		output = append(output, o)
+		output[outputIndex] = o
+		outputIndex++
 
 		mmVal = floatSlicer(ccr.lastSample)*o - floatSlicer(o)*ccr.lastSample
 		ccr.lastSample = o
@@ -295,17 +306,20 @@ func (ccr *FloatClockRecovery) internalWork(input []float32) []float32 {
 		panic("Consumed more samples than input!")
 	}
 
-	return output
+	return outputIndex
 }
 
 func (ccr *FloatClockRecovery) Work(input []float32) []float32 {
 	var buff = make([]float32, len(input)+ccr.sampleHistoryCount)
-	copy(buff, ccr.sampleHistory[:ccr.sampleHistoryCount])
-	copy(buff[ccr.sampleHistoryCount:], input)
+	l := ccr.WorkBuffer(input, buff)
+	return buff[:l]
+}
 
-	var symbols = ccr.internalWork(buff)
+func (ccr *FloatClockRecovery) WorkBuffer(input, output []float32) int {
+	var s = append(ccr.sampleHistory, input...)
+	var symbols = ccr.internalWorkBuffer(s, output)
 
-	ccr.sampleHistoryCount = len(buff) - ccr.consumed
+	ccr.sampleHistoryCount = len(s) - ccr.consumed
 
 	if ccr.sampleHistoryCount < ccHistoryLength {
 		ccr.sampleHistoryCount = ccHistoryLength
@@ -315,9 +329,13 @@ func (ccr *FloatClockRecovery) Work(input []float32) []float32 {
 		ccr.sampleHistory = make([]float32, ccr.sampleHistoryCount)
 	}
 
-	copy(ccr.sampleHistory, buff[len(buff)-ccr.sampleHistoryCount:])
+	copy(ccr.sampleHistory, s[len(s)-ccr.sampleHistoryCount:])
 
 	return symbols
+}
+
+func (ccr *FloatClockRecovery) PredictOutputSize(inputLength int) int {
+	return inputLength + ccr.sampleHistoryCount
 }
 
 // endregion

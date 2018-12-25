@@ -24,8 +24,14 @@ func MakeFloat4LevelSlicer(alpha float32) *Float4LevelSlicer {
 // Work performs the DC Offset removal and 4 level slicing
 func (b4 *Float4LevelSlicer) Work(data []float32) []byte {
 	var output = make([]byte, len(data))
-	for i := 0; i < len(data); i++ {
-		var sample = data[i]
+	b4.WorkBuffer(data, output)
+	return output
+}
+
+// Work performs the DC Offset removal and 4 level slicing
+func (b4 *Float4LevelSlicer) WorkBuffer(input []float32, output []byte) int {
+	for i := 0; i < len(input); i++ {
+		var sample = input[i]
 
 		// Recalculate DC Offset
 		b4.average = b4.average*b4.beta + sample*b4.alpha
@@ -47,5 +53,9 @@ func (b4 *Float4LevelSlicer) Work(data []float32) []byte {
 			}
 		}
 	}
-	return output
+	return len(input)
+}
+
+func (b4 *Float4LevelSlicer) PredictOutputSize(inputLength int) int {
+	return inputLength
 }
