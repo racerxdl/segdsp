@@ -4,7 +4,6 @@ import (
 	"github.com/racerxdl/go.fifo"
 	"github.com/racerxdl/segdsp/dsp"
 	"github.com/racerxdl/segdsp/eventmanager"
-	"log"
 	"math"
 )
 
@@ -22,6 +21,7 @@ type AMDemod struct {
 	ev           *eventmanager.EventManager
 	lastSquelch  bool
 	ffAgc        *dsp.FeedForwardAGC
+	c2m          *dsp.Complex2Magnitude
 }
 
 type AMDemodParams struct {
@@ -47,9 +47,9 @@ func MakeCustomAMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 	var quadRate = float64(sampleRate) / float64(decim)
 	var resampleRate = float32(float64(outputRate) / quadRate)
 
-	log.Println("Decimation:", decim)
-	log.Println("Quad Rate:", quadRate)
-	log.Println("Resample Rate:", resampleRate)
+	//log.Println("Decimation:", decim)
+	//log.Println("Quad Rate:", quadRate)
+	//log.Println("Resample Rate:", resampleRate)
 
 	var sql = dsp.MakeSquelch(squelch, squelchAlpha)
 	var agc = dsp.MakeFeedForwardAGC(1024, 1)
@@ -88,6 +88,7 @@ func MakeCustomAMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 		lastSquelch: true,
 		ffAgc:       agc,
 		signalBw:    signalBw,
+		c2m:         dsp.MakeComplex2Magnitude(),
 	}
 }
 
@@ -112,11 +113,11 @@ func (f *AMDemod) Work(data []complex64) interface{} {
 	filteredData = f.sql.Work(filteredData)
 	filteredData = f.ffAgc.Work(filteredData)
 
-	var fmDemodData = dsp.Complex2Magnitude(filteredData)
+	var amDemodData = f.c2m.Work(filteredData)
 
-	fmDemodData = f.resampler.Work(fmDemodData)
+	amDemodData = f.resampler.Work(amDemodData)
 
-	fmDemodData = f.finalStage.FilterOut(fmDemodData)
+	amDemodData = f.finalStage.FilterOut(amDemodData)
 
 	if f.lastSquelch != f.sql.IsMuted() && f.ev != nil {
 		var evName string
@@ -133,8 +134,8 @@ func (f *AMDemod) Work(data []complex64) interface{} {
 
 	f.lastSquelch = f.sql.IsMuted()
 
-	for i := 0; i < len(fmDemodData); i++ {
-		f.outFifo.Add(fmDemodData[i] - 1)
+	for i := 0; i < len(amDemodData); i++ {
+		f.outFifo.Add(amDemodData[i] - 1)
 	}
 
 	if f.outFifo.Len() >= 16384 {
