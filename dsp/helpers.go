@@ -35,6 +35,11 @@ var MultiplyConjugateInline func(vecA, vecB []complex64, length int)
 // phase = phase * phaseIncrement
 var RotateComplex func(input []complex64, phase *complex64, phaseIncrement complex64, length int) []complex64
 
+// RotateComplex performs the phase rotation of each input items by phase and then increments phase
+// out[i] = input[i] * phase
+// phase = phase * phaseIncrement
+var RotateComplexBuffer func(input, output []complex64, phase *complex64, phaseIncrement complex64, length int) int
+
 // ComplexDotProduct performs the Dot Product between two complex vectors and store the result at *result
 func ComplexDotProduct(result *complex64, input []complex64, taps []complex64) {
 	*result = ComplexDotProductResult(input, taps)
@@ -155,6 +160,29 @@ func genericRotateComplex(input []complex64, phase *complex64, phaseIncrement co
 	return out
 }
 
+// genericRotateComplex performs the phase rotation of each input items by phase and then increments phase
+// out[i] = input[i] * phase
+// phase = phase * phaseIncrement
+// This is the Generic Function in case no SIMD alternative is available
+func genericRotateComplexBuffer(input, output []complex64, phase *complex64, phaseIncrement complex64, length int) int {
+	var counter = 0
+
+	if len(input) > len(output) {
+		panic("There is not enough space in output buffer")
+	}
+
+	for i := 0; i < length; i++ {
+		counter++
+		output[i] = input[i] * (*phase)
+		*phase = *phase * phaseIncrement
+		if counter%512 == 0 {
+			*phase = tools.ComplexNormalize(*phase)
+		}
+	}
+
+	return len(input)
+}
+
 // init initializes the Helper function placeholders with SIMD Alternatives when available
 func init() {
 	if native.GetNativeDotProductComplex() != nil {
@@ -191,6 +219,12 @@ func init() {
 		RotateComplex = native.GetRotateComplex()
 	} else {
 		RotateComplex = genericRotateComplex
+	}
+
+	if native.GetRotateComplexBuffer() != nil {
+		RotateComplexBuffer = native.GetRotateComplexBuffer()
+	} else {
+		RotateComplexBuffer = genericRotateComplexBuffer
 	}
 }
 

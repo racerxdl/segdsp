@@ -46,6 +46,10 @@ func GetRotateComplex() func(input []complex64, phase *complex64, phaseIncrement
 	return nil
 }
 
+func GetRotateComplexBuffer() func(input, output []complex64, phase *complex64, phaseIncrement complex64, length int) int {
+	return nil
+}
+
 func GetFirFilter() func(input []complex64, output []complex64, taps []float32) {
 	return nil
 }
