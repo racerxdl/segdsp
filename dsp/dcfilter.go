@@ -70,3 +70,7 @@ func (dc *DCFilter) WorkBuffer(input, output []complex64) int {
 
 	return len(input)
 }
+
+func (dc *DCFilter) PredictOutputSize(inputLength int) int {
+	return inputLength
+}

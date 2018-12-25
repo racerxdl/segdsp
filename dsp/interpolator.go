@@ -45,6 +45,10 @@ func (f *Interpolator) WorkBuffer(input, output []complex64) int {
 	return oLen
 }
 
+func (f *Interpolator) PredictOutputSize(inputLength int) int {
+	return inputLength * f.interpolationRatio
+}
+
 type FloatInterpolator struct {
 	fir                *FloatFirFilter
 	interpolationRatio int
@@ -87,4 +91,8 @@ func (f *FloatInterpolator) WorkBuffer(input, output []float32) int {
 
 	f.fir.Filter(output, oLen)
 	return oLen
+}
+
+func (f *FloatInterpolator) PredictOutputSize(inputLength int) int {
+	return inputLength * f.interpolationRatio
 }

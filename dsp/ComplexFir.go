@@ -6,6 +6,7 @@ type CTFirFilter struct {
 	taps          []complex64
 	sampleHistory []complex64
 	tapsLen       int
+	decimation    int
 }
 
 func MakeCTFirFilter(taps []complex64) *CTFirFilter {
@@ -13,6 +14,16 @@ func MakeCTFirFilter(taps []complex64) *CTFirFilter {
 		taps:          taps,
 		sampleHistory: make([]complex64, len(taps)),
 		tapsLen:       len(taps),
+		decimation:    1,
+	}
+}
+
+func MakeDecimationCTFirFilter(decimation int, taps []complex64) *CTFirFilter {
+	return &CTFirFilter{
+		taps:          taps,
+		sampleHistory: make([]complex64, len(taps)),
+		tapsLen:       len(taps),
+		decimation:    decimation,
 	}
 }
 
@@ -52,10 +63,16 @@ func (f *CTFirFilter) FilterBuffer(input, output []complex64) int {
 }
 
 func (f *CTFirFilter) Work(data []complex64) []complex64 {
+	if f.decimation > 1 {
+		return f.FilterDecimateOut(data, f.decimation)
+	}
 	return f.FilterOut(data)
 }
 
 func (f *CTFirFilter) WorkBuffer(input, output []complex64) int {
+	if f.decimation > 1 {
+		return f.FilterDecimateBuffer(input, output, f.decimation)
+	}
 	return f.FilterBuffer(input, output)
 }
 
@@ -111,6 +128,10 @@ func (f *CTFirFilter) FilterDecimateBuffer(input, output []complex64, decimate i
 
 func (f *CTFirFilter) SetTaps(taps []complex64) {
 	f.taps = taps
+}
+
+func (f *CTFirFilter) PredictOutputSize(inputLength int) int {
+	return inputLength / f.decimation
 }
 
 // endregion
