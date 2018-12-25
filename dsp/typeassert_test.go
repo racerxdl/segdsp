@@ -46,6 +46,7 @@ func TestFloat32Workers(t *testing.T) {
 func TestComplex2Float32Workers(t *testing.T) {
 	var cfWorkersType = []interface{}{
 		&QuadDemod{},
+		&Complex2Magnitude{},
 	}
 
 	for _, v := range cfWorkersType {
