@@ -58,3 +58,13 @@ func (r *Rotator) WorkBuffer(input, output []complex64) int {
 
 	return len(input)
 }
+
+func (r *Rotator) WorkInline(data []complex64) {
+	for i := 0; i < len(data); i++ {
+		data[i] = r.Rotate(data[i])
+	}
+}
+
+func (r *Rotator) PredictOutputSize(inputLength int) int {
+	return inputLength
+}

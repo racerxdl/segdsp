@@ -86,3 +86,7 @@ func (f *Squelch) WorkBuffer(input, output []complex64) int {
 
 	return len(input)
 }
+
+func (f *Squelch) PredictOutputSize(inputLength int) int {
+	return inputLength
+}

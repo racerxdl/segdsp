@@ -6,6 +6,7 @@ type FirFilter struct {
 	taps          []float32
 	sampleHistory []complex64
 	tapsLen       int
+	decimation    int
 }
 
 func MakeFirFilter(taps []float32) *FirFilter {
@@ -13,6 +14,16 @@ func MakeFirFilter(taps []float32) *FirFilter {
 		taps:          taps,
 		sampleHistory: make([]complex64, len(taps)),
 		tapsLen:       len(taps),
+		decimation:    1,
+	}
+}
+
+func MakeDecimationFirFilter(decimation int, taps []float32) *FirFilter {
+	return &FirFilter{
+		taps:          taps,
+		sampleHistory: make([]complex64, len(taps)),
+		tapsLen:       len(taps),
+		decimation:    decimation,
 	}
 }
 
@@ -102,11 +113,21 @@ func (f *FirFilter) SetTaps(taps []float32) {
 }
 
 func (f *FirFilter) Work(data []complex64) []complex64 {
+	if f.decimation > 1 {
+		return f.FilterDecimateOut(data, f.decimation)
+	}
 	return f.FilterOut(data)
 }
 
 func (f *FirFilter) WorkBuffer(input, output []complex64) int {
+	if f.decimation > 1 {
+		return f.FilterDecimateBuffer(input, output, f.decimation)
+	}
 	return f.FilterBuffer(input, output)
+}
+
+func (f *FirFilter) PredictOutputSize(inputLength int) int {
+	return inputLength / f.decimation
 }
 
 // endregion
@@ -116,6 +137,7 @@ type FloatFirFilter struct {
 	taps          []float32
 	sampleHistory []float32
 	tapsLen       int
+	decimation    int
 }
 
 func MakeFloatFirFilter(taps []float32) *FloatFirFilter {
@@ -123,6 +145,15 @@ func MakeFloatFirFilter(taps []float32) *FloatFirFilter {
 		taps:          taps,
 		sampleHistory: make([]float32, len(taps)),
 		tapsLen:       len(taps),
+	}
+}
+
+func MakeDecimationFloatFirFilter(decimation int, taps []float32) *FloatFirFilter {
+	return &FloatFirFilter{
+		taps:          taps,
+		sampleHistory: make([]float32, len(taps)),
+		tapsLen:       len(taps),
+		decimation:    decimation,
 	}
 }
 
@@ -217,6 +248,10 @@ func (f *FloatFirFilter) WorkBuffer(input, output []float32) int {
 
 func (f *FloatFirFilter) SetTaps(taps []float32) {
 	f.taps = taps
+}
+
+func (f *FloatFirFilter) PredictOutputSize(inputLength int) int {
+	return inputLength / f.decimation
 }
 
 // endregion

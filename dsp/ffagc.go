@@ -61,6 +61,10 @@ func (f *FeedForwardAGC) WorkBuffer(input, output []complex64) int {
 	return len(input)
 }
 
+func (dc *FeedForwardAGC) PredictOutputSize(inputLength int) int {
+	return inputLength
+}
+
 func envelope(c complex64) float64 {
 	realAbs := math.Abs(float64(real(c)))
 	imagAbs := math.Abs(float64(real(c)))
