@@ -101,6 +101,14 @@ func (f *FirFilter) SetTaps(taps []float32) {
 	f.taps = taps
 }
 
+func (f *FirFilter) Work(data []complex64) []complex64 {
+	return f.FilterOut(data)
+}
+
+func (f *FirFilter) WorkBuffer(input, output []complex64) int {
+	return f.FilterBuffer(input, output)
+}
+
 // endregion
 // region Float Fir Filter
 
@@ -197,6 +205,14 @@ func (f *FloatFirFilter) FilterOut(data []float32) []float32 {
 	}
 	f.sampleHistory = samples[len(samples)-f.tapsLen:]
 	return output
+}
+
+func (f *FloatFirFilter) Work(data []float32) []float32 {
+	return f.FilterOut(data)
+}
+
+func (f *FloatFirFilter) WorkBuffer(input, output []float32) int {
+	return f.FilterBuffer(input, output)
 }
 
 func (f *FloatFirFilter) SetTaps(taps []float32) {
