@@ -76,6 +76,28 @@ func (ft *FrequencyTranslator) Work(data []complex64) []complex64 {
 	return output[:outLength]
 }
 
+func (ft *FrequencyTranslator) WorkBuffer(input, output []complex64) int {
+	if ft.needsUpdate {
+		ft.updateFilter()
+	}
+	var outLength = len(input) / ft.decimation
+	var samples = append(ft.sampleHistory, input...)
+
+	if len(output) < outLength {
+		panic("There is not enough space in output buffer")
+	}
+
+	if ft.decimation > 1 {
+		output = ft.filter.FilterDecimateOut(samples, ft.decimation)
+	} else {
+		output = ft.filter.FilterOut(samples)
+	}
+	output = ft.rotator.Work(output)
+	ft.sampleHistory = samples[len(samples)-ft.tapsLen:]
+
+	return outLength
+}
+
 func (ft *FrequencyTranslator) SetFrequency(frequency float32) {
 	ft.centerFrequency = frequency
 	ft.needsUpdate = true

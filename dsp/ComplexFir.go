@@ -51,6 +51,14 @@ func (f *CTFirFilter) FilterBuffer(input, output []complex64) int {
 	return length
 }
 
+func (f *CTFirFilter) Work(data []complex64) []complex64 {
+	return f.FilterOut(data)
+}
+
+func (f *CTFirFilter) WorkBuffer(input, output []complex64) int {
+	return f.FilterBuffer(input, output)
+}
+
 func (f *CTFirFilter) FilterSingle(data []complex64) complex64 {
 	return ComplexDotProductResult(data, f.taps)
 }

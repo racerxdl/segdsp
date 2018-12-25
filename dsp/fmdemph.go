@@ -31,3 +31,7 @@ func MakeFMDeemph(tau, sampleRate float32) *FMDeemph {
 func (f *FMDeemph) Work(data []float32) []float32 {
 	return f.iir.FilterArray(data)
 }
+
+func (f *FMDeemph) WorkBuffer(input, output []float32) int {
+	return f.iir.FilterArrayBuffer(input, output)
+}

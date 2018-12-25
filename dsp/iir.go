@@ -32,6 +32,18 @@ func (f *SinglePoleIIRFilter) FilterArray(input []float32) []float32 {
 	return out
 }
 
+func (f *SinglePoleIIRFilter) FilterArrayBuffer(input, output []float32) int {
+	if len(output) < len(input) {
+		panic("There is not enough space in output buffer")
+	}
+
+	for i := 0; i < len(input); i++ {
+		output[i] = f.Filter(input[i])
+	}
+
+	return len(input)
+}
+
 func (f *SinglePoleIIRFilter) SetTaps(alpha float32) {
 	f.alpha = alpha
 	f.alpham1 = 1.0 - alpha
@@ -78,6 +90,18 @@ func (f *IIRFilter) FilterArray(input []float32) []float32 {
 		out[i] = f.Filter(input[i])
 	}
 	return out
+}
+
+func (f *IIRFilter) FilterArrayBuffer(input, output []float32) int {
+	if len(output) < len(input) {
+		panic("There is not enough space in output buffer")
+	}
+
+	for i := 0; i < len(input); i++ {
+		output[i] = f.Filter(input[i])
+	}
+
+	return len(input)
 }
 
 func (f *IIRFilter) Filter(input float32) float32 {

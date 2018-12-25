@@ -62,3 +62,27 @@ func (f *Squelch) Work(data []complex64) []complex64 {
 		return out
 	}
 }
+
+func (f *Squelch) WorkBuffer(input, output []complex64) int {
+	if len(output) < len(input) {
+		panic("There is not enough space in output buffer")
+	}
+
+	var avg = float32(0)
+	for i := 0; i < len(input); i++ {
+		v := input[i]
+		mag := real(v)*real(v) + imag(v)*imag(v)
+		v2 := f.filter.Filter(mag)
+		avg += v2
+		output[i] = complex(0, 0)
+	}
+	avg /= float32(len(input))
+	f.avgThreshold = avg
+	f.muted = avg <= f.threshold
+
+	if avg >= f.threshold {
+		copy(output, input)
+	}
+
+	return len(input)
+}

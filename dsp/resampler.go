@@ -140,6 +140,35 @@ func (f *FloatResampler) filter(input []float32, length int) (int, []float32) {
 	return read, output
 }
 
+func (f *FloatResampler) filterBuffer(input, output []float32, length int) (read, wrote int) {
+	read = 0
+	wrote = 0
+	var j = f.lastFilter
+
+	for read < length {
+		for j < f.filterSize {
+			var o0 = f.filters[j].FilterSingle(input[read:])
+			var o1 = f.diffFilters[j].FilterSingle(input[read:])
+
+			output[wrote] = o0 + o1*f.accumulator
+			wrote++
+
+			f.accumulator += f.filterRate
+			j += int(f.decimationRate) + int(math.Floor(float64(f.accumulator)))
+			f.accumulator = float32(math.Mod(float64(f.accumulator), 1.0))
+		}
+
+		read += int(j / f.filterSize)
+		j = j % f.filterSize
+	}
+
+	f.lastFilter = j
+
+	output = output[:wrote]
+
+	return read, wrote
+}
+
 func (f *FloatResampler) Work(data []float32) []float32 {
 	var samples = append(f.internalBuffer, data...)
 
@@ -152,4 +181,22 @@ func (f *FloatResampler) Work(data []float32) []float32 {
 	}
 
 	return processed
+}
+
+func (f *FloatResampler) WorkBuffer(input, output []float32) int {
+	if len(output) < len(input)*4 {
+		panic("There is not enough space in output buffer")
+	}
+
+	var samples = append(f.internalBuffer, input...)
+
+	consumed, wrote := f.filterBuffer(samples, output, len(samples))
+
+	if consumed < len(samples) {
+		f.internalBuffer = samples[consumed:]
+	} else {
+		f.internalBuffer = make([]float32, 0)
+	}
+
+	return wrote
 }
