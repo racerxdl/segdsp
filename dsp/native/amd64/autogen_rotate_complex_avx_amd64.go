@@ -22,3 +22,14 @@ func RotateComplexAVX(input []complex64, phase *complex64, phaseIncrement comple
 
 	return output
 }
+
+func RotateComplexBufferAVX(input, output []complex64, phase *complex64, phaseIncrement complex64, length int) int {
+	var inputPtr = unsafe.Pointer(&input[0])
+	var outPtr = unsafe.Pointer(&output[0])
+	var phasePtr = unsafe.Pointer(phase)
+	var phaseIncrementPtr = unsafe.Pointer(&phaseIncrement)
+
+	_rotateComplexAVX(inputPtr, outPtr, phaseIncrementPtr, phasePtr, uint(length))
+
+	return length
+}

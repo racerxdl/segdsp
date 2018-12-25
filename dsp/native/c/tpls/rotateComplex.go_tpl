@@ -22,3 +22,14 @@ func RotateComplex{SUBARCHTITLE}(input []complex64, phase *complex64, phaseIncre
 
   return output
 }}
+
+func RotateComplexBuffer{SUBARCHTITLE}(input, output []complex64, phase *complex64, phaseIncrement complex64, length int) int {{
+  var inputPtr = unsafe.Pointer(&input[0])
+  var outPtr = unsafe.Pointer(&output[0])
+  var phasePtr = unsafe.Pointer(phase)
+  var phaseIncrementPtr = unsafe.Pointer(&phaseIncrement)
+
+  _rotateComplex{SUBARCHTITLE}(inputPtr, outPtr, phaseIncrementPtr, phasePtr, uint(length))
+
+  return length
+}}

@@ -22,3 +22,14 @@ func RotateComplexSSE2(input []complex64, phase *complex64, phaseIncrement compl
 
 	return output
 }
+
+func RotateComplexBufferSSE2(input, output []complex64, phase *complex64, phaseIncrement complex64, length int) int {
+	var inputPtr = unsafe.Pointer(&input[0])
+	var outPtr = unsafe.Pointer(&output[0])
+	var phasePtr = unsafe.Pointer(phase)
+	var phaseIncrementPtr = unsafe.Pointer(&phaseIncrement)
+
+	_rotateComplexSSE2(inputPtr, outPtr, phaseIncrementPtr, phasePtr, uint(length))
+
+	return length
+}

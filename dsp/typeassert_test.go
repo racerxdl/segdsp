@@ -42,3 +42,16 @@ func TestFloat32Workers(t *testing.T) {
 		}
 	}
 }
+
+func TestComplex2Float32Workers(t *testing.T) {
+	var cfWorkersType = []interface{}{
+		&QuadDemod{},
+	}
+
+	for _, v := range cfWorkersType {
+		_, ok := v.(Complex2Float32Worker)
+		if !ok {
+			t.Fatalf("Type %T does not implement Float32Worker type!\n", v)
+		}
+	}
+}
