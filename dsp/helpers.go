@@ -197,17 +197,19 @@ func init() {
 		DotProductFloatResult = genericDotProductFloatResult
 	}
 
-	if native.GetMultiplyConjugate() != nil {
-		MultiplyConjugate = native.GetMultiplyConjugate()
-	} else {
-		MultiplyConjugate = genericMultiplyConjugate
-	}
+	// SIMD Multiply Conjugate is actually slower
 
-	if native.GetMultiplyConjugateInline() != nil {
-		MultiplyConjugateInline = native.GetMultiplyConjugateInline()
-	} else {
-		MultiplyConjugateInline = genericMultiplyConjugateInline
-	}
+	//if native.GetMultiplyConjugate() != nil {
+	//	MultiplyConjugate = native.GetMultiplyConjugate()
+	//} else {
+	MultiplyConjugate = genericMultiplyConjugate
+	//}
+
+	//if native.GetMultiplyConjugateInline() != nil {
+	//	MultiplyConjugateInline = native.GetMultiplyConjugateInline()
+	//} else {
+	MultiplyConjugateInline = genericMultiplyConjugateInline
+	//}
 
 	if native.GetNativeDotProductComplexComplex() != nil {
 		ComplexDotProductResult = native.GetNativeDotProductComplexComplex()

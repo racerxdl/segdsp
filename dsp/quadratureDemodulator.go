@@ -16,8 +16,7 @@ func MakeQuadDemod(gain float32) *QuadDemod {
 
 func (f *QuadDemod) Work(data []complex64) []float32 {
 	var samples = append(f.history, data...)
-	//var tmp = MultiplyConjugate(samples[1:], samples, len(samples)-2) // SIMD Its actually slower for some reason
-	var tmp = genericMultiplyConjugate(samples[1:], samples, len(samples)-2)
+	var tmp = MultiplyConjugate(samples[1:], samples, len(samples)-2)
 	var out = make([]float32, len(samples)-2)
 
 	for i := 0; i < len(out); i++ {
@@ -30,8 +29,7 @@ func (f *QuadDemod) Work(data []complex64) []float32 {
 
 func (f *QuadDemod) WorkBuffer(input []complex64, output []float32) int {
 	var samples = append(f.history, input...)
-	//var tmp = MultiplyConjugate(samples[1:], samples, len(samples)-2) // SIMD Its actually slower for some reason
-	var tmp = genericMultiplyConjugate(samples[1:], samples, len(samples)-2)
+	var tmp = MultiplyConjugate(samples[1:], samples, len(samples)-2)
 
 	for i := 0; i < len(input); i++ {
 		output[i] = f.gain * tools.ComplexPhase(tmp[i])
