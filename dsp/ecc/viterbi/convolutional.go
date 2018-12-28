@@ -182,7 +182,7 @@ func (conv *Convolutional) warmup(sets uint32, input []byte, soft bool) {
 		// walk all of the state we have so far
 		for j := 0; j < 1<<(i+1); j++ {
 			last := j >> 1
-			dist := distance(0)
+			var dist distance
 			if soft {
 				v := input[i*conv.rate:]
 				if conv.softMeasurement == CorrectSoftLinear {
@@ -294,8 +294,8 @@ func (conv *Convolutional) inner(sets uint32, input []byte, soft bool) {
 				writeErrors[successor] = error_
 				history[successor] = historyMask
 
-				lowPlusOneError := (lowConcatDist >> 16) + lowPastError
-				highPlusOneError := (highConcatDist >> 16) + highPastError
+				lowPlusOneError := (uint32(lowConcatDist) >> 16) + uint32(lowPastError)
+				highPlusOneError := (uint32(highConcatDist) >> 16) + uint32(highPastError)
 
 				plusOneSuccesor := lowPlusOneError
 
@@ -307,7 +307,7 @@ func (conv *Convolutional) inner(sets uint32, input []byte, soft bool) {
 					plusOneHistoryMask = 0
 				}
 
-				writeErrors[plusOneSuccesor] = plusOneError
+				writeErrors[plusOneSuccesor] = distance(plusOneError)
 				history[plusOneSuccesor] = plusOneHistoryMask
 
 				offset += 2

@@ -70,6 +70,6 @@ func pairLookupFillDistances(pairs *pairLookup, distances []distance) {
 		concatOut >>= pairs.outputWidth
 		i1 := concatOut
 
-		pairs.distances[i] = (distances[i0] << 16) | distances[i1]
+		pairs.distances[i] = distance((uint32(distances[i0]) << 16) | uint32(distances[i1]))
 	}
 }
