@@ -70,3 +70,12 @@ func ReverseComplex64Taps(input []complex64) []complex64 {
 	}
 	return reversed
 }
+
+func CompareByteArray(a []byte, b []byte, len int) int {
+	for i := 0; i < len; i++ {
+		if a[i] != b[i] {
+			return i
+		}
+	}
+	return -1
+}

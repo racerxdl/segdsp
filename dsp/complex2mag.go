@@ -23,7 +23,7 @@ func (cm *Complex2Magnitude) Work(data []complex64) []float32 {
 }
 
 func (cm *Complex2Magnitude) WorkBuffer(input []complex64, output []float32) int {
-	if len(input) != len(output) {
+	if len(input) > len(output) {
 		panic("There is not enough space in output buffer")
 	}
 
