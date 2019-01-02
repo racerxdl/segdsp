@@ -23,3 +23,9 @@ type Float322ByteWorker interface {
 	WorkBuffer(input []float32, output []byte) int
 	PredictOutputSize(inputLength int) int
 }
+
+type Byte2ByteWorker interface {
+	Work(input []byte) []byte
+	WorkBuffer(input []byte, output []byte) int
+	PredictOutputSize(inputLength int) int
+}
