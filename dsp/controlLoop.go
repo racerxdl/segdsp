@@ -50,6 +50,7 @@ func (cl *controlLoop) SetDampingFactor(df float32) error {
 	}
 
 	cl.dampingFactor = df
+	cl.UpdateGains()
 
 	return nil
 }

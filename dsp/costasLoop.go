@@ -51,13 +51,11 @@ func (cl *CostasLoop2) Work(input []complex64) []complex64 {
 
 func (cl *CostasLoop2) WorkBuffer(input, output []complex64) int {
 	for i := 0; i < len(input); i++ {
-		nr := tools.Sin(-cl.phase)
-		ni := tools.Cos(-cl.phase)
+		nr := tools.Cos(-cl.phase)
+		ni := tools.Sin(-cl.phase)
 
-		or := real(input[i])*nr - imag(input[i])*ni
-		oi := real(input[i])*ni + imag(input[i])*nr
-
-		output[i] = complex64(complex(or, oi))
+		n := complex(nr, ni)
+		output[i] = input[i] * n
 
 		cl.error = real(output[i]) * imag(output[i])
 		cl.error = tools.Clip(cl.error, 1)
@@ -84,7 +82,7 @@ func MakeCostasLoop4WithFrequencyRange(loopBandwidth, minRelativeFrequency, maxR
 }
 
 func MakeCostasLoop4(loopBandwidth float32) CostasLoop {
-	return MakeCostasLoop2WithFrequencyRange(loopBandwidth, -1, 1)
+	return MakeCostasLoop4WithFrequencyRange(loopBandwidth, -1, 1)
 }
 
 func (cl *CostasLoop4) Work(input []complex64) []complex64 {
@@ -95,22 +93,20 @@ func (cl *CostasLoop4) Work(input []complex64) []complex64 {
 
 func (cl *CostasLoop4) WorkBuffer(input, output []complex64) int {
 	for i := 0; i < len(input); i++ {
-		nr := tools.Sin(-cl.phase)
-		ni := tools.Cos(-cl.phase)
+		nr := tools.Cos(-cl.phase)
+		ni := tools.Sin(-cl.phase)
 
-		or := real(input[i])*nr - imag(input[i])*ni
-		oi := real(input[i])*ni + imag(input[i])*nr
-
-		output[i] = complex64(complex(or, oi))
+		n := complex(nr, ni)
+		output[i] = input[i] * n
 
 		vr := float32(1)
 		vi := float32(1)
 
-		if real(output[i]) < 0 {
+		if real(output[i]) <= 0 {
 			vr = -1
 		}
 
-		if imag(output[i]) < 0 {
+		if imag(output[i]) <= 0 {
 			vi = -1
 		}
 
@@ -155,13 +151,11 @@ func (cl *CostasLoop8) Work(input []complex64) []complex64 {
 func (cl *CostasLoop8) WorkBuffer(input, output []complex64) int {
 	K := float32(math.Sqrt(2) - 1)
 	for i := 0; i < len(input); i++ {
-		nr := tools.Sin(-cl.phase)
-		ni := tools.Cos(-cl.phase)
+		nr := tools.Cos(-cl.phase)
+		ni := tools.Sin(-cl.phase)
 
-		or := real(input[i])*nr - imag(input[i])*ni
-		oi := real(input[i])*ni + imag(input[i])*nr
-
-		output[i] = complex64(complex(or, oi))
+		n := complex(nr, ni)
+		output[i] = input[i] * n
 
 		vr := float32(1)
 		vi := float32(1)

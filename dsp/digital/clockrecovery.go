@@ -97,6 +97,13 @@ func NewComplexClockRecovery(omega, gainOmega, mu, gainMu, omegaRelativeLimit fl
 		gainMu:             gainMu,
 		omegaRelativeLimit: omegaRelativeLimit,
 		interp:             MakeComplexMMSEFirInterpolator(),
+		p0T:                0,
+		p1T:                0,
+		p2T:                0,
+		c0T:                0,
+		c1T:                0,
+		c2T:                0,
+		consumed:           0,
 	}
 
 	if omega <= 0 {
