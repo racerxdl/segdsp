@@ -19,9 +19,9 @@ jobs:
         - go get github.com/mattn/goveralls
       script:
         - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.10.2
-        - golangci-lint run       # run a bunch of code checkers/linters in parallel
-        - go test -v -race ./...  # Run all the tests with the race detector enabled
-        - goveralls -v
+        - golangci-lint run
+        - go test -v -race ./... -coverprofile=segdsp.coverprofile
+        - goveralls -coverprofile=segdsp.coverprofile -service travis-ci
     - stage: dockerBuilds
       language: go
       go:
