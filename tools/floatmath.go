@@ -450,3 +450,8 @@ func Cos(x float32) float32 {
 	}
 	return y
 }
+
+func Sqrt(v float32) float32 {
+	// TODO: Make it float32
+	return float32(math.Sqrt(float64(v)))
+}
