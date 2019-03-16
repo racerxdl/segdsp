@@ -51,10 +51,7 @@ func (cl *CostasLoop2) Work(input []complex64) []complex64 {
 
 func (cl *CostasLoop2) WorkBuffer(input, output []complex64) int {
 	for i := 0; i < len(input); i++ {
-		nr := tools.Cos(-cl.phase)
-		ni := tools.Sin(-cl.phase)
-
-		n := complex(nr, ni)
+		n := tools.PhaseToComplex(-cl.phase)
 		output[i] = input[i] * n
 
 		cl.error = real(output[i]) * imag(output[i])
@@ -93,10 +90,7 @@ func (cl *CostasLoop4) Work(input []complex64) []complex64 {
 
 func (cl *CostasLoop4) WorkBuffer(input, output []complex64) int {
 	for i := 0; i < len(input); i++ {
-		nr := tools.Cos(-cl.phase)
-		ni := tools.Sin(-cl.phase)
-
-		n := complex(nr, ni)
+		n := tools.PhaseToComplex(-cl.phase)
 		output[i] = input[i] * n
 
 		vr := float32(1)
@@ -151,10 +145,7 @@ func (cl *CostasLoop8) Work(input []complex64) []complex64 {
 func (cl *CostasLoop8) WorkBuffer(input, output []complex64) int {
 	K := float32(math.Sqrt(2) - 1)
 	for i := 0; i < len(input); i++ {
-		nr := tools.Cos(-cl.phase)
-		ni := tools.Sin(-cl.phase)
-
-		n := complex(nr, ni)
+		n := tools.PhaseToComplex(-cl.phase)
 		output[i] = input[i] * n
 
 		vr := float32(1)

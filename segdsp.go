@@ -55,15 +55,15 @@ func onDeviceSync(rs *client.RadioClient) {
 
 		CurrentSampleRate:      rs.GetSampleRate(),
 		ChannelCenterFrequency: rs.GetCenterFrequency(),
-		Gain:              rs.GetGain(),
-		OutputRate:        uint32(outputRate),
-		FilterBandwidth:   uint32(filterBandwidth),
-		DemodulatorMode:   demodulatorMode,
-		DemodulatorParams: nil,
-		StationName:       stationName,
-		WebCanControl:     webCanControl,
-		TCPCanControl:     tcpCanControl,
-		IsMuted:           false,
+		Gain:                   rs.GetGain(),
+		OutputRate:             uint32(outputRate),
+		FilterBandwidth:        uint32(filterBandwidth),
+		DemodulatorMode:        demodulatorMode,
+		DemodulatorParams:      nil,
+		StationName:            stationName,
+		WebCanControl:          webCanControl,
+		TCPCanControl:          tcpCanControl,
+		IsMuted:                false,
 	}
 
 	if demodulator != nil {

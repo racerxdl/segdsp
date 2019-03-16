@@ -1,8 +1,6 @@
 package dsp
 
-import (
-	"github.com/racerxdl/segdsp/tools"
-)
+import "github.com/racerxdl/segdsp/tools"
 
 type SimpleAGC struct {
 	rate      float32
@@ -25,9 +23,11 @@ func MakeSimpleAGC(rate, reference, gain, maxGain float32) *SimpleAGC {
 }
 
 func (sa *SimpleAGC) scale(input complex64) complex64 {
-	output := input * complex(sa.gain, 0)
+	//output := input * complex(sa.gain, 0)
 
-	sa.gain += sa.rate * (sa.reference - tools.ComplexAbs(output))
+	output := complex(real(input)*sa.gain, imag(input)*sa.gain)
+
+	sa.gain += sa.rate * (sa.reference - tools.Sqrt(tools.ComplexAbsSquared(output)))
 	if sa.maxGain > 0 && sa.gain > sa.maxGain {
 		sa.gain = sa.maxGain
 	}
