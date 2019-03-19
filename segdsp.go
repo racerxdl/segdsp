@@ -150,9 +150,9 @@ func onFFT(data []uint8) {
 }
 
 func sendData(data interface{}) {
-	switch data.(type) {
+	switch data := data.(type) {
 	case demodcore.DemodData:
-		var b = data.(demodcore.DemodData)
+		var b = data
 		go broadcastBMessage(b.Data.MarshalByteArray())
 		go recordAudio(b.Data)
 	default:

@@ -9,7 +9,7 @@ type CostasLoop interface {
 	ComplexWorker
 	GetError() float32
 	GetFrequency() float32
-	GetFrequencyHz() float32
+	GetFrequencyHz(float32) float32
 }
 
 // region Base Costas Loop

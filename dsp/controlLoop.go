@@ -142,8 +142,8 @@ func (cl *controlLoop) GetFrequency() float32 {
 	return cl.freq
 }
 
-func (cl *controlLoop) GetFrequencyHz() float32 {
-	return cl.freq / TwoPi
+func (cl *controlLoop) GetFrequencyHz(sampleRate float32) float32 {
+	return cl.freq * sampleRate
 }
 
 func (cl *controlLoop) GetPhase() float32 {
