@@ -1,6 +1,10 @@
 package dsp
 
-import "github.com/racerxdl/segdsp/tools"
+import (
+	"github.com/racerxdl/segdsp/tools"
+	"math"
+	"math/cmplx"
+)
 
 type Rotator struct {
 	phaseIncrement complex64
@@ -16,12 +20,27 @@ func MakeRotator() *Rotator {
 	}
 }
 
+func MakeRotatorWithFrequency(centerFrequency, sampleRate float32) *Rotator {
+	var shift = float64((2 * math.Pi * centerFrequency) / sampleRate)
+
+	return &Rotator{
+		counter:        0,
+		lastPhase:      complex(1, 0),
+		phaseIncrement: complex64(cmplx.Exp(complex(0, -shift))),
+	}
+}
+
 func (r *Rotator) SetPhase(p complex64) {
 	r.lastPhase = tools.ComplexNormalize(p)
 }
 
 func (r *Rotator) SetPhaseIncrement(increment complex64) {
 	r.phaseIncrement = tools.ComplexNormalize(increment)
+}
+
+func (r *Rotator) SetCenterFrequency(centerFrequency, sampleRate float32) {
+	var shift = float64((2 * math.Pi * centerFrequency) / sampleRate)
+	r.phaseIncrement = complex64(cmplx.Exp(complex(0, -shift)))
 }
 
 func (r *Rotator) Rotate(d complex64) complex64 {
