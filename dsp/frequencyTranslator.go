@@ -7,7 +7,6 @@ import (
 
 type FrequencyTranslator struct {
 	filter          *CTFirFilter
-	sampleHistory   []complex64
 	baseTaps        []complex64
 	centerFrequency float32
 	sampleRate      float32
@@ -31,7 +30,6 @@ func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32
 		decimation:      decimation,
 		rotator:         MakeRotator(),
 		needsUpdate:     true,
-		sampleHistory:   make([]complex64, len(taps)),
 		tapsLen:         len(taps),
 	}
 
@@ -43,15 +41,15 @@ func MakeFrequencyTranslator(decimation int, centerFrequency, sampleRate float32
 func (ft *FrequencyTranslator) updateFilter() {
 	var newTaps = make([]complex64, len(ft.baseTaps))
 
-	var fDecimation = float64(ft.decimation)
-	var shift = float64(2 * math.Pi * ft.centerFrequency / ft.sampleRate)
-
-	ft.rotator.SetPhaseIncrement(complex64(cmplx.Exp(complex(0, -shift*fDecimation))))
+	var shift = float64((2 * math.Pi * ft.centerFrequency) / ft.sampleRate)
 
 	for i := 0; i < len(newTaps); i++ {
 		var fi = float64(i)
 		newTaps[i] = complex64(complex128(ft.baseTaps[i]) * cmplx.Exp(complex(0, fi*shift)))
 	}
+
+	var fDecimation = float64(ft.decimation)
+	ft.rotator.SetPhaseIncrement(complex64(cmplx.Exp(complex(0, -shift*fDecimation))))
 
 	ft.filter = MakeDecimationCTFirFilter(ft.decimation, newTaps)
 
@@ -59,21 +57,11 @@ func (ft *FrequencyTranslator) updateFilter() {
 }
 
 func (ft *FrequencyTranslator) Work(data []complex64) []complex64 {
-	if ft.needsUpdate {
-		ft.updateFilter()
-	}
-	var outLength = len(data) / ft.decimation
-	var samples = append(ft.sampleHistory, data...)
-	var output []complex64
-	if ft.decimation > 1 {
-		output = ft.filter.FilterDecimateOut(samples, ft.decimation)
-	} else {
-		output = ft.filter.FilterOut(samples)
-	}
-	output = ft.rotator.Work(output)
-	ft.sampleHistory = samples[len(samples)-ft.tapsLen:]
+	output := make([]complex64, ft.filter.PredictOutputSize(len(data)))
 
-	return output[:outLength]
+	l := ft.WorkBuffer(data, output)
+
+	return output[:l]
 }
 
 func (ft *FrequencyTranslator) WorkBuffer(input, output []complex64) int {
@@ -82,15 +70,13 @@ func (ft *FrequencyTranslator) WorkBuffer(input, output []complex64) int {
 	}
 
 	var outLength = len(input) / ft.decimation
-	var samples = append(ft.sampleHistory, input...)
-
 	if len(output) < outLength {
 		panic("There is not enough space in output buffer")
 	}
 
-	ft.filter.WorkBuffer(input, output)
+	l := ft.filter.WorkBuffer(input, output)
+	output = output[:l]
 	ft.rotator.WorkInline(output)
-	ft.sampleHistory = samples[len(samples)-ft.tapsLen:]
 
 	return outLength
 }
