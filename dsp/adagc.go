@@ -36,7 +36,7 @@ func (adagc *AttackDecayAGC) WorkBuffer(input, output []complex64) int {
 	}
 
 	for i := 0; i < len(output); i++ {
-		output[i] = input[i] * complex(adagc.gain, 0)
+		output[i] = input[i] * complex(adagc.gain, 1)
 
 		tmp := adagc.reference + tools.ComplexAbs(output[i])
 		rate := adagc.decayRate
