@@ -58,10 +58,10 @@ var radioserverhostFlag = flag.String("radioserver", "localhost:4050", "radioser
 var displayPixelsFlag = flag.Uint("displayPixels", 512, "Width in pixels of the FFT")
 
 var channelFrequencyFlag = flag.Uint("channelFrequency", 106.3e6, "Channel (IQ) Center Frequency")
-var displayFrequencyFlag = flag.Uint("fftFrequency", 106e6, "FFT Center Frequency")
+var displayFrequencyFlag = flag.Uint("fftFrequency", 106.3e6, "FFT Center Frequency")
 
 var channelDecimationStageFlag = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
-var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 1, "FFT Decimation Stage (The actual decimation will be 2^d)")
+var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 0, "FFT Decimation Stage (The actual decimation will be 2^d)")
 
 var demodulatorModeFlag = flag.String("demodMode", modeFM, fmt.Sprintf("Demodulator Mode: %s", modes))
 var outputRateFlag = flag.Uint("outputRate", 48000, "Output Rate in Hertz")
@@ -77,7 +77,7 @@ var recordMethodFlag = flag.String("recordMethod", recorders.RecFile, "Method to
 
 var presetFlag = flag.String("preset", "none", "presetStruct for Demodulator Params")
 
-var squelchFlag = flag.Float64("squelch", -72, "Demodulator Squelch in dB")
+var squelchFlag = flag.Float64("squelch", -150, "Demodulator Squelch in dB")
 var squelchAlphaFlag = flag.Float64("squelchAlpha", 0.001, "Demodulator Squelch Filter Alpha")
 
 // region FM Demodulator Flags

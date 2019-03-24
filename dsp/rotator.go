@@ -43,6 +43,12 @@ func (r *Rotator) SetCenterFrequency(centerFrequency, sampleRate float32) {
 	r.phaseIncrement = complex64(cmplx.Exp(complex(0, -shift)))
 }
 
+func (r *Rotator) Reset() {
+	r.counter = 0
+	r.lastPhase = complex(1, 0)
+	r.phaseIncrement = complex(1, 0)
+}
+
 func (r *Rotator) Rotate(d complex64) complex64 {
 	r.counter++
 

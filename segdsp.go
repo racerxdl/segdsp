@@ -22,7 +22,7 @@ import (
 )
 
 var displayRange = 90
-var displayOffset = -50
+var displayOffset = -60
 var lastFFT []float32
 var fftSamples []uint8
 var fftSamplesF []float32
@@ -32,15 +32,12 @@ type segdspCallback struct {
 	rs *client.RadioClient
 }
 
-func (cb *segdspCallback) OnData(dType int, data interface{}) {
-	switch dType {
-	case client.SamplesComplex32:
-		go addS16Fifo(data.([]client.ComplexInt16))
-	case client.SmartSamplesComplex32:
-		go onSmartIQ(cb.rs, data.([]client.ComplexInt16))
-	case client.DeviceSync:
-		onDeviceSync(cb.rs)
-	}
+func (cb *segdspCallback) OnSmartData(data []complex64) {
+	go onSmartIQ(cb.rs, data)
+}
+
+func (cb *segdspCallback) OnData(data []complex64) {
+	addComplex(data)
 }
 
 func onDeviceSync(rs *client.RadioClient) {
@@ -86,18 +83,14 @@ func refreshDevice() {
 	}
 }
 
-func onSmartIQ(rs *client.RadioClient, data []client.ComplexInt16) {
+func onSmartIQ(rs *client.RadioClient, data []complex64) {
 	var scale = 256 / float32(displayRange)
 	data = data[:displayPixels]
 	if smartIqSamples == nil || len(smartIqSamples) != len(data) {
 		smartIqSamples = make([]complex64, len(data))
 	}
 
-	for i, v := range data {
-		var a = float32(v.Real)
-		var b = float32(v.Imag)
-		smartIqSamples[i] = complex(a/32768, b/32768)
-	}
+	copy(smartIqSamples, data)
 
 	fftCData := fft.FFT(smartIqSamples)
 
@@ -246,7 +239,7 @@ func main() {
 	}
 
 	initDSP()
-	var rs = client.MakeRadioClientByFullHS(radioserverhost)
+	var rs = client.MakeRadioClient(radioserverhost, "User", "SegDSP")
 	var cb = segdspCallback{
 		rs: rs,
 	}
@@ -264,7 +257,8 @@ func main() {
 		log.Println(fmt.Sprintf("		%f msps (dec stage %d)", float32(srs[i])/1e6, i))
 	}
 
-	rs.SetStreamingMode(protocol.TypeCombined)
+	rs.SetIQEnabled(true)
+	rs.SetSmartIQEnabled(true)
 	rs.SetSmartDecimation(uint32(displayDecimationStage))
 	rs.SetSmartCenterFrequency(uint32(displayFrequency))
 
@@ -299,6 +293,7 @@ func main() {
 
 	var srv = createServer()
 
+	onDeviceSync(rs)
 	startDSP()
 
 	log.Println("Starting")

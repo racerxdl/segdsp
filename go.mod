@@ -9,4 +9,5 @@ require (
 	github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e // indirect
 	github.com/racerxdl/go.fifo v0.0.0-20180604061744-c6aa83afe374
 	github.com/racerxdl/radioserver v0.0.0-20190316070955-f8953f368ce1
+	google.golang.org/grpc v1.19.1 // indirect
 )
