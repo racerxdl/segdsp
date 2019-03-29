@@ -4,6 +4,7 @@ env:
   - secure: LvXLJtMSA6MxlV+zgZwdVUm4R4IZOY9WuKmX+SAmXpa6swV9k5kILne6QAhjDsX2o9463bgb5tQ3nHTDuY09BiszJNxe3npPU/0F18YzXT6MXh5BWSq6wHdmbF6dhHfuuJab8ZUKwdAScA+7UABYW7M/avBfSnr35ZWNXWUAHIgKIt5SCrcMg06rzPpHDF4jiXDw5HIzYZQfSSrTxXkYaXHTX+M/WCU0NM6yePMqOCUXgAY4HDAK5b5fuoH5jHG+n/EpSFhIp9hf0XPrEpevm8TPMCG9yRwAzuK3qEJ4FDT89dqgTA/Ym2SLfiW8sWrWq7a2xfBjTPEwyXfYCkySw3rlI7ZPVbKRdz4og32GVrTBtpbPzm2x9cyrjHlpiDTckLVE8hoTBiUeN7OxTOYagFX6epkLqv94fhmo9BHOPRAnwKtS6ItYkexwRZdgARGzlujPfsJoPliBfXoPQsqX8X/Hv+GdhXxlal6Ukec6g23yRqOXuFSsb2/rvEMsoOd8Dk7Q+maLNUlXbedx0NniXxjJN7hQ0Ybk+bmUQiR7Gn9pq/aPpZJZhK7vWg7t+h5kHnucYt2E4Y2i0sPt99QJzzNUs1/oxic6vDk7+rLlToKBAMXzjK4HCXtbFq27PgqhmRyp+TBMF3AbqXzoYF8qTMpbC56HJ5jZgc+dl/w32nE=
   - secure: McNqPRnYGyRScB6nJy7dOy01b4lwlXOSDk69vsRcPzq7Datdrn4JuXMmKlIl/4ll7g93aDaOn10Q2hVUYFBzlRvpxP9XAB5dZ2BYC4Xbmh3TgMC8SNgcX56Cn7WJXEvjSFACdKYntoCPOmMtz2LyoSUa0MTaI5zXSF74TkOT8h9tXxIn2zVagQmccosr4CSex0yw9hQz4yYxW+iLHYfmgRa18DfBUn/WZVlF/b/ERNg0E75jlsaJ/3Q8C3gAqRfZQipGF42MYn70t5ujNZjZ6YHpNIO4gvWqQkucICZ15eYVwga00nWj4CownqD8HRU2WrJ/UKmmQlbdNxcwQtsQhm7FJx7Aw53rbzIUX0KWX1ZBFsA1Xt9XosfQW5VY3INUCzs8lErtjo2xIXclut5IOWZ+89Oz7+GeKi1Rn2MQcbP+3pdkT2eRS8Bw52nBr02P8TKfB50QnwTiycABpmLb9rbnrhiiZgrU5fttoiGehsWhbqmgqyhBRqlqDH3e9KgX0v6EtcL+jwYcn/w/IYx6Zm3t7WSLvPWw9CYiw65aGeBQKu0GAkGSmxMs5Q78bFxoT2J2Cyv9WczzkQVMccBZQkQ8NM/xVOQXmXYViZlhI/FyBx/dZ2ImpCFbHuL6yYkgP8FU2BjIzI5RbktV94+drhB86/qmOn4lRbZqeXYP3e8=
   - secure: dgpquyBdKdccW3jSlPlcvvZ+J9jleuSml2VBeipfDjTOkuhoNrGhXsVI6DvOIyN6fooMvBXtNwqTlSrhxajzwCUU0oBi3IkNpU5WV2ul306d6V61kgF4PPW5OZVQONrZ6rL+ld1vADsNxX3ybz1uBaJ7qFjuwqKWWGzzth2hulkGynqqP++5rOG0Cha8sY4zihUqc3I+U3T4xPxLqQSle3FrQSe2yIOTGneOZ2UIvOo3+yhHQ+cZSYmaYJG9z7pGF8n/7KIbJ/CGNB/7+sjrEa/lDSxhvW2p2L2mBBD+oHqZq2n37jzNPmK3RiMrro1Dnv8pn8srSZ5P335VFkP1NDHIYyBN6kk7PMnK37JF8HJ4J7umQ8tfJ8/39ADbZDtfmEaMmol1tRuXs6EBZZHLkAIlwfuq2maTt8hKLIxRKipMmpPelcswuQgDJ2Z23g61YX2S1EB0RO+w9iNEEv1Uoli3Hw84BUq20sgj83ikWj6IDNxSWxZCpO/0dIZVydk188zgJtsmCe+b+GN4Wzo5yKAManX1eH6BnjXjrgLNfSOEBLC9cvGBDX7gB0AyaPycNUnvUsD4uDF83uCwn02Jn1cjTyjaSTpv/31T4U+V6ALTIgy/qfuYOQDhXYNJWCONAdCgC+fZtVo3Z4hKTqWER3XM24nWvL3udUXUWLQg6K8=
+  - GO111MODULE=on
 
 sudo: required
 services:
@@ -14,18 +15,18 @@ jobs:
     - stage: test
       language: go
       go:
-        "1.10.x"
+        "1.11.x"
       before_install:
         - go get github.com/mattn/goveralls
       script:
-        - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.10.2
+        - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.15.0
         - golangci-lint run
         - go test -v -race ./... -coverprofile=segdsp.coverprofile
         - goveralls -coverprofile=segdsp.coverprofile -service travis-ci
     - stage: dockerBuilds
       language: go
       go:
-        "1.10.x"
+        "1.11.x"
       before_install:
         - docker run --rm --privileged multiarch/qemu-user-static:register
         - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
@@ -36,7 +37,7 @@ jobs:
     - stage: tagBuilds
       language: go
       go:
-        "1.10.x"
+        "1.11.x"
       script:
         - git describe --exact-match --tags HEAD 2>> /dev/null && export TRAVIS_TAG="`git describe --exact-match --tags HEAD`"; echo ""
         - ./travis-build.sh
