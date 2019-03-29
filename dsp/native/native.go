@@ -18,6 +18,10 @@ func GetNativeDotProductFloat() func(input []float32, taps []float32) float32 {
 	return nil
 }
 
+func GetNativeDotProductComplexComplex() func(input []complex64, taps []complex64) complex64 {
+	return nil
+}
+
 func MultiplyConjugateInline(vecA, vecB []complex64, length int) {
 	panic("No native function available for arch")
 }
