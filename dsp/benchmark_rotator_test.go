@@ -28,7 +28,7 @@ func BenchmarkRotateComplexGolang(b *testing.B) {
 }
 
 func BenchmarkRotateComplexNative(b *testing.B) {
-	if native.GetRotateComplex() == nil {
+	if native.GetNativeRotateComplex() == nil {
 		b.Logf("No Native SIMD Rotate Complex to test")
 		return
 	}

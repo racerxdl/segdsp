@@ -14,7 +14,7 @@ void GENFUN(multiplyFloatFloatVectors, __SUBARCH__)(float *A, float *B, unsigned
     }
 
     // Add remaning non multiple of 4
-    for (int i = 0; i < c; i++) {
+    for (int i = c; i < length; i++) {
         A[i] = A[i] * B[i];
     }
 }

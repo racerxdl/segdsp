@@ -10,7 +10,7 @@ import (
 )
 
 func TestRotator(t *testing.T) {
-	if native.GetRotateComplex() == nil {
+	if native.GetNativeRotateComplex() == nil {
 		t.Logf("No Native SIMD Rotate Complex to test")
 		return
 	}

@@ -21,6 +21,26 @@ subarchs = [
 
 sources = [
   {
+    "filename": "add_complex_complex_vectors.c",
+    "function": "AddComplexComplexVectors",
+    "cFunction": "addComplexComplexVectors",
+  },
+  {
+    "filename": "subtract_complex_complex_vectors.c",
+    "function": "SubtractComplexComplexVectors",
+    "cFunction": "subtractComplexComplexVectors",
+  },
+  {
+    "filename": "multiply_complex_complex_vectors.c",
+    "function": "MultiplyComplexComplexVectors",
+    "cFunction": "multiplyComplexComplexVectors",
+  },
+  {
+    "filename": "divide_complex_complex_vectors.c",
+    "function": "DivideComplexComplexVectors",
+    "cFunction": "divideComplexComplexVectors",
+  },
+  {
     "filename": "add_float_float_vectors.c",
     "function": "AddFloatFloatVectors",
     "cFunction": "addFloatFloatVectors",

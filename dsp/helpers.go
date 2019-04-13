@@ -56,6 +56,22 @@ var AddFloatFloatVectors func(A, B []float32)
 // A[i] = A[i] - B[i]
 var SubtractFloatFloatVectors func(A, B []float32)
 
+// MultiplyComplexComplexVectors performs multiplication of each element from A by the same element in B
+// A[i] = A[i] * B[i]
+var MultiplyComplexComplexVectors func(A, B []complex64)
+
+// DivideComplexComplexVectors performs division of each element from A by the same element in B
+// A[i] = A[i] / B[i]
+var DivideComplexComplexVectors func(A, B []complex64)
+
+// AddComplexComplexVectors performs addition of each element from A by the same element in B
+// A[i] = A[i] + B[i]
+var AddComplexComplexVectors func(A, B []complex64)
+
+// SubtractComplexComplexVectors performs addition of each element from A by the same element in B
+// A[i] = A[i] - B[i]
+var SubtractComplexComplexVectors func(A, B []complex64)
+
 // ComplexDotProduct performs the Dot Product between two complex vectors and store the result at *result
 func ComplexDotProduct(result *complex64, input []complex64, taps []complex64) {
 	*result = ComplexDotProductResult(input, taps)
@@ -91,7 +107,7 @@ func GetSIMDMode() string {
 
 // region Private Functions
 
-// genericComplexDotProductResult performs multiplication of each element from A by the same element in B
+// genericMultiplyFloatFloatVectors performs multiplication of each element from A by the same element in B
 // This is the Generic Function in case no SIMD alternative is available
 func genericMultiplyFloatFloatVectors(A, B []float32) {
 	for i, v := range B {
@@ -118,6 +134,38 @@ func genericAddFloatFloatVectors(A, B []float32) {
 // genericSubtractFloatFloatVectors performs subtraction of each element from A by the same element in B
 // This is the Generic Function in case no SIMD alternative is available
 func genericSubtractFloatFloatVectors(A, B []float32) {
+	for i, v := range B {
+		A[i] = A[i] - v
+	}
+}
+
+// genericMultiplyComplexComplexVectors performs multiplication of each element from A by the same element in B
+// This is the Generic Function in case no SIMD alternative is available
+func genericMultiplyComplexComplexVectors(A, B []complex64) {
+	for i, v := range B {
+		A[i] = A[i] * v
+	}
+}
+
+// genericDivideComplexComplexVectors performs division of each element from A by the same element in B
+// This is the Generic Function in case no SIMD alternative is available
+func genericDivideComplexComplexVectors(A, B []complex64) {
+	for i, v := range B {
+		A[i] = A[i] / v
+	}
+}
+
+// genericAddComplexComplexVectors performs addition of each element from A by the same element in B
+// This is the Generic Function in case no SIMD alternative is available
+func genericAddComplexComplexVectors(A, B []complex64) {
+	for i, v := range B {
+		A[i] = A[i] + v
+	}
+}
+
+// genericSubtractComplexComplexVectors performs subtraction of each element from A by the same element in B
+// This is the Generic Function in case no SIMD alternative is available
+func genericSubtractComplexComplexVectors(A, B []complex64) {
 	for i, v := range B {
 		A[i] = A[i] - v
 	}
@@ -265,41 +313,68 @@ func init() {
 		ComplexDotProductResult = genericComplexDotProductResult
 	}
 
-	if native.GetRotateComplex() != nil {
-		RotateComplex = native.GetRotateComplex()
+	if native.GetNativeRotateComplex() != nil {
+		RotateComplex = native.GetNativeRotateComplex()
 	} else {
 		RotateComplex = genericRotateComplex
 	}
 
-	if native.GetRotateComplexBuffer() != nil {
-		RotateComplexBuffer = native.GetRotateComplexBuffer()
+	if native.GetNativeRotateComplexBuffer() != nil {
+		RotateComplexBuffer = native.GetNativeRotateComplexBuffer()
 	} else {
 		RotateComplexBuffer = genericRotateComplexBuffer
 	}
 
-	if native.GetAddFloatFloatVectors() != nil {
-		AddFloatFloatVectors = native.GetAddFloatFloatVectors()
+	if native.GetNativeAddFloatFloatVectors() != nil {
+		AddFloatFloatVectors = native.GetNativeAddFloatFloatVectors()
 	} else {
 		AddFloatFloatVectors = genericAddFloatFloatVectors
 	}
 
-	if native.GetSubtractFloatFloatVectors() != nil {
-		SubtractFloatFloatVectors = native.GetSubtractFloatFloatVectors()
+	// region Float-Float Vector Operations
+	if native.GetNativeSubtractFloatFloatVectors() != nil {
+		SubtractFloatFloatVectors = native.GetNativeSubtractFloatFloatVectors()
 	} else {
 		SubtractFloatFloatVectors = genericSubtractFloatFloatVectors
 	}
 
-	if native.GetMultiplyFloatFloatVectors() != nil {
-		MultiplyFloatFloatVectors = native.GetMultiplyFloatFloatVectors()
+	if native.GetNativeMultiplyFloatFloatVectors() != nil {
+		MultiplyFloatFloatVectors = native.GetNativeMultiplyFloatFloatVectors()
 	} else {
 		MultiplyFloatFloatVectors = genericMultiplyFloatFloatVectors
 	}
 
-	if native.GetDivideFloatFloatVectors() != nil {
-		DivideFloatFloatVectors = native.GetDivideFloatFloatVectors()
+	if native.GetNativeDivideFloatFloatVectors() != nil {
+		DivideFloatFloatVectors = native.GetNativeDivideFloatFloatVectors()
 	} else {
 		DivideFloatFloatVectors = genericDivideFloatFloatVectors
 	}
+	// endregion
+	// region Complex-Complex Vector Operations
+	if native.GetNativeAddComplexComplexVectors() != nil {
+		AddComplexComplexVectors = native.GetNativeAddComplexComplexVectors()
+	} else {
+		AddComplexComplexVectors = genericAddComplexComplexVectors
+	}
+
+	if native.GetNativeSubtractComplexComplexVectors() != nil {
+		SubtractComplexComplexVectors = native.GetNativeSubtractComplexComplexVectors()
+	} else {
+		SubtractComplexComplexVectors = genericSubtractComplexComplexVectors
+	}
+
+	if native.GetNativeMultiplyComplexComplexVectors() != nil {
+		MultiplyComplexComplexVectors = native.GetNativeMultiplyComplexComplexVectors()
+	} else {
+		MultiplyComplexComplexVectors = genericMultiplyComplexComplexVectors
+	}
+
+	if native.GetNativeDivideComplexComplexVectors() != nil {
+		DivideComplexComplexVectors = native.GetNativeDivideComplexComplexVectors()
+	} else {
+		DivideComplexComplexVectors = genericDivideComplexComplexVectors
+	}
+	// endregion
 }
 
 // endregion

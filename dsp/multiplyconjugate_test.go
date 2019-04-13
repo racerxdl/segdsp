@@ -21,7 +21,7 @@ func Equal(a, b []complex64, t *testing.T) bool {
 }
 
 func TestMultiplyConjugate(t *testing.T) {
-	if native.GetMultiplyConjugate() == nil {
+	if native.GetNativeMultiplyConjugate() == nil {
 		t.Logf("No Native SIMD Multiply Conjugate to test")
 		return
 	}
@@ -47,7 +47,7 @@ func TestMultiplyConjugate(t *testing.T) {
 }
 
 func TestMultiplyConjugateInline(t *testing.T) {
-	if native.GetMultiplyConjugate() == nil {
+	if native.GetNativeMultiplyConjugate() == nil {
 		t.Logf("No Native SIMD Multiply Conjugate to test")
 		return
 	}
