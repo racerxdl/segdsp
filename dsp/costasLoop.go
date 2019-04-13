@@ -61,10 +61,10 @@ func (cl *CostasLoop2) Work(input []complex64) []complex64 {
 }
 
 func (cl *CostasLoop2) WorkBuffer(input, output []complex64) int {
-	if len(cl.frequencyShift) < len(output) {
-		cl.frequencyShift = make([]float32, len(output))
+	if len(cl.frequencyShift) < len(input) {
+		cl.frequencyShift = make([]float32, len(input))
 	}
-	cl.lastBuffLen = len(output)
+	cl.lastBuffLen = len(input)
 	for i := 0; i < len(input); i++ {
 		n := tools.PhaseToComplex(-cl.phase)
 		output[i] = input[i] * n
@@ -105,10 +105,10 @@ func (cl *CostasLoop4) Work(input []complex64) []complex64 {
 }
 
 func (cl *CostasLoop4) WorkBuffer(input, output []complex64) int {
-	if len(cl.frequencyShift) < len(output) {
-		cl.frequencyShift = make([]float32, len(output))
+	if len(cl.frequencyShift) < len(input) {
+		cl.frequencyShift = make([]float32, len(input))
 	}
-	cl.lastBuffLen = len(output)
+	cl.lastBuffLen = len(input)
 	for i := 0; i < len(input); i++ {
 		n := tools.PhaseToComplex(-cl.phase)
 		output[i] = input[i] * n
@@ -164,10 +164,10 @@ func (cl *CostasLoop8) Work(input []complex64) []complex64 {
 }
 
 func (cl *CostasLoop8) WorkBuffer(input, output []complex64) int {
-	if len(cl.frequencyShift) < len(output) {
-		cl.frequencyShift = make([]float32, len(output))
+	if len(cl.frequencyShift) < len(input) {
+		cl.frequencyShift = make([]float32, len(input))
 	}
-	cl.lastBuffLen = len(output)
+	cl.lastBuffLen = len(input)
 	K := float32(math.Sqrt(2) - 1)
 	for i := 0; i < len(input); i++ {
 		n := tools.PhaseToComplex(-cl.phase)
