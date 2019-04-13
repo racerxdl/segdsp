@@ -10,15 +10,26 @@ type CostasLoop interface {
 	GetError() float32
 	GetFrequency() float32
 	GetFrequencyHz(float32) float32
+	GetFrequencyShift() []float32
 }
 
 // region Base Costas Loop
 type baseCostasLoop struct {
-	error float32
+	error          float32
+	frequencyShift []float32
+	lastBuffLen    int
 }
 
 func (cl *baseCostasLoop) GetError() float32 {
 	return cl.error
+}
+
+func (cl *baseCostasLoop) GetFrequencyShift() []float32 {
+	if cl.lastBuffLen == 0 {
+		return make([]float32, 0)
+	}
+
+	return cl.frequencyShift[:cl.lastBuffLen]
 }
 
 func (cl *baseCostasLoop) PredictOutputSize(input int) int {
@@ -34,7 +45,7 @@ type CostasLoop2 struct {
 
 func MakeCostasLoop2WithFrequencyRange(loopBandwidth, minRelativeFrequency, maxRelativeFrequency float32) CostasLoop {
 	cl := makeControlLoop(loopBandwidth, minRelativeFrequency, maxRelativeFrequency)
-	cl2 := &CostasLoop2{controlLoop: *cl, baseCostasLoop: baseCostasLoop{error: 0}}
+	cl2 := &CostasLoop2{controlLoop: *cl, baseCostasLoop: baseCostasLoop{error: 0, lastBuffLen: 0}}
 
 	return cl2
 }
@@ -50,6 +61,10 @@ func (cl *CostasLoop2) Work(input []complex64) []complex64 {
 }
 
 func (cl *CostasLoop2) WorkBuffer(input, output []complex64) int {
+	if len(cl.frequencyShift) < len(output) {
+		cl.frequencyShift = make([]float32, len(output))
+	}
+	cl.lastBuffLen = len(output)
 	for i := 0; i < len(input); i++ {
 		n := tools.PhaseToComplex(-cl.phase)
 		output[i] = input[i] * n
@@ -59,6 +74,7 @@ func (cl *CostasLoop2) WorkBuffer(input, output []complex64) int {
 		cl.AdvanceLoop(cl.error)
 		cl.phaseWrap()
 		cl.frequencyLimit()
+		cl.frequencyShift[i] = cl.freq
 	}
 
 	return len(input)
@@ -73,7 +89,7 @@ type CostasLoop4 struct {
 
 func MakeCostasLoop4WithFrequencyRange(loopBandwidth, minRelativeFrequency, maxRelativeFrequency float32) CostasLoop {
 	cl := makeControlLoop(loopBandwidth, minRelativeFrequency, maxRelativeFrequency)
-	cl2 := &CostasLoop4{controlLoop: *cl, baseCostasLoop: baseCostasLoop{error: 0}}
+	cl2 := &CostasLoop4{controlLoop: *cl, baseCostasLoop: baseCostasLoop{error: 0, lastBuffLen: 0}}
 
 	return cl2
 }
@@ -89,6 +105,10 @@ func (cl *CostasLoop4) Work(input []complex64) []complex64 {
 }
 
 func (cl *CostasLoop4) WorkBuffer(input, output []complex64) int {
+	if len(cl.frequencyShift) < len(output) {
+		cl.frequencyShift = make([]float32, len(output))
+	}
+	cl.lastBuffLen = len(output)
 	for i := 0; i < len(input); i++ {
 		n := tools.PhaseToComplex(-cl.phase)
 		output[i] = input[i] * n
@@ -109,6 +129,7 @@ func (cl *CostasLoop4) WorkBuffer(input, output []complex64) int {
 		cl.AdvanceLoop(cl.error)
 		cl.phaseWrap()
 		cl.frequencyLimit()
+		cl.frequencyShift[i] = cl.freq
 	}
 
 	return len(input)
@@ -123,7 +144,7 @@ type CostasLoop8 struct {
 
 func MakeCostasLoop8WithFrequencyRange(loopBandwidth, minRelativeFrequency, maxRelativeFrequency float32) CostasLoop {
 	cl := makeControlLoop(loopBandwidth, minRelativeFrequency, maxRelativeFrequency)
-	cl2 := &CostasLoop8{controlLoop: *cl, baseCostasLoop: baseCostasLoop{error: 0}}
+	cl2 := &CostasLoop8{controlLoop: *cl, baseCostasLoop: baseCostasLoop{error: 0, lastBuffLen: 0}}
 
 	return cl2
 }
@@ -143,6 +164,10 @@ func (cl *CostasLoop8) Work(input []complex64) []complex64 {
 }
 
 func (cl *CostasLoop8) WorkBuffer(input, output []complex64) int {
+	if len(cl.frequencyShift) < len(output) {
+		cl.frequencyShift = make([]float32, len(output))
+	}
+	cl.lastBuffLen = len(output)
 	K := float32(math.Sqrt(2) - 1)
 	for i := 0; i < len(input); i++ {
 		n := tools.PhaseToComplex(-cl.phase)
@@ -170,6 +195,7 @@ func (cl *CostasLoop8) WorkBuffer(input, output []complex64) int {
 		cl.AdvanceLoop(cl.error)
 		cl.phaseWrap()
 		cl.frequencyLimit()
+		cl.frequencyShift[i] = cl.freq
 	}
 
 	return len(input)

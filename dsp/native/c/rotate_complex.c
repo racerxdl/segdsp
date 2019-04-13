@@ -13,6 +13,8 @@ inline void multiplyComplex(float *output, float *a, float *b) {
       output[1] = (Ar * Bi) + (Ai * Br);
 }
 
+#if __amd64__ || __x86_64__ || __X86__ || __i386__
+// Use hardware SQRT
 inline volatile double asmSqrt(double a){
     double b = 0;
     asm volatile(
@@ -25,6 +27,12 @@ inline volatile double asmSqrt(double a){
     );
     return b;
 }
+#else
+// Fallback
+inline volatile double asmSqrt(double a){
+    return sqrt(a);
+}
+#endif
 
 inline void normalizeComplex(float *complex) {
   float mag = asmSqrt(complex[0] * complex[0] + complex[1] * complex[1]);

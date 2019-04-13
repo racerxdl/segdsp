@@ -40,6 +40,22 @@ var RotateComplex func(input []complex64, phase *complex64, phaseIncrement compl
 // phase = phase * phaseIncrement
 var RotateComplexBuffer func(input, output []complex64, phase *complex64, phaseIncrement complex64, length int) int
 
+// MultiplyFloatFloatVectors performs multiplication of each element from A by the same element in B
+// A[i] = A[i] * B[i]
+var MultiplyFloatFloatVectors func(A, B []float32)
+
+// DivideFloatFloatVectors performs division of each element from A by the same element in B
+// A[i] = A[i] / B[i]
+var DivideFloatFloatVectors func(A, B []float32)
+
+// AddFloatFloatVectors performs addition of each element from A by the same element in B
+// A[i] = A[i] + B[i]
+var AddFloatFloatVectors func(A, B []float32)
+
+// SubtractFloatFloatVectors performs addition of each element from A by the same element in B
+// A[i] = A[i] - B[i]
+var SubtractFloatFloatVectors func(A, B []float32)
+
 // ComplexDotProduct performs the Dot Product between two complex vectors and store the result at *result
 func ComplexDotProduct(result *complex64, input []complex64, taps []complex64) {
 	*result = ComplexDotProductResult(input, taps)
@@ -74,6 +90,38 @@ func GetSIMDMode() string {
 }
 
 // region Private Functions
+
+// genericComplexDotProductResult performs multiplication of each element from A by the same element in B
+// This is the Generic Function in case no SIMD alternative is available
+func genericMultiplyFloatFloatVectors(A, B []float32) {
+	for i, v := range B {
+		A[i] = A[i] * v
+	}
+}
+
+// genericDivideFloatFloatVectors performs division of each element from A by the same element in B
+// This is the Generic Function in case no SIMD alternative is available
+func genericDivideFloatFloatVectors(A, B []float32) {
+	for i, v := range B {
+		A[i] = A[i] / v
+	}
+}
+
+// genericAddFloatFloatVectors performs addition of each element from A by the same element in B
+// This is the Generic Function in case no SIMD alternative is available
+func genericAddFloatFloatVectors(A, B []float32) {
+	for i, v := range B {
+		A[i] = A[i] + v
+	}
+}
+
+// genericSubtractFloatFloatVectors performs subtraction of each element from A by the same element in B
+// This is the Generic Function in case no SIMD alternative is available
+func genericSubtractFloatFloatVectors(A, B []float32) {
+	for i, v := range B {
+		A[i] = A[i] - v
+	}
+}
 
 // genericComplexDotProductResult performs the Dot Product between two complex vectors and returns the result
 // This is the Generic Function in case no SIMD alternative is available
@@ -227,6 +275,30 @@ func init() {
 		RotateComplexBuffer = native.GetRotateComplexBuffer()
 	} else {
 		RotateComplexBuffer = genericRotateComplexBuffer
+	}
+
+	if native.GetAddFloatFloatVectors() != nil {
+		AddFloatFloatVectors = native.GetAddFloatFloatVectors()
+	} else {
+		AddFloatFloatVectors = genericAddFloatFloatVectors
+	}
+
+	if native.GetSubtractFloatFloatVectors() != nil {
+		SubtractFloatFloatVectors = native.GetSubtractFloatFloatVectors()
+	} else {
+		SubtractFloatFloatVectors = genericSubtractFloatFloatVectors
+	}
+
+	if native.GetMultiplyFloatFloatVectors() != nil {
+		MultiplyFloatFloatVectors = native.GetMultiplyFloatFloatVectors()
+	} else {
+		MultiplyFloatFloatVectors = genericMultiplyFloatFloatVectors
+	}
+
+	if native.GetDivideFloatFloatVectors() != nil {
+		DivideFloatFloatVectors = native.GetDivideFloatFloatVectors()
+	} else {
+		DivideFloatFloatVectors = genericDivideFloatFloatVectors
 	}
 }
 

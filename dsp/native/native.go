@@ -57,3 +57,35 @@ func FirFilter(input []complex64, output []complex64, taps []float32) {
 func FirFilterDecimate(decimation uint, input []complex64, output []complex64, taps []float32) {
 	panic("No native function available for arch")
 }
+
+func MultiplyFloatFloatVectors(A, B []float32) {
+	panic("No native function available for arch")
+}
+
+func DivideFloatFloatVectors(A, B []float32) {
+	panic("No native function available for arch")
+}
+
+func AddFloatFloatVectors(A, B []float32) {
+	panic("No native function available for arch")
+}
+
+func SubtractFloatFloatVectors(A, B []float32) {
+	panic("No native function available for arch")
+}
+
+func GetMultiplyFloatFloatVectors() func(A, B []float32) {
+	return nil
+}
+
+func GetDivideFloatFloatVectors() func(A, B []float32) {
+	return nil
+}
+
+func GetAddFloatFloatVectors() func(A, B []float32) {
+	return nil
+}
+
+func GetSubtractFloatFloatVectors() func(A, B []float32) {
+	return nil
+}

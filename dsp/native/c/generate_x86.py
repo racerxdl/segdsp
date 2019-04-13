@@ -21,6 +21,26 @@ subarchs = [
 
 sources = [
   {
+    "filename": "add_float_float_vectors.c",
+    "function": "AddFloatFloatVectors",
+    "cFunction": "addFloatFloatVectors",
+  },
+  {
+    "filename": "subtract_float_float_vectors.c",
+    "function": "SubtractFloatFloatVectors",
+    "cFunction": "subtractFloatFloatVectors",
+  },
+  {
+    "filename": "multiply_float_float_vectors.c",
+    "function": "MultiplyFloatFloatVectors",
+    "cFunction": "multiplyFloatFloatVectors",
+  },
+  {
+    "filename": "divide_float_float_vectors.c",
+    "function": "DivideFloatFloatVectors",
+    "cFunction": "divideFloatFloatVectors",
+  },
+  {
     "filename": "multiply_conjugate_native.c",
     "function": "MultiplyConjugate",
     "cFunction": "multiplyConjugate",

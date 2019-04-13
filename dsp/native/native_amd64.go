@@ -11,6 +11,10 @@ var nativeComplexRotate func(input []complex64, phase *complex64, phaseIncrement
 var nativeComplexBufferRotate func(input, output []complex64, phase *complex64, phaseIncrement complex64, length int) int
 var nativeFirFilter func(input []complex64, output []complex64, taps []float32)
 var nativeFirFilterDecimate func(decimation uint, input []complex64, output []complex64, taps []float32)
+var nativeMultiplyFloatFloatVectors func(A, B []float32)
+var nativeDivideFloatFloatVectors func(A, B []float32)
+var nativeAddFloatFloatVectors func(A, B []float32)
+var nativeSubtractFloatFloatVectors func(A, B []float32)
 
 func RotateComplex(input []complex64, phase *complex64, phaseIncrement complex64, length int) []complex64 {
 	if nativeComplexRotate == nil {
@@ -214,6 +218,98 @@ func GetFirFilterDecimate() func(decimation uint, input []complex64, output []co
 
 	if amd64.SSE2 {
 		return amd64.FirFilterDecimateSSE2
+	}
+
+	return nil
+}
+
+func MultiplyFloatFloatVectors(A, B []float32) {
+	if nativeMultiplyFloatFloatVectors == nil {
+		nativeMultiplyFloatFloatVectors = GetMultiplyFloatFloatVectors()
+	}
+
+	if nativeMultiplyFloatFloatVectors == nil {
+		panic("No native function available for arch")
+	}
+	nativeMultiplyFloatFloatVectors(A, B)
+}
+
+func DivideFloatFloatVectors(A, B []float32) {
+	if nativeDivideFloatFloatVectors == nil {
+		nativeDivideFloatFloatVectors = GetDivideFloatFloatVectors()
+	}
+
+	if nativeDivideFloatFloatVectors == nil {
+		panic("No native function available for arch")
+	}
+	nativeDivideFloatFloatVectors(A, B)
+}
+
+func AddFloatFloatVectors(A, B []float32) {
+	if nativeAddFloatFloatVectors == nil {
+		nativeAddFloatFloatVectors = GetAddFloatFloatVectors()
+	}
+
+	if nativeAddFloatFloatVectors == nil {
+		panic("No native function available for arch")
+	}
+	nativeAddFloatFloatVectors(A, B)
+}
+
+func SubtractFloatFloatVectors(A, B []float32) {
+	if nativeSubtractFloatFloatVectors == nil {
+		nativeSubtractFloatFloatVectors = GetSubtractFloatFloatVectors()
+	}
+
+	if nativeSubtractFloatFloatVectors == nil {
+		panic("No native function available for arch")
+	}
+	nativeSubtractFloatFloatVectors(A, B)
+}
+
+func GetMultiplyFloatFloatVectors() func(A, B []float32) {
+	if amd64.AVX {
+		return amd64.MultiplyFloatFloatVectorsAVX
+	}
+
+	if amd64.SSE2 {
+		return amd64.MultiplyFloatFloatVectorsSSE2
+	}
+
+	return nil
+}
+
+func GetDivideFloatFloatVectors() func(A, B []float32) {
+	if amd64.AVX {
+		return amd64.DivideFloatFloatVectorsAVX
+	}
+
+	if amd64.SSE2 {
+		return amd64.DivideFloatFloatVectorsSSE2
+	}
+
+	return nil
+}
+
+func GetAddFloatFloatVectors() func(A, B []float32) {
+	if amd64.AVX {
+		return amd64.AddFloatFloatVectorsAVX
+	}
+
+	if amd64.SSE2 {
+		return amd64.AddFloatFloatVectorsSSE2
+	}
+
+	return nil
+}
+
+func GetSubtractFloatFloatVectors() func(A, B []float32) {
+	if amd64.AVX {
+		return amd64.SubtractFloatFloatVectorsAVX
+	}
+
+	if amd64.SSE2 {
+		return amd64.SubtractFloatFloatVectorsSSE2
 	}
 
 	return nil

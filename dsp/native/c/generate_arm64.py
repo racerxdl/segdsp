@@ -9,8 +9,8 @@ outputFolder = "../%s" %mainArch
 subarchs = [
   {
     "name": "aarch64",
-    "subarchtitle": "AArch64",
-    "flags": "-target aarch64-none-eabi"
+    "subarchtitle": "arm64",
+    "flags": "-I/usr/include/aarch64-linux-gnu/ -target aarch64-none-eabi"
   }
 ]
 
