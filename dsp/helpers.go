@@ -338,6 +338,7 @@ func init() {
 		SubtractFloatFloatVectors = genericSubtractFloatFloatVectors
 	}
 
+	// The difference between native and golang is not that huge, but native is a bit faster
 	if native.GetNativeMultiplyFloatFloatVectors() != nil {
 		MultiplyFloatFloatVectors = native.GetNativeMultiplyFloatFloatVectors()
 	} else {
@@ -363,11 +364,12 @@ func init() {
 		SubtractComplexComplexVectors = genericSubtractComplexComplexVectors
 	}
 
-	if native.GetNativeMultiplyComplexComplexVectors() != nil {
-		MultiplyComplexComplexVectors = native.GetNativeMultiplyComplexComplexVectors()
-	} else {
-		MultiplyComplexComplexVectors = genericMultiplyComplexComplexVectors
-	}
+	// Multiply ComplexComplex in golang is actually faster than native
+	//if native.GetNativeMultiplyComplexComplexVectors() != nil {
+	//	MultiplyComplexComplexVectors = native.GetNativeMultiplyComplexComplexVectors()
+	//} else {
+	MultiplyComplexComplexVectors = genericMultiplyComplexComplexVectors
+	//}
 
 	if native.GetNativeDivideComplexComplexVectors() != nil {
 		DivideComplexComplexVectors = native.GetNativeDivideComplexComplexVectors()

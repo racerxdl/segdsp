@@ -24,9 +24,9 @@ func TestAddFloatFloatVectors(t *testing.T) {
 
 	t.Logf("SIMD Mode: %s", native.GetSIMDMode())
 
-	var vecA = make([]float32, 64)
-	var vecA2 = make([]float32, 64)
-	var vecB = make([]float32, 64)
+	var vecA = make([]float32, 69)
+	var vecA2 = make([]float32, 69)
+	var vecB = make([]float32, 69)
 
 	t.Logf("Initializing Vectors\n")
 	for i := 0; i < len(vecA); i++ {
@@ -55,9 +55,9 @@ func TestSubFloatFloatVectors(t *testing.T) {
 
 	t.Logf("SIMD Mode: %s", native.GetSIMDMode())
 
-	var vecA = make([]float32, 64)
-	var vecA2 = make([]float32, 64)
-	var vecB = make([]float32, 64)
+	var vecA = make([]float32, 69)
+	var vecA2 = make([]float32, 69)
+	var vecB = make([]float32, 69)
 
 	t.Logf("Initializing Vectors\n")
 	for i := 0; i < len(vecA); i++ {
@@ -86,9 +86,9 @@ func TestMultiplyFloatFloatVectors(t *testing.T) {
 
 	t.Logf("SIMD Mode: %s", native.GetSIMDMode())
 
-	var vecA = make([]float32, 64)
-	var vecA2 = make([]float32, 64)
-	var vecB = make([]float32, 64)
+	var vecA = make([]float32, 69)
+	var vecA2 = make([]float32, 69)
+	var vecB = make([]float32, 69)
 
 	t.Logf("Initializing Vectors\n")
 	for i := 0; i < len(vecA); i++ {
@@ -117,9 +117,9 @@ func TestDivideFloatFloatVectors(t *testing.T) {
 
 	t.Logf("SIMD Mode: %s", native.GetSIMDMode())
 
-	var vecA = make([]float32, 64)
-	var vecA2 = make([]float32, 64)
-	var vecB = make([]float32, 64)
+	var vecA = make([]float32, 69)
+	var vecA2 = make([]float32, 69)
+	var vecB = make([]float32, 69)
 
 	t.Logf("Initializing Vectors\n")
 	for i := 0; i < len(vecA); i++ {
@@ -150,9 +150,9 @@ func TestAddComplexComplexVectors(t *testing.T) {
 
 	t.Logf("SIMD Mode: %s", native.GetSIMDMode())
 
-	var vecA = make([]complex64, 64)
-	var vecA2 = make([]complex64, 64)
-	var vecB = make([]complex64, 64)
+	var vecA = make([]complex64, 69)
+	var vecA2 = make([]complex64, 69)
+	var vecB = make([]complex64, 69)
 
 	t.Logf("Initializing Vectors\n")
 	for i := 0; i < len(vecA); i++ {
@@ -179,9 +179,9 @@ func TestSubComplexComplexVectors(t *testing.T) {
 
 	t.Logf("SIMD Mode: %s", native.GetSIMDMode())
 
-	var vecA = make([]complex64, 64)
-	var vecA2 = make([]complex64, 64)
-	var vecB = make([]complex64, 64)
+	var vecA = make([]complex64, 69)
+	var vecA2 = make([]complex64, 69)
+	var vecB = make([]complex64, 69)
 
 	t.Logf("Initializing Vectors\n")
 	for i := 0; i < len(vecA); i++ {
@@ -208,9 +208,9 @@ func TestMultiplyComplexComplexVectors(t *testing.T) {
 
 	t.Logf("SIMD Mode: %s", native.GetSIMDMode())
 
-	var vecA = make([]complex64, 64)
-	var vecA2 = make([]complex64, 64)
-	var vecB = make([]complex64, 64)
+	var vecA = make([]complex64, 69)
+	var vecA2 = make([]complex64, 69)
+	var vecB = make([]complex64, 69)
 
 	t.Logf("Initializing Vectors\n")
 	for i := 0; i < len(vecA); i++ {
@@ -237,9 +237,9 @@ func TestDivideComplexComplexVectors(t *testing.T) {
 
 	t.Logf("SIMD Mode: %s", native.GetSIMDMode())
 
-	var vecA = make([]complex64, 64)
-	var vecA2 = make([]complex64, 64)
-	var vecB = make([]complex64, 64)
+	var vecA = make([]complex64, 69)
+	var vecA2 = make([]complex64, 69)
+	var vecB = make([]complex64, 69)
 
 	t.Logf("Initializing Vectors\n")
 
