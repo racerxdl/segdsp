@@ -14,7 +14,8 @@ def initFolders(mainArch):
     shutil.rmtree(genasmFolder)
 
   os.mkdir(genasmFolder)
-  os.mkdir(os.path.join("..", mainArch))
+  if not os.path.exists(os.path.join("..", mainArch)):
+    os.mkdir(os.path.join("..", mainArch))
 
 def fixFile(filename):
   f = open(filename, "r")

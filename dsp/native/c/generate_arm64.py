@@ -14,7 +14,7 @@ subarchs = [
   {
     "name": "neon",
     "subarchtitle": "Neon",
-    "flags": "-funsafe-math-optimizations -ftree-vectorize"
+    "flags": "-funsafe-math-optimizations -ftree-vectorize -march=armv8-a+simd+fp"
   }
 ]
 
