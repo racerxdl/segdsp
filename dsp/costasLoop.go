@@ -8,6 +8,7 @@ import (
 type CostasLoop interface {
 	ComplexWorker
 	GetError() float32
+	GetAverageError() float32
 	GetFrequency() float32
 	GetFrequencyHz(float32) float32
 	GetFrequencyShift() []float32
@@ -15,6 +16,7 @@ type CostasLoop interface {
 
 // region Base Costas Loop
 type baseCostasLoop struct {
+	avgError       float32
 	error          float32
 	frequencyShift []float32
 	lastBuffLen    int
@@ -22,6 +24,10 @@ type baseCostasLoop struct {
 
 func (cl *baseCostasLoop) GetError() float32 {
 	return cl.error
+}
+
+func (cl *baseCostasLoop) GetAverageError() float32 {
+	return cl.avgError
 }
 
 func (cl *baseCostasLoop) GetFrequencyShift() []float32 {
@@ -71,11 +77,14 @@ func (cl *CostasLoop2) WorkBuffer(input, output []complex64) int {
 
 		cl.error = real(output[i]) * imag(output[i])
 		cl.error = tools.Clip(cl.error, 1)
+		cl.avgError += cl.error
 		cl.AdvanceLoop(cl.error)
 		cl.phaseWrap()
 		cl.frequencyLimit()
 		cl.frequencyShift[i] = cl.freq
 	}
+
+	cl.avgError /= float32(len(input) + 1)
 
 	return len(input)
 }
@@ -126,11 +135,14 @@ func (cl *CostasLoop4) WorkBuffer(input, output []complex64) int {
 
 		cl.error = imag(output[i])*vr - real(output[i])*vi
 		cl.error = tools.Clip(cl.error, 1)
+		cl.avgError += cl.error
 		cl.AdvanceLoop(cl.error)
 		cl.phaseWrap()
 		cl.frequencyLimit()
 		cl.frequencyShift[i] = cl.freq
 	}
+
+	cl.avgError /= float32(len(input) + 1)
 
 	return len(input)
 }
@@ -192,11 +204,13 @@ func (cl *CostasLoop8) WorkBuffer(input, output []complex64) int {
 
 		cl.error = imag(output[i])*vr - real(output[i])*vi
 		cl.error = tools.Clip(cl.error, 1)
+		cl.avgError += cl.error
 		cl.AdvanceLoop(cl.error)
 		cl.phaseWrap()
 		cl.frequencyLimit()
 		cl.frequencyShift[i] = cl.freq
 	}
+	cl.avgError /= float32(len(input) + 1)
 
 	return len(input)
 }
