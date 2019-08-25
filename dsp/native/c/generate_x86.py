@@ -10,12 +10,12 @@ subarchs = [
   {
     "name": "avx",
     "subarchtitle": "AVX",
-    "flags": "-mavx -mfma"
+    "flags": "-mavx -mfma -masm=intel"
   },
   {
     "name": "sse2",
     "subarchtitle": "SSE2",
-    "flags": "-msse2"
+    "flags": "-msse2 -masm=intel"
   }
 ]
 

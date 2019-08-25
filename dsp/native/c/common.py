@@ -7,7 +7,7 @@ genasmFolder = "genasm"
 outputPrefix = "autogen_"
 baseC2GoAsm = "c2goasm -s -c -a {IN} {OUT}"
 baseFlags = "-O2 -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti -S"
-baseClang = "clang -D__SUBARCH__={SUBARCH} {BASE_FLAGS} {SUBARCHFLAGS} -masm=intel {CFILE} -o {GENASMFOLDER}/{ASMFILE}"
+baseClang = "clang -D__SUBARCH__={SUBARCH} {BASE_FLAGS} {SUBARCHFLAGS} {CFILE} -o {GENASMFOLDER}/{ASMFILE}"
 
 def initFolders(mainArch):
   if os.path.exists(genasmFolder):
