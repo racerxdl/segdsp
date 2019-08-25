@@ -1,5 +1,6 @@
 //+build !noasm
 //+build !appengine
+
 package arm64
 
 import (

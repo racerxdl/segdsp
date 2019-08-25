@@ -1,7 +1,5 @@
 package native
 
-import "github.com/racerxdl/segdsp/dsp/native/arm64"
-
 // region Float-Float Vector Operations
 func MultiplyFloatFloatVectors(A, B []float32) {
 	if nativeMultiplyFloatFloatVectors == nil {
@@ -48,49 +46,25 @@ func SubtractFloatFloatVectors(A, B []float32) {
 }
 
 func GetNativeMultiplyFloatFloatVectors() func(A, B []float32) {
-	if amd64.AVX {
-		return amd64.MultiplyFloatFloatVectorsAVX
-	}
-
-	if amd64.SSE2 {
-		return amd64.MultiplyFloatFloatVectorsSSE2
-	}
+	// TODO
 
 	return nil
 }
 
 func GetNativeDivideFloatFloatVectors() func(A, B []float32) {
-	if amd64.AVX {
-		return amd64.DivideFloatFloatVectorsAVX
-	}
-
-	if amd64.SSE2 {
-		return amd64.DivideFloatFloatVectorsSSE2
-	}
+	// TODO
 
 	return nil
 }
 
 func GetNativeAddFloatFloatVectors() func(A, B []float32) {
-	if amd64.AVX {
-		return amd64.AddFloatFloatVectorsAVX
-	}
-
-	if amd64.SSE2 {
-		return amd64.AddFloatFloatVectorsSSE2
-	}
+	// TODO
 
 	return nil
 }
 
 func GetNativeSubtractFloatFloatVectors() func(A, B []float32) {
-	if amd64.AVX {
-		return amd64.SubtractFloatFloatVectorsAVX
-	}
-
-	if amd64.SSE2 {
-		return amd64.SubtractFloatFloatVectorsSSE2
-	}
+	// TODO
 
 	return nil
 }
@@ -142,49 +116,25 @@ func SubtractComplexComplexVectors(A, B []complex64) {
 }
 
 func GetNativeMultiplyComplexComplexVectors() func(A, B []complex64) {
-	if amd64.AVX {
-		return amd64.MultiplyComplexComplexVectorsAVX
-	}
-
-	if amd64.SSE2 {
-		return amd64.MultiplyComplexComplexVectorsSSE2
-	}
+	// TODO
 
 	return nil
 }
 
 func GetNativeDivideComplexComplexVectors() func(A, B []complex64) {
-	if amd64.AVX {
-		return amd64.DivideComplexComplexVectorsAVX
-	}
-
-	if amd64.SSE2 {
-		return amd64.DivideComplexComplexVectorsSSE2
-	}
+	// TODO
 
 	return nil
 }
 
 func GetNativeAddComplexComplexVectors() func(A, B []complex64) {
-	if amd64.AVX {
-		return amd64.AddComplexComplexVectorsAVX
-	}
-
-	if amd64.SSE2 {
-		return amd64.AddComplexComplexVectorsSSE2
-	}
+	// TODO
 
 	return nil
 }
 
 func GetNativeSubtractComplexComplexVectors() func(A, B []complex64) {
-	if amd64.AVX {
-		return amd64.SubtractComplexComplexVectorsAVX
-	}
-
-	if amd64.SSE2 {
-		return amd64.SubtractComplexComplexVectorsSSE2
-	}
+	// TODO
 
 	return nil
 }
