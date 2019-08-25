@@ -2,6 +2,7 @@ package dsp
 
 import (
 	"github.com/racerxdl/segdsp/dsp/native"
+	"github.com/racerxdl/segdsp/tools"
 	"math/rand"
 	"testing"
 )
@@ -29,7 +30,7 @@ func TestDotProductComplex(t *testing.T) {
 	var expected = genericDotProductResult(vecA, taps)
 	var got = native.DotProductComplex(vecA, taps)
 
-	if expected != got {
+	if !tools.ComplexEqual(expected, got) {
 		t.Errorf("Expected %f + %fi got %f + %fi\n", real(expected), imag(expected), real(got), imag(got))
 	}
 }
@@ -57,7 +58,7 @@ func TestDotProductFloat(t *testing.T) {
 	var expected = genericDotProductFloatResult(vecA, taps)
 	var got = native.DotProductFloat(vecA, taps)
 
-	if expected != got {
+	if !tools.AlmostFloatEqual(expected, got) {
 		t.Errorf("Expected %f got %f\n", expected, got)
 	}
 }
