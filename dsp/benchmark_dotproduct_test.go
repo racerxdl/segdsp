@@ -48,3 +48,46 @@ func BenchmarkDotProductNative(b *testing.B) {
 		native.DotProductComplex(vecA, taps)
 	}
 }
+
+func BenchmarkFloatDotProductGolang(b *testing.B) {
+	var vecA = make([]float32, 16384)
+	var taps = make([]float32, 8192)
+
+	for i := 0; i < len(vecA); i++ {
+		vecA[i] = rand.Float32()*2 - 1
+		if i < len(taps) {
+			taps[i] = rand.Float32()*2 - 1
+		}
+	}
+
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		genericDotProductFloatResult(vecA, taps)
+	}
+}
+
+func BenchmarkFloatDotProductNative(b *testing.B) {
+	b.StopTimer()
+
+	if native.GetNativeDotProductFloat() == nil {
+		b.Logf("No Native SIMD Float Dot Product to test")
+		return
+	}
+
+	var vecA = make([]float32, 16384)
+	var taps = make([]float32, 8192)
+
+	for i := 0; i < len(vecA); i++ {
+		vecA[i] = rand.Float32()*2 - 1
+		if i < len(taps) {
+			taps[i] = rand.Float32()*2 - 1
+		}
+	}
+
+	b.StartTimer()
+
+	for i := 0; i < b.N; i++ {
+		native.DotProductFloat(vecA, taps)
+	}
+}
