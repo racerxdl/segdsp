@@ -7,6 +7,7 @@ import (
 )
 
 func BenchmarkDotProductGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]complex64, 16384)
 	var taps = make([]float32, 128)
 
@@ -17,7 +18,6 @@ func BenchmarkDotProductGolang(b *testing.B) {
 		}
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericDotProductResult(vecA, taps)
@@ -50,6 +50,7 @@ func BenchmarkDotProductNative(b *testing.B) {
 }
 
 func BenchmarkFloatDotProductGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]float32, 16384)
 	var taps = make([]float32, 8192)
 
@@ -60,7 +61,6 @@ func BenchmarkFloatDotProductGolang(b *testing.B) {
 		}
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericDotProductFloatResult(vecA, taps)

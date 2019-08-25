@@ -8,6 +8,7 @@ import (
 
 // region Complex-Complex Vector Operations
 func BenchmarkAddComplexComplexVectorsGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]complex64, 16384)
 	var vecB = make([]complex64, 16384)
 
@@ -16,7 +17,6 @@ func BenchmarkAddComplexComplexVectorsGolang(b *testing.B) {
 		vecB[i] = complex(rand.Float32()*2-1, rand.Float32()*2-1)
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericAddComplexComplexVectors(vecA, vecB)
@@ -47,6 +47,7 @@ func BenchmarkAddComplexComplexVectorsNative(b *testing.B) {
 }
 
 func BenchmarkSubComplexComplexVectorsGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]complex64, 16384)
 	var vecB = make([]complex64, 16384)
 
@@ -55,7 +56,6 @@ func BenchmarkSubComplexComplexVectorsGolang(b *testing.B) {
 		vecB[i] = complex(rand.Float32()*2-1, rand.Float32()*2-1)
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericSubtractComplexComplexVectors(vecA, vecB)
@@ -86,6 +86,7 @@ func BenchmarkSubComplexComplexVectorsNative(b *testing.B) {
 }
 
 func BenchmarkMultiplyComplexComplexVectorsGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]complex64, 16384)
 	var vecB = make([]complex64, 16384)
 
@@ -94,7 +95,6 @@ func BenchmarkMultiplyComplexComplexVectorsGolang(b *testing.B) {
 		vecB[i] = complex(rand.Float32()*2-1, rand.Float32()*2-1)
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericMultiplyComplexComplexVectors(vecA, vecB)
@@ -125,6 +125,7 @@ func BenchmarkMultiplyComplexComplexVectorsNative(b *testing.B) {
 }
 
 func BenchmarkDivideComplexComplexVectorsGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]complex64, 16384)
 	var vecB = make([]complex64, 16384)
 
@@ -133,7 +134,6 @@ func BenchmarkDivideComplexComplexVectorsGolang(b *testing.B) {
 		vecB[i] = complex(rand.Float32()*2-1, rand.Float32()*2-1)
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericDivideComplexComplexVectors(vecA, vecB)
@@ -166,6 +166,7 @@ func BenchmarkDivideComplexComplexVectorsNative(b *testing.B) {
 // endregion
 // region Complex-Complex Vector Operations
 func BenchmarkAddFloatFloatVectorsGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]float32, 16384)
 	var vecB = make([]float32, 16384)
 
@@ -174,7 +175,6 @@ func BenchmarkAddFloatFloatVectorsGolang(b *testing.B) {
 		vecB[i] = rand.Float32()*2 - 1
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericAddFloatFloatVectors(vecA, vecB)
@@ -205,6 +205,7 @@ func BenchmarkAddFloatFloatVectorsNative(b *testing.B) {
 }
 
 func BenchmarkSubFloatFloatVectorsGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]float32, 16384)
 	var vecB = make([]float32, 16384)
 
@@ -213,7 +214,6 @@ func BenchmarkSubFloatFloatVectorsGolang(b *testing.B) {
 		vecB[i] = rand.Float32()*2 - 1
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericSubtractFloatFloatVectors(vecA, vecB)
@@ -244,6 +244,7 @@ func BenchmarkSubFloatFloatVectorsNative(b *testing.B) {
 }
 
 func BenchmarkMultiplyFloatFloatVectorsGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]float32, 16384)
 	var vecB = make([]float32, 16384)
 
@@ -252,7 +253,6 @@ func BenchmarkMultiplyFloatFloatVectorsGolang(b *testing.B) {
 		vecB[i] = rand.Float32()*2 - 1
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericMultiplyFloatFloatVectors(vecA, vecB)
@@ -283,6 +283,7 @@ func BenchmarkMultiplyFloatFloatVectorsNative(b *testing.B) {
 }
 
 func BenchmarkDivideFloatFloatVectorsGolang(b *testing.B) {
+	b.StopTimer()
 	var vecA = make([]float32, 16384)
 	var vecB = make([]float32, 16384)
 
@@ -291,7 +292,6 @@ func BenchmarkDivideFloatFloatVectorsGolang(b *testing.B) {
 		vecB[i] = rand.Float32()*2 - 1
 	}
 
-	b.StopTimer()
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
 		genericDivideFloatFloatVectors(vecA, vecB)
