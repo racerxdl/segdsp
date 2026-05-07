@@ -9,332 +9,136 @@ import (
 	"strconv"
 )
 
-// region Modes
-
 const modeFM = "FM"
 const modeAM = "AM"
 
 var modes = []string{modeFM, modeAM}
 
-// endregion
-
-// region Environment Variables
-const envRadioServerAddr = "RADIOSERVER"
-const envCenterFrequency = "CENTER_FREQUENCY"
-const envFFTFrequency = "FFT_FREQUENCY"
-const envHTTPAddr = "HTTP_ADDRESS"
-const envDisplayPixels = "DISPLAY_PIXELS"
-const envDecimationStage = "DECIMATION_STAGE"
-const envFFTDecimationStage = "FFT_DECIMATION_STAGE"
-const envOutputRate = "OUTPUT_RATE"
-const envMode = "DEMOD_MODE"
-const envFSBW = "FS_BANDWIDTH"
-const envStationName = "STATION_NAME"
-const envWebCanControl = "WEB_CAN_CONTROL"
-const envTCPCanControl = "TCP_CAN_CONTROL"
-const envRecord = "RECORD"
-const envRecordMethod = "RECORD_METHOD"
-const envPreset = "PRESET"
-
-const envSquelch = "SQUELCH"
-const envSquelchAlpha = "SQUELCH_ALPHA"
-
-// region FM Demodulator Options
-const envFMDeviation = "FM_DEVIATION"
-const envFMTau = "FM_TAU"
-
-// endregion
-
-// region AM Demodulator Options
-const envAMAudioCut = "AM_AUDIO_CUT"
-
-// endregion
-
-// endregion
-// region Arguments
-
 var addrFlag = flag.String("httpAddr", "localhost:8080", "http service address")
 var radioserverhostFlag = flag.String("radioserver", "localhost:4050", "radioserver address")
 var displayPixelsFlag = flag.Uint("displayPixels", 512, "Width in pixels of the FFT")
-
 var channelFrequencyFlag = flag.Uint("channelFrequency", 106.3e6, "Channel (IQ) Center Frequency")
 var displayFrequencyFlag = flag.Uint("fftFrequency", 106.3e6, "FFT Center Frequency")
-
-var channelDecimationStageFlag = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage (The actual decimation will be 2^d)")
-var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 1, "FFT Decimation Stage (The actual decimation will be 2^d)")
-
+var channelDecimationStageFlag = flag.Uint("decimationStage", 3, "Channel (IQ) Decimation Stage")
+var displayDecimationStageFlag = flag.Uint("fftDecimationStage", 1, "FFT Decimation Stage")
 var demodulatorModeFlag = flag.String("demodMode", modeFM, fmt.Sprintf("Demodulator Mode: %s", modes))
 var outputRateFlag = flag.Uint("outputRate", 48000, "Output Rate in Hertz")
-
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
-
-var stationNameFlag = flag.String("stationName", "SegDSP", "Your station name or callsign (it identifies this instance)")
-var webCanControlFlag = flag.Bool("webCanControl", false, "If Web UI Clients can control this server")
-var tcpCanControlFlag = flag.Bool("tcpCanControl", true, "If TCP Clients can control this server")
-
-var recordFlag = flag.Bool("record", false, "If it should record when not squelched")
-var recordMethodFlag = flag.String("recordMethod", recorders.RecFile, "Method to use when recording")
-
-var presetFlag = flag.String("preset", "none", "presetStruct for Demodulator Params")
-
+var stationNameFlag = flag.String("stationName", "SegDSP", "Station name or callsign")
+var webCanControlFlag = flag.Bool("webCanControl", false, "Web UI can control server")
+var tcpCanControlFlag = flag.Bool("tcpCanControl", true, "TCP clients can control server")
+var recordFlag = flag.Bool("record", false, "Record when not squelched")
+var recordMethodFlag = flag.String("recordMethod", recorders.RecFile, "Recording method")
+var presetFlag = flag.String("preset", "none", "Preset for Demodulator Params")
 var squelchFlag = flag.Float64("squelch", -150, "Demodulator Squelch in dB")
 var squelchAlphaFlag = flag.Float64("squelchAlpha", 0.001, "Demodulator Squelch Filter Alpha")
-
-// region FM Demodulator Flags
-var filterBandwidthFlag = flag.Uint("filterBandwidth", 120e3, "First Stage Filter Bandwidth in Hertz")
-var fmDeviationFlag = flag.Uint("fmDeviation", 75e3, "FM Demodulator Max Deviation in Hertz")
-var fmTauFlag = flag.Float64("fmTau", 75e-6, "FM Demodulator Tau in seconds (0 to disable)")
-
-// endregion
-
-// region AM Demodulator Flags
+var filterBandwidthFlag = flag.Uint("filterBandwidth", 120e3, "First Stage Filter Bandwidth in Hz")
+var fmDeviationFlag = flag.Uint("fmDeviation", 75e3, "FM Max Deviation in Hz")
+var fmTauFlag = flag.Float64("fmTau", 75e-6, "FM Tau in seconds (0 to disable)")
 var amAudioCutFlag = flag.Float64("amAudioCut", 5000, "AM Low Pass Filter Cut")
 
-// endregion
-
-// endregion
-// region Variables
 var httpAddr string
 var radioserverhost string
 var displayPixels uint
-
 var channelFrequency uint
 var displayFrequency uint
-
 var channelDecimationStage uint
 var displayDecimationStage uint
-
 var demodulatorMode string
 var outputRate uint
 var filterBandwidth uint
 var squelch float32
 var squelchAlpha float32
-
 var fmDeviation uint
 var fmTau float32
-
 var amAudioCut float32
-
 var stationName string
 var webCanControl bool
 var tcpCanControl bool
 var record bool
 var recordMethod string
-var preset string
 
-// endregion
-
-func applyPreset(preset presetStruct) {
-	log.Printf("PRESET: Setting Output Rate to %d Hz\n", preset.outputRate)
-	log.Printf("PRESET: Setting Demod Mode to %s\n", preset.demodMode)
-	log.Printf("PRESET: Setting First Stage Filter to %f Hz\n", preset.filterBandwidth)
-
-	_ = os.Setenv(envOutputRate, strconv.FormatUint(uint64(preset.outputRate), 10))
-	_ = os.Setenv(envMode, preset.demodMode)
-	_ = os.Setenv(envFSBW, strconv.FormatFloat(preset.filterBandwidth, 'E', -1, 32))
-
-	switch preset.demodMode {
-	case modeFM:
-		applyFMPreset(preset)
-	case modeAM:
-		applyAMPreset(preset)
+func envString(envKey, fallback string) string {
+	if v := os.Getenv(envKey); v != "" {
+		return v
 	}
+	return fallback
 }
 
-func applyFMPreset(preset presetStruct) {
-	log.Printf("PRESET: Setting FM Tau to %f\n", preset.demodOptions["tau"].(float64))
-	log.Printf("PRESET: Setting FM Devation to %f Hz\n", preset.demodOptions["devation"].(float64))
-	_ = os.Setenv(envFMTau, strconv.FormatFloat(preset.demodOptions["tau"].(float64), 'E', -1, 32))
-	_ = os.Setenv(envFMDeviation, strconv.FormatFloat(preset.demodOptions["deviation"].(float64), 'E', -1, 32))
+func envUint(envKey string, fallback uint) uint {
+	if v := os.Getenv(envKey); v != "" {
+		n, err := strconv.ParseUint(v, 10, 32)
+		if err != nil {
+			panic(fmt.Sprintf("invalid value for %s: %v", envKey, err))
+		}
+		return uint(n)
+	}
+	return fallback
 }
 
-func applyAMPreset(preset presetStruct) {
-	log.Printf("PRESET: Setting AM Audio Cut to %f\n", preset.demodOptions["audioCut"].(float64))
-	_ = os.Setenv(envAMAudioCut, strconv.FormatFloat(preset.demodOptions["audioCut"].(float64), 'E', -1, 32))
+func envFloat32(envKey string, fallback float32) float32 {
+	if v := os.Getenv(envKey); v != "" {
+		n, err := strconv.ParseFloat(v, 32)
+		if err != nil {
+			panic(fmt.Sprintf("invalid value for %s: %v", envKey, err))
+		}
+		return float32(n)
+	}
+	return fallback
+}
+
+func envBool(envKey string, fallback bool) bool {
+	if v := os.Getenv(envKey); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			panic(fmt.Sprintf("invalid value for %s: %v", envKey, err))
+		}
+		return b
+	}
+	return fallback
+}
+
+func applyPreset(p presetStruct) {
+	log.Printf("PRESET: %s — outputRate=%d, mode=%s, fsbw=%.0f\n", p.name, p.outputRate, p.demodMode, p.filterBandwidth)
+	_ = os.Setenv("OUTPUT_RATE", strconv.FormatUint(uint64(p.outputRate), 10))
+	_ = os.Setenv("DEMOD_MODE", p.demodMode)
+	_ = os.Setenv("FS_BANDWIDTH", strconv.FormatFloat(p.filterBandwidth, 'E', -1, 32))
+
+	switch p.demodMode {
+	case modeFM:
+		_ = os.Setenv("FM_TAU", strconv.FormatFloat(p.demodOptions["tau"].(float64), 'E', -1, 32))
+		_ = os.Setenv("FM_DEVIATION", strconv.FormatFloat(p.demodOptions["deviation"].(float64), 'E', -1, 32))
+	case modeAM:
+		_ = os.Setenv("AM_AUDIO_CUT", strconv.FormatFloat(p.demodOptions["audioCut"].(float64), 'E', -1, 32))
+	}
 }
 
 func setEnv() {
 	flag.Parse()
-	// region Parse presetStruct
-	if val, ok := presets[preset]; ok {
+
+	if val, ok := presets[*presetFlag]; ok {
 		log.Printf("Selected %s preset.\n", val.name)
 		applyPreset(val)
 	}
-	// endregion
-	// region Fill Environment
-	if os.Getenv(envRadioServerAddr) == "" {
-		_ = os.Setenv(envRadioServerAddr, *radioserverhostFlag)
-	}
 
-	if os.Getenv(envCenterFrequency) == "" {
-		_ = os.Setenv(envCenterFrequency, strconv.FormatUint(uint64(*channelFrequencyFlag), 10))
-	}
-
-	if os.Getenv(envFFTFrequency) == "" {
-		_ = os.Setenv(envFFTFrequency, strconv.FormatUint(uint64(*displayFrequencyFlag), 10))
-	}
-
-	if os.Getenv(envHTTPAddr) == "" {
-		_ = os.Setenv(envHTTPAddr, *addrFlag)
-	}
-
-	if os.Getenv(envDisplayPixels) == "" {
-		_ = os.Setenv(envDisplayPixels, strconv.FormatUint(uint64(*displayPixelsFlag), 10))
-	}
-
-	if os.Getenv(envDecimationStage) == "" {
-		_ = os.Setenv(envDecimationStage, strconv.FormatUint(uint64(*channelDecimationStageFlag), 10))
-	}
-
-	if os.Getenv(envFFTDecimationStage) == "" {
-		_ = os.Setenv(envFFTDecimationStage, strconv.FormatUint(uint64(*displayDecimationStageFlag), 10))
-	}
-
-	if os.Getenv(envMode) == "" {
-		_ = os.Setenv(envMode, *demodulatorModeFlag)
-	}
-
-	if os.Getenv(envOutputRate) == "" {
-		_ = os.Setenv(envOutputRate, strconv.FormatUint(uint64(*outputRateFlag), 10))
-	}
-
-	if os.Getenv(envFSBW) == "" {
-		_ = os.Setenv(envFSBW, strconv.FormatUint(uint64(*filterBandwidthFlag), 10))
-	}
-
-	if os.Getenv(envFMDeviation) == "" {
-		_ = os.Setenv(envFMDeviation, strconv.FormatUint(uint64(*fmDeviationFlag), 10))
-	}
-
-	if os.Getenv(envFMTau) == "" {
-		_ = os.Setenv(envFMTau, strconv.FormatFloat(*fmTauFlag, 'E', -1, 32))
-	}
-
-	if os.Getenv(envSquelch) == "" {
-		_ = os.Setenv(envSquelch, strconv.FormatFloat(*squelchFlag, 'E', -1, 32))
-	}
-
-	if os.Getenv(envSquelchAlpha) == "" {
-		_ = os.Setenv(envSquelchAlpha, strconv.FormatFloat(*squelchAlphaFlag, 'E', -1, 32))
-	}
-
-	if os.Getenv(envAMAudioCut) == "" {
-		_ = os.Setenv(envAMAudioCut, strconv.FormatFloat(*amAudioCutFlag, 'E', -1, 32))
-	}
-
-	if os.Getenv(envStationName) == "" {
-		_ = os.Setenv(envStationName, *stationNameFlag)
-	}
-
-	if os.Getenv(envWebCanControl) == "" {
-		_ = os.Setenv(envWebCanControl, strconv.FormatBool(*webCanControlFlag))
-	}
-
-	if os.Getenv(envTCPCanControl) == "" {
-		_ = os.Setenv(envTCPCanControl, strconv.FormatBool(*tcpCanControlFlag))
-	}
-
-	if os.Getenv(envRecord) == "" {
-		_ = os.Setenv(envRecord, strconv.FormatBool(*recordFlag))
-	}
-
-	if os.Getenv(envRecordMethod) == "" {
-		_ = os.Setenv(envRecordMethod, *recordMethodFlag)
-	}
-
-	if os.Getenv(envPreset) == "" {
-		_ = os.Setenv(envPreset, *presetFlag)
-	}
-
-	// endregion
-	// region Fill Variables
-	httpAddr = os.Getenv(envHTTPAddr)
-	radioserverhost = os.Getenv(envRadioServerAddr)
-	dp, err := strconv.ParseUint(os.Getenv(envDisplayPixels), 10, 16)
-	if err != nil {
-		panic(err)
-	}
-	displayPixels = uint(dp)
-	cf, err := strconv.ParseUint(os.Getenv(envCenterFrequency), 10, 32)
-	if err != nil {
-		panic(err)
-	}
-	channelFrequency = uint(cf)
-	df, err := strconv.ParseUint(os.Getenv(envFFTFrequency), 10, 32)
-	if err != nil {
-		panic(err)
-	}
-	displayFrequency = uint(df)
-	cds, err := strconv.ParseUint(os.Getenv(envDecimationStage), 10, 8)
-	if err != nil {
-		panic(err)
-	}
-	channelDecimationStage = uint(cds)
-	dds, err := strconv.ParseUint(os.Getenv(envFFTDecimationStage), 10, 8)
-	if err != nil {
-		panic(err)
-	}
-	displayDecimationStage = uint(dds)
-	demodulatorMode = os.Getenv(envMode)
-	or, err := strconv.ParseUint(os.Getenv(envOutputRate), 10, 32)
-	if err != nil {
-		panic(err)
-	}
-	outputRate = uint(or)
-	fsbw, err := strconv.ParseUint(os.Getenv(envFSBW), 10, 32)
-	if err != nil {
-		panic(err)
-	}
-	filterBandwidth = uint(fsbw)
-	fmdev, err := strconv.ParseUint(os.Getenv(envFMDeviation), 10, 32)
-	if err != nil {
-		panic(err)
-	}
-	fmDeviation = uint(fmdev)
-	fmtau, err := strconv.ParseFloat(os.Getenv(envFMTau), 32)
-	if err != nil {
-		panic(err)
-	}
-	fmTau = float32(fmtau)
-	squelchx, err := strconv.ParseFloat(os.Getenv(envSquelch), 32)
-	if err != nil {
-		panic(err)
-	}
-	squelch = float32(squelchx)
-	squelchalpha, err := strconv.ParseFloat(os.Getenv(envSquelchAlpha), 32)
-	if err != nil {
-		panic(err)
-	}
-	squelchAlpha = float32(squelchalpha)
-
-	amaudiocut, err := strconv.ParseFloat(os.Getenv(envAMAudioCut), 32)
-	if err != nil {
-		panic(err)
-	}
-	amAudioCut = float32(amaudiocut)
-
-	stationName = os.Getenv(envStationName)
-
-	webcancontrol, err := strconv.ParseBool(os.Getenv(envWebCanControl))
-	if err != nil {
-		panic(err)
-	}
-	webCanControl = webcancontrol
-
-	tcpcancontrol, err := strconv.ParseBool(os.Getenv(envTCPCanControl))
-	if err != nil {
-		panic(err)
-	}
-	tcpCanControl = tcpcancontrol
-
-	recordf, err := strconv.ParseBool(os.Getenv(envRecord))
-	if err != nil {
-		panic(err)
-	}
-	record = recordf
-
-	recordMethod = os.Getenv(envRecordMethod)
-
-	preset = os.Getenv(envPreset)
-	// endregion
+	httpAddr = envString("HTTP_ADDRESS", *addrFlag)
+	radioserverhost = envString("RADIOSERVER", *radioserverhostFlag)
+	displayPixels = envUint("DISPLAY_PIXELS", *displayPixelsFlag)
+	channelFrequency = envUint("CENTER_FREQUENCY", *channelFrequencyFlag)
+	displayFrequency = envUint("FFT_FREQUENCY", *displayFrequencyFlag)
+	channelDecimationStage = envUint("DECIMATION_STAGE", *channelDecimationStageFlag)
+	displayDecimationStage = envUint("FFT_DECIMATION_STAGE", *displayDecimationStageFlag)
+	demodulatorMode = envString("DEMOD_MODE", *demodulatorModeFlag)
+	outputRate = envUint("OUTPUT_RATE", *outputRateFlag)
+	filterBandwidth = envUint("FS_BANDWIDTH", *filterBandwidthFlag)
+	fmDeviation = envUint("FM_DEVIATION", *fmDeviationFlag)
+	fmTau = envFloat32("FM_TAU", float32(*fmTauFlag))
+	squelch = envFloat32("SQUELCH", float32(*squelchFlag))
+	squelchAlpha = envFloat32("SQUELCH_ALPHA", float32(*squelchAlphaFlag))
+	amAudioCut = envFloat32("AM_AUDIO_CUT", float32(*amAudioCutFlag))
+	stationName = envString("STATION_NAME", *stationNameFlag)
+	webCanControl = envBool("WEB_CAN_CONTROL", *webCanControlFlag)
+	tcpCanControl = envBool("TCP_CAN_CONTROL", *tcpCanControlFlag)
+	record = envBool("RECORD", *recordFlag)
+	recordMethod = envString("RECORD_METHOD", *recordMethodFlag)
 }
