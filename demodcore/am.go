@@ -1,27 +1,27 @@
 package demodcore
 
 import (
-	"github.com/racerxdl/go.fifo"
 	"github.com/racerxdl/segdsp/dsp"
 	"github.com/racerxdl/segdsp/eventmanager"
 	"math"
 )
 
 type AMDemod struct {
-	sampleRate   float64
-	outputRate   uint32
-	firstStage   *dsp.FirFilter
-	signalBw     float64
-	decimation   int
-	resampler    *dsp.FloatResampler
-	finalStage   *dsp.FloatFirFilter
-	outFifo      *fifo.Queue
-	sql          *dsp.Squelch
-	packedParams AMDemodParams
-	ev           *eventmanager.EventManager
-	lastSquelch  bool
-	ffAgc        *dsp.FeedForwardAGC
-	c2m          *dsp.Complex2Magnitude
+	sampleRate      float64
+	outputRate      uint32
+	firstStage      *dsp.FirFilter
+	signalBw        float64
+	decimation      int
+	resampler       *dsp.FloatResampler
+	finalStage      *dsp.FloatFirFilter
+	outputBuffer    []float32
+	outputBufferPos int
+	sql             *dsp.Squelch
+	packedParams    AMDemodParams
+	ev              *eventmanager.EventManager
+	lastSquelch     bool
+	ffAgc           *dsp.FeedForwardAGC
+	c2m             *dsp.Complex2Magnitude
 }
 
 type AMDemodParams struct {
@@ -75,8 +75,9 @@ func MakeCustomAMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 				31,
 			),
 		),
-		outFifo: fifo.NewQueue(),
-		sql:     sql,
+		outputBufferPos: 0,
+		outputBuffer:    make([]float32, 16384),
+		sql:             sql,
 		packedParams: AMDemodParams{
 			SampleRate:      sampleRate,
 			SignalBandwidth: signalBw,
@@ -134,23 +135,26 @@ func (f *AMDemod) Work(data []complex64) interface{} {
 
 	f.lastSquelch = f.sql.IsMuted()
 
-	for i := 0; i < len(amDemodData); i++ {
-		f.outFifo.Add(amDemodData[i] - 1)
-	}
+	if f.outputBufferPos+len(amDemodData) >= len(f.outputBuffer) {
+		var diff = len(f.outputBuffer) - f.outputBufferPos
+		copy(f.outputBuffer[f.outputBufferPos:], amDemodData[:diff])
+		var outBuf = make([]float32, len(f.outputBuffer))
+		copy(outBuf, f.outputBuffer)
 
-	if f.outFifo.Len() >= 16384 {
-		var outBuff = make([]float32, 16384)
-
-		for i := 0; i < 16384; i++ {
-			outBuff[i] = f.outFifo.Next().(float32)
-		}
+		amDemodData = amDemodData[diff:]
+		f.outputBufferPos = 0
+		copy(f.outputBuffer, amDemodData)
+		f.outputBufferPos += len(amDemodData)
 
 		return DemodData{
 			OutputRate: f.outputRate,
 			Level:      f.sql.GetAvgLevel(),
-			Data:       outBuff,
+			Data:       outBuf,
 		}
-	}
+	} else {
+		copy(f.outputBuffer[f.outputBufferPos:], amDemodData)
+		f.outputBufferPos += len(amDemodData)
 
-	return nil
+		return nil
+	}
 }
