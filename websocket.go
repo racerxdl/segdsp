@@ -9,6 +9,8 @@ import (
 	"runtime"
 )
 
+const wsChannelBuf = 64
+
 var chanList = list.New()
 
 type conn struct {
@@ -24,33 +26,32 @@ func closeN(c *list.Element) {
 
 func broadcastMessage(data string) {
 	wsMutex.Lock()
-	for e := chanList.Front(); e != nil; {
+	defer wsMutex.Unlock()
+	for e := chanList.Front(); e != nil; e = e.Next() {
 		var c = e.Value.(conn)
-		go func() {
-			c.stringc <- data
-		}()
-		var next = e.Next()
-		e = next
+		select {
+		case c.stringc <- data:
+		default:
+		}
 	}
-	wsMutex.Unlock()
 }
+
 func broadcastBMessage(data []byte) {
 	wsMutex.Lock()
-	for e := chanList.Front(); e != nil; {
+	defer wsMutex.Unlock()
+	for e := chanList.Front(); e != nil; e = e.Next() {
 		var c = e.Value.(conn)
-		go func() {
-			c.bytec <- data
-		}()
-		var next = e.Next()
-		e = next
+		select {
+		case c.bytec <- data:
+		default:
+		}
 	}
-	wsMutex.Unlock()
 }
 
 func handleMessages(c *websocket.Conn) {
 
-	var cChannel = make(chan string)
-	var bChannel = make(chan []byte)
+	var cChannel = make(chan string, wsChannelBuf)
+	var bChannel = make(chan []byte, wsChannelBuf)
 	wsMutex.Lock()
 	var li = chanList.PushBack(conn{
 		stringc: cChannel,
