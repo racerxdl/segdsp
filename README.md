@@ -1,98 +1,87 @@
-[![Build Status](https://api.travis-ci.org/racerxdl/segdsp.svg?branch=master)](https://travis-ci.org/racerxdl/segdsp) [![Apache License](https://img.shields.io/badge/license-Apache-blue.svg)](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)) [![Go Report](https://goreportcard.com/badge/github.com/racerxdl/segdsp)](https://goreportcard.com/report/github.com/racerxdl/segdsp)
+# SegDSP
 
-# SegDSP - Future of RF Monitoring (WIP)
+Go SDR demodulator. Connects to a [radioserver](https://github.com/racerxdl/radioserver) instance for IQ data and provides a web-based spectrum display with demodulated audio output.
 
+[![CI](https://github.com/racerxdl/segdsp/actions/workflows/ci.yml/badge.svg)](https://github.com/racerxdl/segdsp/actions/workflows/ci.yml) [![Apache License](https://img.shields.io/badge/license-Apache-blue.svg)](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)) [![Go Report](https://goreportcard.com/badge/github.com/racerxdl/segdsp)](https://goreportcard.com/report/github.com/racerxdl/segdsp)
 
-## Docker Images
+## Features
 
-All `master` branch builds is uploaded to dockerhub with the name `racerxdl/segdsp`. The following archs are available:
+- Wideband and narrowband FM demodulation with de-emphasis
+- AM demodulation with AGC
+- Real-time FFT waterfall via WebSocket
+- Squelch with automatic recording
+- Cross-platform single binary (static content embedded via `go:embed`)
+- Multi-arch Docker images
 
-- `x86` - `racerxdl/segdsp:latest` - For any x86 machine
-- `amd64` - `racerxdl/segdsp:amd64-latest` - For 64 bit x86 machines
-- `arm32v6` - `racerxdl/segdsp:arm32v6-latest` - For 32 bit raspberry pies and equivalents
-- `arm64v8` - `racerxdl/segdsp:arm64v8-latest` - For 64 bit raspberry pies and equivalents
-
-## Binary Release
-
-Please check the [Releases](https://github.com/racerxdl/segdsp/releases) for binary releases.
-
-## Nice Sample using SegDSP as a Library
-
-Here is a nice sample using segdsp as a library: https://github.com/racerxdl/segdsp-sample
-
-## Running
-
-SegDSP is pretty straightforward to run if you know what you want to capture. It accepts both Environment Variables (suitable for docker containers) or just normal command line arguments.
-
-## Examples
-
-### WBFM Demodulator
+## Quick Start
 
 ```bash
-# Argument Mode
-segdsp -channelFrequency 106300000 -demodMode FM -fmDeviation 75000 -filterBandwidth 120000 -fftFrequency 106300000 -decimationStage 3 -stationName PU2NVX
+go build -o segdsp .
 
-# Environment Mode
-CENTER_FREQUENCY="106300000" DEMOD_MODE="FM" FM_DEVIATION="75000" FFT_FREQUENCY="106300000" FS_BANDWIDTH="120000" DECIMATION_STAGE="3" STATION_NAME="PU2NVX" segdsp
+# FM radio
+segdsp -channelFrequency 106300000 -demodMode FM -fmDeviation 75000 -filterBandwidth 120000 -radioserver localhost:4050
+
+# AM radio
+segdsp -channelFrequency 145570000 -demodMode AM -filterBandwidth 15000 -radioserver localhost:4050
 ```
 
-### NBFM Demodulator
+**Requires** a running [radioserver](https://github.com/racerxdl/radioserver) instance.
+
+## Docker
+
+Images are published to Docker Hub on every push to `master`:
 
 ```bash
-# Argument Mode
-segdsp -channelFrequency 145570000 -demodMode FM -fmDeviation 5000 -filterBandwidth 15000 -fftFrequency 145570000 -decimationStage 5 -stationName PU2NVX
-
-# Environment Mode
-CENTER_FREQUENCY="145570000" DEMOD_MODE="FM" FM_DEVIATION="5000" FS_BANDWIDTH="15000" FFT_FREQUENCY="145570000" DECIMATION_STAGE="5" STATION_NAME="PU2NVX" segdsp
+docker run -e RADIOSERVER=host.docker.internal:4050 racerxdl/segdsp
 ```
 
-## Arguments
+Available tags: `latest`, `amd64-latest`, `arm64v8-latest`, `arm32v6-latest`
 
-| Argument              | Environment variable    | Type   | Possible Values  | Description                                                       | Default Value   |
-|-----------------------|-------------------------|--------|------------------|-------------------------------------------------------------------|-----------------|
-| `-channelFrequency`   | `CENTER_FREQUENCY`      | number |                  | Channel (IQ) Center Frequency in Hz                               | 106300000       |
-| `-cpuprofile`         |                         | string |                  | Write cpu profile to specified file                               |                 |
-| `-decimationStage`    | `DECIMATION_STAGE`      | number |                  | Channel (IQ) Decimation Stage (The actual decimation will be 2^d) | 3               |
-| `-demodMode`          | `DEMOD_MODE`            | string | `FM`, `AM`       | Demodulator Mode: [FM]                                            | FM              |
-| `-displayPixels`      | `DISPLAY_PIXELS`        | number |                  | Width in pixels of the FFT                                        | 512             |
-| `-fftDecimationStage` | `FFT_DECIMATION_STAGE`  | number |                  | FFT Decimation Stage (The actual decimation will be 2^d)          | 0               |
-| `-fftFrequency`       | `FFT_FREQUENCY`         | number |                  | FFT Center Frequency in Hz                                        | 106300000       |
-| `-filterBandwidth`    | `FS_BANDWIDTH`          | number |                  | First Stage Filter Bandwidth in Hert                              | 120000          |
-| `-squelch`            | `SQUELCH`               | number |                  | Demodulator Squelch in dB                                         | -72             |
-| `-squelchAlpha`       | `SQUELCH_ALPHA`         | number |                  | Demodulator Squelch Filter Alpha                                  | 0.001           |
-| `-fmDeviation`        | `FM_DEVIATION`          | number |                  | FM Demodulator Max Deviation in Hertz                             | 75000           |
-| `-fmTau`              | `FM_TAU`                | number |                  | FM Demodulator Tau in seconds (0 to disable)                      | 0.0000075       |
-| `-amAudioCut`         | `AM_AUDIO_CUT`          | number |                  | AM Demodulator Audio Low Pass Cut                                 | 5000            |
-| `-httpAddr`           | `HTTP_ADDRESS`          | string |                  | HTTP Service Address                                              | localhost:8080  |
-| `-outputRate`         | `OUTPUT_RATE`           | number |                  | Output Rate in Hz                                                 | 48000           |
-| `-record`             | `RECORD`                |  bool  | `true`, `false`  | If it should record output when not squelched                     | false           |
-| `-recordMethod`       | `RECORD_METHOD`         | string | `file`           | Method to use when recording                                      | file            |
-| `-radioserver`        | `RADIOSERVER`           | string |                  | radioserver Address                                                 | localhost:5555  |
-| `-stationName`        | `STATION_NAME`          | string |                  | Name of the Station                                               | SegDSP          |
+## Presets
 
-## Git Hooks
-
-### pre-commit
-
-Inside the project repository create the following file:
+Instead of setting individual flags, use a preset:
 
 ```bash
-touch .git/hooks/pre-commit
+segdsp -preset wbfm -channelFrequency 106300000
+segdsp -preset nbfm -channelFrequency 145570000
+segdsp -preset am   -channelFrequency 145570000
 ```
 
-And paste this code inside it:
+## Configuration
+
+| Argument              | Environment variable    | Type   | Default    | Description                                                       |
+|-----------------------|-------------------------|--------|------------|-------------------------------------------------------------------|
+| `-channelFrequency`   | `CENTER_FREQUENCY`      | number | 106300000  | Channel (IQ) Center Frequency in Hz                               |
+| `-radioserver`        | `RADIOSERVER`           | string | localhost:4050 | radioserver address                                           |
+| `-demodMode`          | `DEMOD_MODE`            | string | FM         | Demodulator mode: `FM`, `AM`                                      |
+| `-preset`             | `PRESET`                | string | none       | Preset: `wbfm`, `nbfm`, `am`                                      |
+| `-outputRate`         | `OUTPUT_RATE`           | number | 48000      | Output audio sample rate in Hz                                     |
+| `-filterBandwidth`    | `FS_BANDWIDTH`          | number | 120000     | First stage filter bandwidth in Hz                                 |
+| `-decimationStage`    | `DECIMATION_STAGE`      | number | 3          | Channel decimation stage (decimation = 2^d)                        |
+| `-fftFrequency`       | `FFT_FREQUENCY`         | number | 106300000  | FFT center frequency in Hz                                         |
+| `-fftDecimationStage` | `FFT_DECIMATION_STAGE`  | number | 1          | FFT decimation stage                                               |
+| `-displayPixels`      | `DISPLAY_PIXELS`        | number | 512        | FFT display width in pixels                                        |
+| `-httpAddr`           | `HTTP_ADDRESS`          | string | localhost:8080 | HTTP service address                                           |
+| `-fmDeviation`        | `FM_DEVIATION`          | number | 75000      | FM max deviation in Hz                                             |
+| `-fmTau`              | `FM_TAU`                | number | 0.000075   | FM de-emphasis tau (0 to disable)                                  |
+| `-squelch`            | `SQUELCH`               | number | -150       | Squelch threshold in dB                                            |
+| `-squelchAlpha`       | `SQUELCH_ALPHA`         | number | 0.001      | Squelch filter alpha                                               |
+| `-amAudioCut`         | `AM_AUDIO_CUT`          | number | 5000       | AM audio low-pass cut in Hz                                        |
+| `-stationName`        | `STATION_NAME`          | string | SegDSP     | Station name / callsign                                            |
+| `-record`             | `RECORD`                | bool   | false      | Record audio when not squelched                                    |
+| `-recordMethod`       | `RECORD_METHOD`         | string | file       | Recording method (`file`)                                          |
+| `-webCanControl`      | `WEB_CAN_CONTROL`       | bool   | false      | Allow web UI to control settings                                   |
+| `-tcpCanControl`      | `TCP_CAN_CONTROL`       | bool   | true       | Allow TCP clients to control settings                               |
+| `-cpuprofile`         |                         | string |            | Write CPU profile to file                                          |
+
+## Development
 
 ```bash
-#!/bin/bash
-
-echo "Formatting code"
-go fmt ./...
-exit 0
+go build -o segdsp .
+go test -v -race ./...
+golangci-lint run
 ```
 
-And give execute permission:
+## License
 
-```bash
-chmod +x .git/hooks/pre-commit
-```
-
+Apache 2.0

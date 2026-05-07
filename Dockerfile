@@ -1,24 +1,19 @@
-FROM golang:alpine as build
+FROM golang:1.25-alpine AS build
 
-RUN apk update
+WORKDIR /build
 
-RUN apk add git ca-certificates
+COPY go.mod go.sum ./
+RUN go mod download
 
-ADD . /go/src/github.com/racerxdl/segdsp
-
-WORKDIR /go/src/github.com/racerxdl/segdsp
-
-RUN go get -v
-
-RUN CGO_ENABLED=0 GOOS=linux go build -o segdsp_worker
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o segdsp_worker .
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /root/
-COPY --from=build /go/src/github.com/racerxdl/segdsp/segdsp_worker .
-COPY content content
+COPY --from=build /build/segdsp_worker .
 
-ENV radioserver=localhost:5555
+ENV RADIOSERVER=localhost:4050
 ENV CENTER_FREQUENCY=106300000
 ENV FFT_FREQUENCY=106300000
 ENV HTTP_ADDRESS=localhost:8080
@@ -34,11 +29,9 @@ ENV TCP_CAN_CONTROL=true
 ENV RECORD=false
 ENV RECORD_METHOD=file
 ENV PRESET=none
-
 ENV FM_DEVIATION=75000
 ENV FM_TAU=0.000075
-ENV FM_SQUELCH=-72
-ENV FM_SQUELCH_ALPHA=0.001
+ENV SQUELCH=-150
+ENV SQUELCH_ALPHA=0.001
 
 CMD ["./segdsp_worker"]
-
