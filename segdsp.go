@@ -149,18 +149,10 @@ func onFFT(data []uint8) {
 	go wsServer.BroadcastMessage(string(m))
 }
 
-func sendData(data interface{}) {
-	switch data := data.(type) {
-	case demodcore.DemodData:
+func sendData(data *demodcore.DemodData) {
+	if data != nil {
 		go wsServer.BroadcastBMessage(data.Data.MarshalByteArray())
 		go recManager.RecordAudio(data.Data)
-	default:
-		var j = makeDataMessage(data)
-		m, err := json.Marshal(j)
-		if err != nil {
-			log.Println("Error serializing JSON: ", err)
-		}
-		go wsServer.BroadcastMessage(string(m))
 	}
 }
 
@@ -180,8 +172,8 @@ func createServer() *http.Server {
 	return srv
 }
 
-var squelchOn chan interface{}
-var squelchOff chan interface{}
+var squelchOn chan eventmanager.SquelchEventData
+var squelchOff chan eventmanager.SquelchEventData
 
 func onSquelchOn(data eventmanager.SquelchEventData) {
 	log.Println("Squelch ON", data.AvgValue, data.Threshold)
@@ -216,8 +208,8 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	squelchOn = make(chan interface{})
-	squelchOff = make(chan interface{})
+	squelchOn = make(chan eventmanager.SquelchEventData)
+	squelchOff = make(chan eventmanager.SquelchEventData)
 
 	var ev = eventmanager.EventManager{}
 
@@ -229,9 +221,9 @@ func main() {
 		for {
 			select {
 			case msg := <-squelchOn:
-				onSquelchOn(msg.(eventmanager.SquelchEventData))
+				onSquelchOn(msg)
 			case msg := <-squelchOff:
-				onSquelchOff(msg.(eventmanager.SquelchEventData))
+				onSquelchOff(msg)
 			}
 		}
 	}()

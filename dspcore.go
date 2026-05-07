@@ -9,7 +9,7 @@ type DSPPipeline struct {
 	samplesFifo *fifo.Queue
 	Demodulator demodcore.DemodCore
 	buffer      []complex64
-	cb          func(interface{})
+	cb func(*demodcore.DemodData)
 	ready       chan struct{}
 	done        chan struct{}
 }
@@ -30,7 +30,7 @@ func (d *DSPPipeline) AddComplex(data []complex64) {
 	}
 }
 
-func (d *DSPPipeline) SetCallback(cb func(interface{})) {
+func (d *DSPPipeline) SetCallback(cb func(*demodcore.DemodData)) {
 	d.cb = cb
 }
 
@@ -60,8 +60,7 @@ func (d *DSPPipeline) run() {
 
 	if out != nil {
 		d.cb(out)
-	}
-}
+	}}
 
 func (d *DSPPipeline) loop() {
 	defer close(d.done)

@@ -5,7 +5,13 @@ type presetStruct struct {
 	demodMode       string
 	outputRate      uint
 	filterBandwidth float64
-	demodOptions    map[string]interface{}
+	demodOptions    demodOptions
+}
+
+type demodOptions struct {
+	fmDeviation float64
+	fmTau       float64
+	amAudioCut  float64
 }
 
 var presets = map[string]presetStruct{
@@ -14,8 +20,8 @@ var presets = map[string]presetStruct{
 		demodMode:       modeAM,
 		outputRate:      48000,
 		filterBandwidth: 10e3,
-		demodOptions: map[string]interface{}{
-			"audioCut": 5e3,
+		demodOptions: demodOptions{
+			amAudioCut: 5e3,
 		},
 	},
 	"nbfm": {
@@ -23,9 +29,9 @@ var presets = map[string]presetStruct{
 		demodMode:       modeFM,
 		outputRate:      48000,
 		filterBandwidth: 10e3,
-		demodOptions: map[string]interface{}{
-			"deviation": 5e3,
-			"tau":       75e-6,
+		demodOptions: demodOptions{
+			fmDeviation: 5e3,
+			fmTau:       75e-6,
 		},
 	},
 	"wbfm": {
@@ -33,9 +39,9 @@ var presets = map[string]presetStruct{
 		demodMode:       modeFM,
 		outputRate:      48000,
 		filterBandwidth: 120e3,
-		demodOptions: map[string]interface{}{
-			"deviation": 75e3,
-			"tau":       75e-6,
+		demodOptions: demodOptions{
+			fmDeviation: 75e3,
+			fmTau:       75e-6,
 		},
 	},
 }

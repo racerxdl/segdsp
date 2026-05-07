@@ -133,7 +133,7 @@ func (f *FMDemod) IsMuted() bool {
 	return f.sql.IsMuted()
 }
 
-func (f *FMDemod) Work(data []complex64) interface{} {
+func (f *FMDemod) Work(data []complex64) *DemodData {
 	var filteredData = f.firstStage.FilterDecimateOut(data, f.decimation)
 	filteredData = f.sql.Work(filteredData)
 
@@ -174,7 +174,7 @@ func (f *FMDemod) Work(data []complex64) interface{} {
 		copy(f.outputBuffer, fmDemodData)
 		f.outputBufferPos += len(fmDemodData)
 
-		return DemodData{
+		return &DemodData{
 			OutputRate: f.outputRate,
 			Level:      f.sql.GetAvgLevel(),
 			Data:       outBuf,

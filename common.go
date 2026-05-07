@@ -106,10 +106,10 @@ func applyPreset(p presetStruct) {
 
 	switch p.demodMode {
 	case modeFM:
-		_ = os.Setenv("FM_TAU", strconv.FormatFloat(p.demodOptions["tau"].(float64), 'E', -1, 32))
-		_ = os.Setenv("FM_DEVIATION", strconv.FormatFloat(p.demodOptions["deviation"].(float64), 'E', -1, 32))
+		_ = os.Setenv("FM_TAU", strconv.FormatFloat(p.demodOptions.fmTau, 'E', -1, 32))
+		_ = os.Setenv("FM_DEVIATION", strconv.FormatFloat(p.demodOptions.fmDeviation, 'E', -1, 32))
 	case modeAM:
-		_ = os.Setenv("AM_AUDIO_CUT", strconv.FormatFloat(p.demodOptions["audioCut"].(float64), 'E', -1, 32))
+		_ = os.Setenv("AM_AUDIO_CUT", strconv.FormatFloat(p.demodOptions.amAudioCut, 'E', -1, 32))
 	}
 }
 

@@ -41,16 +41,15 @@ func (r *RecordingManager) StartRecording(stationName string) {
 		r.recorder.Close()
 	}
 	var filename = fmt.Sprintf(r.baseFilename, stationName, time.Now().Local().Format("20060102_150405"))
-	var newParams = []interface{}{
-		filename,
-		recordingMetadata{
+
+	r.recorder.Open(recorders.RecorderConfig{
+		BaseFilename: filename,
+		Metadata: recordingMetadata{
 			DemodParams:  r.getDemodParams(),
 			BaseFilename: filename,
 			Timestamp:    time.Now().Local(),
 		},
-	}
-
-	r.recorder.Open(newParams)
+	})
 	r.recording = true
 }
 

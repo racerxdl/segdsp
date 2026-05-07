@@ -26,11 +26,6 @@ type fftMessage struct {
 	FFTData          jsonUint8s
 }
 
-type dataMessage struct {
-	MessageType string
-	Data        interface{}
-}
-
 type deviceMessage struct {
 	MessageType string
 
@@ -64,13 +59,6 @@ func makeFFTMessage(data []uint8, level float32) fftMessage {
 		MessageType:      "fft",
 		DemodOutputLevel: level,
 		FFTData:          data,
-	}
-}
-
-func makeDataMessage(data interface{}) dataMessage {
-	return dataMessage{
-		MessageType: "data",
-		Data:        data,
 	}
 }
 

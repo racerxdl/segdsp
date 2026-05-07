@@ -105,7 +105,7 @@ func (f *AMDemod) GetLevel() float32 {
 	return f.sql.GetAvgLevel()
 }
 
-func (f *AMDemod) Work(data []complex64) interface{} {
+func (f *AMDemod) Work(data []complex64) *DemodData {
 	var filteredData = f.firstStage.FilterDecimateOut(data, f.decimation)
 	filteredData = f.sql.Work(filteredData)
 	filteredData = f.ffAgc.Work(filteredData)
@@ -142,7 +142,7 @@ func (f *AMDemod) Work(data []complex64) interface{} {
 		copy(f.outputBuffer, amDemodData)
 		f.outputBufferPos += len(amDemodData)
 
-		return DemodData{
+		return &DemodData{
 			OutputRate: f.outputRate,
 			Level:      f.sql.GetAvgLevel(),
 			Data:       outBuf,

@@ -20,25 +20,15 @@ type FileRecorder struct {
 	dataFilename  string
 }
 
-func (f *FileRecorder) Open(params []interface{}) bool {
-	if len(params) < 2 {
-		panic("File Recorder Expects two parameters: basefilename metadata [audioAsWav]")
-	}
-
-	var baseFilename = params[0].(string)
-	var metadata = params[1]
-	if len(params) > 3 {
-		f.audioAsWav = params[2].(bool)
-	}
-
-	log.Println("FileRecorder: Writing Metadata to", fmt.Sprintf("%s-metadata.json", baseFilename))
-	metaFile, err := os.Create(fmt.Sprintf("%s-metadata.json", baseFilename))
+func (f *FileRecorder) Open(config RecorderConfig) bool {
+	log.Println("FileRecorder: Writing Metadata to", fmt.Sprintf("%s-metadata.json", config.BaseFilename))
+	metaFile, err := os.Create(fmt.Sprintf("%s-metadata.json", config.BaseFilename))
 
 	if err != nil {
 		panic(err)
 	}
 
-	metadataJson, err := json.MarshalIndent(metadata, "", "   ")
+	metadataJson, err := json.MarshalIndent(config.Metadata, "", "   ")
 
 	if err != nil {
 		panic(err)
@@ -52,7 +42,8 @@ func (f *FileRecorder) Open(params []interface{}) bool {
 
 	_ = metaFile.Close()
 
-	f.baseFilename = baseFilename
+	f.baseFilename = config.BaseFilename
+	f.audioAsWav = config.AudioAsWav
 	f.iqFilename = fmt.Sprintf("%s-iq.cfile", f.baseFilename)
 	f.audioFilename = fmt.Sprintf("%s-audio.float32", f.baseFilename)
 	f.dataFilename = fmt.Sprintf("%s-data.bytes", f.baseFilename)
