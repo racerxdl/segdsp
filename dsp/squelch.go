@@ -11,6 +11,7 @@ type Squelch struct {
 	muted        atomic.Bool
 	filter       *SinglePoleIIRFilter
 	avgThreshold atomic.Uint32
+	outBuf       []complex64
 }
 
 func MakeSquelch(threshold, alpha float32) *Squelch {
@@ -43,15 +44,12 @@ func (f *Squelch) GetThreshold() float32 {
 }
 
 func (f *Squelch) Work(data []complex64) []complex64 {
-	var out = make([]complex64, len(data))
-
 	var avg = float32(0)
 	for i := 0; i < len(data); i++ {
 		v := data[i]
 		mag := real(v)*real(v) + imag(v)*imag(v)
 		v2 := f.filter.Filter(mag)
 		avg += v2
-		out[i] = complex(0, 0)
 	}
 	avg /= float32(len(data))
 	f.avgThreshold.Store(math.Float32bits(avg))
@@ -59,9 +57,15 @@ func (f *Squelch) Work(data []complex64) []complex64 {
 
 	if avg >= f.threshold {
 		return data
-	} else {
-		return out
 	}
+
+	if cap(f.outBuf) < len(data) {
+		f.outBuf = make([]complex64, len(data))
+	}
+	for i := range data {
+		f.outBuf[i] = 0
+	}
+	return f.outBuf[:len(data)]
 }
 
 func (f *Squelch) WorkBuffer(input, output []complex64) int {

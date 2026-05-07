@@ -21,6 +21,7 @@ type FloatResampler struct {
 	estimatedPhaseChange float32
 	accumulator          float32
 	rate                 float32
+	outBuf               []float32
 }
 
 func MakeFloatResampler(filterSize int, rate float32) *FloatResampler {
@@ -111,7 +112,11 @@ func (f *FloatResampler) createTaps(taps []float32, ourTaps [][]float32, filter 
 }
 
 func (f *FloatResampler) filter(input []float32, length int) (int, []float32) {
-	var output = make([]float32, f.PredictOutputSize(len(input)))
+	var maxOut = f.PredictOutputSize(length)
+	if cap(f.outBuf) < maxOut {
+		f.outBuf = make([]float32, maxOut)
+	}
+	var output = f.outBuf
 	var read = 0
 	var wrote = 0
 	var j = f.lastFilter
@@ -135,9 +140,7 @@ func (f *FloatResampler) filter(input []float32, length int) (int, []float32) {
 
 	f.lastFilter = j
 
-	output = output[:wrote]
-
-	return read, output
+	return read, output[:wrote]
 }
 
 func (f *FloatResampler) filterBuffer(input, output []float32, length int) (read, wrote int) {
@@ -175,7 +178,7 @@ func (f *FloatResampler) Work(data []float32) []float32 {
 	if consumed < len(samples) {
 		f.internalBuffer = samples[consumed:]
 	} else {
-		f.internalBuffer = make([]float32, 0)
+		f.internalBuffer = f.internalBuffer[:0]
 	}
 
 	return processed

@@ -7,6 +7,7 @@ type CTFirFilter struct {
 	sampleHistory []complex64
 	tapsLen       int
 	decimation    int
+	outBuf        []complex64
 }
 
 func MakeCTFirFilter(taps []complex64) *CTFirFilter {
@@ -64,9 +65,44 @@ func (f *CTFirFilter) FilterBuffer(input, output []complex64) int {
 
 func (f *CTFirFilter) Work(data []complex64) []complex64 {
 	if f.decimation > 1 {
-		return f.FilterDecimateOut(data, f.decimation)
+		return f.filterDecimateOutBuf(data, f.decimation)
 	}
-	return f.FilterOut(data)
+	return f.filterOutBuf(data)
+}
+
+func (f *CTFirFilter) filterOutBuf(data []complex64) []complex64 {
+	var samples = append(f.sampleHistory, data...)
+	var length = len(samples) - f.tapsLen
+	if length < 0 {
+		length = 0
+	}
+	if cap(f.outBuf) < length {
+		f.outBuf = make([]complex64, length)
+	}
+	for i := 0; i < length; i++ {
+		f.outBuf[i] = ComplexDotProductResult(samples[i:], f.taps)
+	}
+	f.sampleHistory = samples[length:]
+	return f.outBuf[:length]
+}
+
+func (f *CTFirFilter) filterDecimateOutBuf(data []complex64, decimate int) []complex64 {
+	var samples = append(f.sampleHistory, data...)
+	var length = len(data) / decimate
+	if cap(f.outBuf) < length {
+		f.outBuf = make([]complex64, length)
+	}
+	for i := 0; i < length; i++ {
+		var srcIdx = decimate * i
+		var sl = samples[srcIdx:]
+		if len(sl) < len(f.taps) {
+			length = i
+			break
+		}
+		f.outBuf[i] = ComplexDotProductResult(sl, f.taps)
+	}
+	f.sampleHistory = samples[len(samples)-f.tapsLen:]
+	return f.outBuf[:length]
 }
 
 func (f *CTFirFilter) WorkBuffer(input, output []complex64) int {

@@ -6,6 +6,7 @@ type FeedForwardAGC struct {
 	sampleHistory []complex64
 	reference     float64
 	numSamples    int
+	outBuf        []complex64
 }
 
 const maxGain = float64(1e-4)
@@ -19,27 +20,27 @@ func MakeFeedForwardAGC(numSamples int, reference float32) *FeedForwardAGC {
 }
 
 func (f *FeedForwardAGC) Work(input []complex64) []complex64 {
-	var gain float64
-	output := make([]complex64, len(input))
 	samples := append(f.sampleHistory, input...)
+	if cap(f.outBuf) < len(input) {
+		f.outBuf = make([]complex64, len(input))
+	}
 
-	for i := 0; i < len(output); i++ {
+	for i := 0; i < len(input); i++ {
 		maxEnv := maxGain
 		for j := 0; j < len(f.sampleHistory); j++ {
 			maxEnv = math.Max(maxEnv, envelope(samples[i+j]))
 		}
 
-		gain = f.reference / maxEnv
-		output[i] = complex(float32(gain)*real(samples[i]), float32(gain)*imag(samples[i]))
+		gain := f.reference / maxEnv
+		f.outBuf[i] = complex(float32(gain)*real(samples[i]), float32(gain)*imag(samples[i]))
 	}
 
 	f.sampleHistory = samples[len(samples)-f.numSamples:]
 
-	return output
+	return f.outBuf[:len(input)]
 }
 
 func (f *FeedForwardAGC) WorkBuffer(input, output []complex64) int {
-	var gain float64
 	samples := append(f.sampleHistory, input...)
 
 	if len(output) < len(input) {
@@ -52,7 +53,7 @@ func (f *FeedForwardAGC) WorkBuffer(input, output []complex64) int {
 			maxEnv = math.Max(maxEnv, envelope(samples[i+j]))
 		}
 
-		gain = f.reference / maxEnv
+		gain := f.reference / maxEnv
 		output[i] = complex(float32(gain)*real(samples[i]), float32(gain)*imag(samples[i]))
 	}
 

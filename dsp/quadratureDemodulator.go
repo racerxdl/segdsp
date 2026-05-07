@@ -5,6 +5,7 @@ import "github.com/racerxdl/segdsp/tools"
 type QuadDemod struct {
 	gain    float32
 	history []complex64
+	outBuf  []float32
 }
 
 func MakeQuadDemod(gain float32) *QuadDemod {
@@ -15,11 +16,11 @@ func MakeQuadDemod(gain float32) *QuadDemod {
 }
 
 func (f *QuadDemod) Work(data []complex64) []float32 {
-	out := make([]float32, f.PredictOutputSize(len(data)))
-
-	f.WorkBuffer(data, out)
-
-	return out
+	if cap(f.outBuf) < len(data) {
+		f.outBuf = make([]float32, len(data))
+	}
+	f.WorkBuffer(data, f.outBuf[:len(data)])
+	return f.outBuf[:len(data)]
 }
 
 func (f *QuadDemod) WorkBuffer(input []complex64, output []float32) int {

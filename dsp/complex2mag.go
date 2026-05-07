@@ -4,22 +4,20 @@ import (
 	"github.com/racerxdl/segdsp/tools"
 )
 
-type Complex2Magnitude struct{}
+type Complex2Magnitude struct {
+	outBuf []float32
+}
 
 func MakeComplex2Magnitude() *Complex2Magnitude {
 	return &Complex2Magnitude{}
 }
 
 func (cm *Complex2Magnitude) Work(data []complex64) []float32 {
-	output := make([]float32, len(data))
-
-	for i := 0; i < len(data); i++ {
-		sample := data[i]
-		output[i] = tools.ComplexAbs(sample)
-		//output[i] = float32(math.Sqrt(float64(real(sample)*real(sample) + imag(sample)*imag(sample))))
+	if cap(cm.outBuf) < len(data) {
+		cm.outBuf = make([]float32, len(data))
 	}
-
-	return output
+	cm.WorkBuffer(data, cm.outBuf[:len(data)])
+	return cm.outBuf[:len(data)]
 }
 
 func (cm *Complex2Magnitude) WorkBuffer(input []complex64, output []float32) int {
