@@ -16,7 +16,7 @@ func (u jsonUint8s) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		panic(err)
 	}
-	enc.Close()
+	_ = enc.Close()
 	return json.Marshal(buf.String())
 }
 

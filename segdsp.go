@@ -249,12 +249,12 @@ func main() {
 	rs.Connect()
 	defer rs.Disconnect()
 
-	log.Println(fmt.Sprintf("Device: %s", rs.GetName()))
+	log.Printf("Device: %s", rs.GetName())
 	var srs = rs.GetAvailableSampleRates()
 
 	log.Println("Available SampleRates:")
 	for i := 0; i < len(srs); i++ {
-		log.Println(fmt.Sprintf("		%f msps (dec stage %d)", float32(srs[i])/1e6, i))
+		log.Printf("		%f msps (dec stage %d)", float32(srs[i])/1e6, i)
 	}
 
 	rs.SetIQEnabled(true)

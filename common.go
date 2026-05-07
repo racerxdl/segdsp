@@ -129,9 +129,9 @@ func applyPreset(preset presetStruct) {
 	log.Printf("PRESET: Setting Demod Mode to %s\n", preset.demodMode)
 	log.Printf("PRESET: Setting First Stage Filter to %f Hz\n", preset.filterBandwidth)
 
-	os.Setenv(envOutputRate, strconv.FormatUint(uint64(preset.outputRate), 10))
-	os.Setenv(envMode, preset.demodMode)
-	os.Setenv(envFSBW, strconv.FormatFloat(preset.filterBandwidth, 'E', -1, 32))
+	_ = os.Setenv(envOutputRate, strconv.FormatUint(uint64(preset.outputRate), 10))
+	_ = os.Setenv(envMode, preset.demodMode)
+	_ = os.Setenv(envFSBW, strconv.FormatFloat(preset.filterBandwidth, 'E', -1, 32))
 
 	switch preset.demodMode {
 	case modeFM:
@@ -144,13 +144,13 @@ func applyPreset(preset presetStruct) {
 func applyFMPreset(preset presetStruct) {
 	log.Printf("PRESET: Setting FM Tau to %f\n", preset.demodOptions["tau"].(float64))
 	log.Printf("PRESET: Setting FM Devation to %f Hz\n", preset.demodOptions["devation"].(float64))
-	os.Setenv(envFMTau, strconv.FormatFloat(preset.demodOptions["tau"].(float64), 'E', -1, 32))
-	os.Setenv(envFMDeviation, strconv.FormatFloat(preset.demodOptions["deviation"].(float64), 'E', -1, 32))
+	_ = os.Setenv(envFMTau, strconv.FormatFloat(preset.demodOptions["tau"].(float64), 'E', -1, 32))
+	_ = os.Setenv(envFMDeviation, strconv.FormatFloat(preset.demodOptions["deviation"].(float64), 'E', -1, 32))
 }
 
 func applyAMPreset(preset presetStruct) {
 	log.Printf("PRESET: Setting AM Audio Cut to %f\n", preset.demodOptions["audioCut"].(float64))
-	os.Setenv(envAMAudioCut, strconv.FormatFloat(preset.demodOptions["audioCut"].(float64), 'E', -1, 32))
+	_ = os.Setenv(envAMAudioCut, strconv.FormatFloat(preset.demodOptions["audioCut"].(float64), 'E', -1, 32))
 }
 
 func setEnv() {
@@ -163,91 +163,91 @@ func setEnv() {
 	// endregion
 	// region Fill Environment
 	if os.Getenv(envRadioServerAddr) == "" {
-		os.Setenv(envRadioServerAddr, *radioserverhostFlag)
+		_ = os.Setenv(envRadioServerAddr, *radioserverhostFlag)
 	}
 
 	if os.Getenv(envCenterFrequency) == "" {
-		os.Setenv(envCenterFrequency, strconv.FormatUint(uint64(*channelFrequencyFlag), 10))
+		_ = os.Setenv(envCenterFrequency, strconv.FormatUint(uint64(*channelFrequencyFlag), 10))
 	}
 
 	if os.Getenv(envFFTFrequency) == "" {
-		os.Setenv(envFFTFrequency, strconv.FormatUint(uint64(*displayFrequencyFlag), 10))
+		_ = os.Setenv(envFFTFrequency, strconv.FormatUint(uint64(*displayFrequencyFlag), 10))
 	}
 
 	if os.Getenv(envHTTPAddr) == "" {
-		os.Setenv(envHTTPAddr, *addrFlag)
+		_ = os.Setenv(envHTTPAddr, *addrFlag)
 	}
 
 	if os.Getenv(envFFTFrequency) == "" {
-		os.Setenv(envFFTFrequency, strconv.FormatUint(uint64(*displayFrequencyFlag), 10))
+		_ = os.Setenv(envFFTFrequency, strconv.FormatUint(uint64(*displayFrequencyFlag), 10))
 	}
 
 	if os.Getenv(envDisplayPixels) == "" {
-		os.Setenv(envDisplayPixels, strconv.FormatUint(uint64(*displayPixelsFlag), 10))
+		_ = os.Setenv(envDisplayPixels, strconv.FormatUint(uint64(*displayPixelsFlag), 10))
 	}
 
 	if os.Getenv(envDecimationStage) == "" {
-		os.Setenv(envDecimationStage, strconv.FormatUint(uint64(*channelDecimationStageFlag), 10))
+		_ = os.Setenv(envDecimationStage, strconv.FormatUint(uint64(*channelDecimationStageFlag), 10))
 	}
 
 	if os.Getenv(envFFTDecimationStage) == "" {
-		os.Setenv(envFFTDecimationStage, strconv.FormatUint(uint64(*displayDecimationStageFlag), 10))
+		_ = os.Setenv(envFFTDecimationStage, strconv.FormatUint(uint64(*displayDecimationStageFlag), 10))
 	}
 
 	if os.Getenv(envMode) == "" {
-		os.Setenv(envMode, *demodulatorModeFlag)
+		_ = os.Setenv(envMode, *demodulatorModeFlag)
 	}
 
 	if os.Getenv(envOutputRate) == "" {
-		os.Setenv(envOutputRate, strconv.FormatUint(uint64(*outputRateFlag), 10))
+		_ = os.Setenv(envOutputRate, strconv.FormatUint(uint64(*outputRateFlag), 10))
 	}
 
 	if os.Getenv(envFSBW) == "" {
-		os.Setenv(envFSBW, strconv.FormatUint(uint64(*filterBandwidthFlag), 10))
+		_ = os.Setenv(envFSBW, strconv.FormatUint(uint64(*filterBandwidthFlag), 10))
 	}
 
 	if os.Getenv(envFMDeviation) == "" {
-		os.Setenv(envFMDeviation, strconv.FormatUint(uint64(*fmDeviationFlag), 10))
+		_ = os.Setenv(envFMDeviation, strconv.FormatUint(uint64(*fmDeviationFlag), 10))
 	}
 
 	if os.Getenv(envFMTau) == "" {
-		os.Setenv(envFMTau, strconv.FormatFloat(*fmTauFlag, 'E', -1, 32))
+		_ = os.Setenv(envFMTau, strconv.FormatFloat(*fmTauFlag, 'E', -1, 32))
 	}
 
 	if os.Getenv(envSquelch) == "" {
-		os.Setenv(envSquelch, strconv.FormatFloat(*squelchFlag, 'E', -1, 32))
+		_ = os.Setenv(envSquelch, strconv.FormatFloat(*squelchFlag, 'E', -1, 32))
 	}
 
 	if os.Getenv(envSquelchAlpha) == "" {
-		os.Setenv(envSquelchAlpha, strconv.FormatFloat(*squelchAlphaFlag, 'E', -1, 32))
+		_ = os.Setenv(envSquelchAlpha, strconv.FormatFloat(*squelchAlphaFlag, 'E', -1, 32))
 	}
 
 	if os.Getenv(envAMAudioCut) == "" {
-		os.Setenv(envAMAudioCut, strconv.FormatFloat(*amAudioCutFlag, 'E', -1, 32))
+		_ = os.Setenv(envAMAudioCut, strconv.FormatFloat(*amAudioCutFlag, 'E', -1, 32))
 	}
 
 	if os.Getenv(envStationName) == "" {
-		os.Setenv(envStationName, *stationNameFlag)
+		_ = os.Setenv(envStationName, *stationNameFlag)
 	}
 
 	if os.Getenv(envWebCanControl) == "" {
-		os.Setenv(envWebCanControl, strconv.FormatBool(*webCanControlFlag))
+		_ = os.Setenv(envWebCanControl, strconv.FormatBool(*webCanControlFlag))
 	}
 
 	if os.Getenv(envTCPCanControl) == "" {
-		os.Setenv(envTCPCanControl, strconv.FormatBool(*tcpCanControlFlag))
+		_ = os.Setenv(envTCPCanControl, strconv.FormatBool(*tcpCanControlFlag))
 	}
 
 	if os.Getenv(envRecord) == "" {
-		os.Setenv(envRecord, strconv.FormatBool(*recordFlag))
+		_ = os.Setenv(envRecord, strconv.FormatBool(*recordFlag))
 	}
 
 	if os.Getenv(envRecordMethod) == "" {
-		os.Setenv(envRecordMethod, *recordMethodFlag)
+		_ = os.Setenv(envRecordMethod, *recordMethodFlag)
 	}
 
 	if os.Getenv(envPreset) == "" {
-		os.Setenv(envPreset, *presetFlag)
+		_ = os.Setenv(envPreset, *presetFlag)
 	}
 
 	// endregion

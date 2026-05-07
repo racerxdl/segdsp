@@ -11,7 +11,6 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
-	"io/ioutil"
 	"log"
 	"math"
 	"math/rand"
@@ -53,7 +52,7 @@ func drawGrid(gc *draw2dimg.GraphicContext, fftOffset, fftScale, width int) {
 
 func main() {
 	// region Load Font
-	fontBytes, err := ioutil.ReadFile("FreeMono.ttf")
+	fontBytes, err := os.ReadFile("FreeMono.ttf")
 	if err != nil {
 		log.Println(err)
 		return
@@ -179,10 +178,10 @@ func main() {
 	drawGrid(gc, fftOffset, fftScale, len(fftReal))
 
 	f, err := os.Create("test.jpg")
-	defer f.Close()
 	if err != nil {
 		panic(err)
 	}
+	defer func() { _ = f.Close() }()
 	err = jpeg.Encode(f, img, nil)
 	if err != nil {
 		panic(err)

@@ -9,11 +9,7 @@ func (ev *EventManager) AddHandler(e string, ch chan interface{}) {
 		ev.handlers = make(map[string][]chan interface{})
 	}
 
-	if _, ok := ev.handlers[e]; ok {
-		ev.handlers[e] = append(ev.handlers[e], ch)
-	} else {
-		ev.handlers[e] = []chan interface{}{ch}
-	}
+	ev.handlers[e] = append(ev.handlers[e], ch)
 }
 
 func (ev *EventManager) DelHandler(e string, ch chan interface{}) {

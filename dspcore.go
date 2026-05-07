@@ -4,15 +4,12 @@ import (
 	"github.com/racerxdl/go.fifo"
 	"github.com/racerxdl/segdsp/demodcore"
 	"runtime"
-	"time"
 )
 
 var samplesFifo *fifo.Queue
 var demodulator demodcore.DemodCore
 var running = false
 var buffer []complex64
-var delta = 0.0
-var count = 0
 
 var dspCb func(interface{})
 
@@ -51,17 +48,9 @@ func dspRun() {
 
 	buffer = samplesFifo.Next().([]complex64)
 
-	var t0 = time.Now()
 	var out = demodulator.Work(buffer)
-	var d = time.Since(t0)
-	delta += d.Seconds()
-	count++
 
 	if out != nil {
-		delta /= float64(count)
-		//log.Println("Delta: ", delta, "seconds")
-		delta = 0
-		count = 0
 		dspCb(out)
 	}
 }

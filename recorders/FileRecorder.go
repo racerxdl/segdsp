@@ -44,13 +44,13 @@ func (f *FileRecorder) Open(params []interface{}) bool {
 		panic(err)
 	}
 
-	_, err = metaFile.Write(metadataJson)
+	_, _ = metaFile.Write(metadataJson)
 
 	if err != nil {
 		panic(err)
 	}
 
-	metaFile.Close()
+	_ = metaFile.Close()
 
 	f.baseFilename = baseFilename
 	f.iqFilename = fmt.Sprintf("%s-iq.cfile", f.baseFilename)
@@ -63,17 +63,17 @@ func (f *FileRecorder) Open(params []interface{}) bool {
 func (f *FileRecorder) Close() bool {
 	if f.audioFile != nil {
 		log.Println("FileRecorder: Closing Audio File", f.audioFilename)
-		f.audioFile.Close()
+		_ = f.audioFile.Close()
 		f.audioFile = nil
 	}
 	if f.iqFile != nil {
 		log.Println("FileRecorder: Closing IQ File", f.iqFile)
-		f.iqFile.Close()
+		_ = f.iqFile.Close()
 		f.iqFile = nil
 	}
 	if f.dataFile != nil {
 		log.Println("FileRecorder: Closing Data File", f.dataFile)
-		f.dataFile.Close()
+		_ = f.dataFile.Close()
 		f.dataFile = nil
 	}
 

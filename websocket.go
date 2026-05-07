@@ -85,14 +85,12 @@ func handleMessages(c *websocket.Conn) {
 			if err != nil {
 				log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
 				running = false
-				break
 			}
 		case msg := <-bChannel:
 			err = c.WriteMessage(websocket.BinaryMessage, msg)
 			if err != nil {
 				log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
 				running = false
-				break
 			}
 		}
 
