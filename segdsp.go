@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -27,6 +28,7 @@ var lastFFT []float32
 var fftSamples []uint8
 var fftSamplesF []float32
 var smartIqSamples []complex64
+var fftMutex sync.Mutex
 
 type segdspCallback struct {
 	rs *client.RadioClient
@@ -84,6 +86,9 @@ func refreshDevice() {
 }
 
 func onSmartIQ(rs *client.RadioClient, data []complex64) {
+	fftMutex.Lock()
+	defer fftMutex.Unlock()
+
 	var scale = 256 / float32(displayRange)
 	data = data[:displayPixels]
 	if smartIqSamples == nil || len(smartIqSamples) != len(data) {

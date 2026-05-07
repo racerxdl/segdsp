@@ -2,14 +2,15 @@ package dsp
 
 import (
 	"math"
+	"sync/atomic"
 )
 
 type Squelch struct {
 	threshold    float32
 	thresholddB  float32
-	muted        bool
+	muted        atomic.Bool
 	filter       *SinglePoleIIRFilter
-	avgThreshold float32
+	avgThreshold atomic.Uint32
 }
 
 func MakeSquelch(threshold, alpha float32) *Squelch {
@@ -21,11 +22,11 @@ func MakeSquelch(threshold, alpha float32) *Squelch {
 }
 
 func (f *Squelch) GetAvgLevel() float32 {
-	return float32(10 * math.Log10(float64(f.avgThreshold)))
+	return float32(10 * math.Log10(float64(math.Float32frombits(f.avgThreshold.Load()))))
 }
 
 func (f *Squelch) IsMuted() bool {
-	return f.muted
+	return f.muted.Load()
 }
 
 func (f *Squelch) SetAlpha(alpha float32) {
@@ -53,8 +54,8 @@ func (f *Squelch) Work(data []complex64) []complex64 {
 		out[i] = complex(0, 0)
 	}
 	avg /= float32(len(data))
-	f.avgThreshold = avg
-	f.muted = avg <= f.threshold
+	f.avgThreshold.Store(math.Float32bits(avg))
+	f.muted.Store(avg <= f.threshold)
 
 	if avg >= f.threshold {
 		return data
@@ -77,8 +78,8 @@ func (f *Squelch) WorkBuffer(input, output []complex64) int {
 		output[i] = complex(0, 0)
 	}
 	avg /= float32(len(input))
-	f.avgThreshold = avg
-	f.muted = avg <= f.threshold
+	f.avgThreshold.Store(math.Float32bits(avg))
+	f.muted.Store(avg <= f.threshold)
 
 	if avg >= f.threshold {
 		copy(output, input)

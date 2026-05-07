@@ -4,11 +4,12 @@ import (
 	"github.com/racerxdl/go.fifo"
 	"github.com/racerxdl/segdsp/demodcore"
 	"runtime"
+	"sync/atomic"
 )
 
 var samplesFifo *fifo.Queue
 var demodulator demodcore.DemodCore
-var running = false
+var running atomic.Bool
 var buffer []complex64
 
 var dspCb func(interface{})
@@ -22,16 +23,14 @@ func initDSP() {
 }
 
 func startDSP() {
-	if !running {
-		running = true
+	if !running.Load() {
+		running.Store(true)
 		go dspLoop()
 	}
 }
 
 func stopDSP() {
-	if running {
-		running = false
-	}
+	running.Store(false)
 }
 
 func dspRun() {
@@ -56,7 +55,7 @@ func dspRun() {
 }
 
 func dspLoop() {
-	for running {
+	for running.Load() {
 		dspRun()
 		runtime.Gosched()
 	}
