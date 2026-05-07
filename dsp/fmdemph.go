@@ -9,7 +9,10 @@ type FMDeemph struct {
 }
 
 func MakeFMDeemph(tau, sampleRate float32) *FMDeemph {
-	var p = 1 / tau
+	var p float32
+	if tau != 0 {
+		p = 1 / tau
+	}
 
 	var ca = 2 * float64(sampleRate) * math.Tan(float64(p/(sampleRate*2)))
 

@@ -162,7 +162,7 @@ func MakeCostasLoop8WithFrequencyRange(loopBandwidth, minRelativeFrequency, maxR
 }
 
 func MakeCostasLoop8(loopBandwidth float32) CostasLoop {
-	return MakeCostasLoop2WithFrequencyRange(loopBandwidth, -1, 1)
+	return MakeCostasLoop8WithFrequencyRange(loopBandwidth, -1, 1)
 }
 
 func (cl *CostasLoop8) GetError() float32 {
@@ -202,7 +202,6 @@ func (cl *CostasLoop8) WorkBuffer(input, output []complex64) int {
 			cl.error = imag(output[i])*vr*K - real(output[i])*vi
 		}
 
-		cl.error = imag(output[i])*vr - real(output[i])*vi
 		cl.error = tools.Clip(cl.error, 1)
 		cl.avgError += cl.error
 		cl.AdvanceLoop(cl.error)

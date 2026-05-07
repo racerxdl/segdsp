@@ -67,7 +67,7 @@ func (dc *FeedForwardAGC) PredictOutputSize(inputLength int) int {
 
 func envelope(c complex64) float64 {
 	realAbs := math.Abs(float64(real(c)))
-	imagAbs := math.Abs(float64(real(c)))
+	imagAbs := math.Abs(float64(imag(c)))
 
 	if realAbs > imagAbs {
 		return realAbs + 0.4*imagAbs

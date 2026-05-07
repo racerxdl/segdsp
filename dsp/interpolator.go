@@ -85,7 +85,7 @@ func (f *FloatInterpolator) WorkBuffer(input, output []float32) int {
 		var idx = i * f.interpolationRatio
 		output[idx] = input[i]
 		for j := 1; j < f.interpolationRatio; j++ {
-			output[idx+j] = complex(0, 0)
+			output[idx+j] = 0
 		}
 	}
 

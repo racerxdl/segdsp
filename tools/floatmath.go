@@ -307,6 +307,9 @@ func Floor(x float32) float32 {
 }
 
 func AlmostFloatEqual(a, b float32) bool {
+	if b == 0 {
+		return Abs(a) <= epsilon
+	}
 	return Abs(a-b) <= epsilon || Abs(1-a/b) <= epsilon
 }
 
