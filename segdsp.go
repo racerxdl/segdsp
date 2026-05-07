@@ -138,7 +138,6 @@ func onSmartIQ(rs *client.RadioClient, data []complex64) {
 }
 
 func onFFT(data []uint8) {
-	//log.Println("Received FFT! ", len(data))
 	var j = makeFFTMessage(data, demodulator.GetLevel())
 	m, err := json.Marshal(j)
 	if err != nil {
@@ -164,16 +163,16 @@ func sendData(data interface{}) {
 }
 
 func createServer() *http.Server {
-	srv := &http.Server{Addr: httpAddr}
+	mux := http.NewServeMux()
 
-	fs := http.FileServer(http.Dir("./content/static"))
+	mux.HandleFunc("/ws", ws)
+	mux.Handle("/static/", http.StripPrefix("/static", staticFileServer))
+	mux.HandleFunc("/", content)
 
-	http.HandleFunc("/ws", ws)
-	http.Handle("/static/", http.StripPrefix("/static", fs))
-	http.HandleFunc("/", content)
+	srv := &http.Server{Addr: httpAddr, Handler: mux}
 
 	go func() {
-		log.Println(http.ListenAndServe(httpAddr, nil))
+		log.Println(srv.ListenAndServe())
 	}()
 
 	return srv
@@ -233,14 +232,13 @@ func main() {
 				onSquelchOff(msg.(eventmanager.SquelchEventData))
 			}
 		}
-		//log.Println("Ending Handler loop")
 	}()
 
 	recorder = &recorders.FileRecorder{}
 	recordingParams.recorderEnable = record
 
 	if recordMethod != "file" {
-		panic("Only\"file\" method is supported for recording.")
+		panic("Only \"file\" method is supported for recording.")
 	}
 
 	initDSP()

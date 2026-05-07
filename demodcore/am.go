@@ -47,10 +47,6 @@ func MakeCustomAMDemodulator(sampleRate uint32, signalBw float64, outputRate uin
 	var quadRate = float64(sampleRate) / float64(decim)
 	var resampleRate = float32(float64(outputRate) / quadRate)
 
-	//log.Println("Decimation:", decim)
-	//log.Println("Quad Rate:", quadRate)
-	//log.Println("Resample Rate:", resampleRate)
-
 	var sql = dsp.MakeSquelch(squelch, squelchAlpha)
 	var agc = dsp.MakeFeedForwardAGC(1024, 1)
 

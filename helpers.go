@@ -20,18 +20,6 @@ func (u jsonUint8s) MarshalJSON() ([]byte, error) {
 	return json.Marshal(buf.String())
 }
 
-//type jsonInt16s []int16
-//
-//func (u jsonInt16s) MarshalJSON() ([]byte, error) {
-//	var result string
-//	if u == nil {
-//		result = "null"
-//	} else {
-//		result = strings.Join(strings.Fields(fmt.Sprintf("%d", u)), ",")
-//	}
-//	return []byte(result), nil
-//}
-
 type fftMessage struct {
 	MessageType      string
 	DemodOutputLevel float32

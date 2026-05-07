@@ -86,18 +86,8 @@ func main() {
 	}
 
 	samples = frequencyShift.Work(samples)
-	// Should have a 50 kHz signal shifted to -100 kHz
 	log.Printf("Generated %d samples.\n", len(samples))
-	// Uncomment for saving IQ Samples
-	//f , _ := os.Create("test.iq")
-	//for i := 0; i < 16; i++ {
-	//	for j := 0; j < len(samples); j++ {
-	//		_ = binary.Write(f, binary.LittleEndian, samples[j])
-	//	}
-	//}
-	//f.Close()
-	// endregion
-	// region Compute FFT
+
 	window := dsp.BlackmanHarris(fftSize, 61)
 	fftSamples := make([]complex64, fftSize)
 	copy(fftSamples, samples)

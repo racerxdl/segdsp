@@ -72,14 +72,8 @@ func handleMessages(c *websocket.Conn) {
 		log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
 		return
 	}
-	// endregion
-	// region Client Loop
 	running := true
 	for running {
-		//_, _, err := c.ReadMessage()
-		//if err != nil {
-		//	break
-		//}
 		select {
 		case msg := <-cChannel:
 			err = c.WriteMessage(websocket.TextMessage, []byte(msg))

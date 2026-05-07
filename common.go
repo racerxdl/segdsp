@@ -178,10 +178,6 @@ func setEnv() {
 		_ = os.Setenv(envHTTPAddr, *addrFlag)
 	}
 
-	if os.Getenv(envFFTFrequency) == "" {
-		_ = os.Setenv(envFFTFrequency, strconv.FormatUint(uint64(*displayFrequencyFlag), 10))
-	}
-
 	if os.Getenv(envDisplayPixels) == "" {
 		_ = os.Setenv(envDisplayPixels, strconv.FormatUint(uint64(*displayPixelsFlag), 10))
 	}

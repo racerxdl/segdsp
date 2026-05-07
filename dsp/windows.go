@@ -40,22 +40,6 @@ func cosWindow4(nTaps int, c0, c1, c2, c3 float64) []float64 {
 	return taps
 }
 
-//func cosWindow5(nTaps int, c0, c1, c2, c3, c4 float64) []float64 {
-//	taps := make([]float64, nTaps)
-//	M := float64(nTaps - 1)
-//
-//	for i := 0; i < nTaps; i++ {
-//		var a = c0
-//		var b = c1 * math.Cos((2 * math.Pi * float64(i)) / M)
-//		var c = c2 * math.Cos((4 * math.Pi * float64(i)) / M)
-//		var d = c3 * math.Cos((6 * math.Pi * float64(i)) / M)
-//		var e = c3 * math.Cos((8 * math.Pi * float64(i)) / M)
-//		taps[i] = a - b + c - d + e
-//	}
-//
-//	return taps
-//}
-
 func BlackmanHarris(nTaps, atten int) []float64 {
 	switch atten {
 	case 61:
