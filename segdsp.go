@@ -30,6 +30,10 @@ var fftSamplesF []float32
 var smartIqSamples []complex64
 var fftMutex sync.Mutex
 
+var dspPipeline *DSPPipeline
+var wsServer *WSServer
+var recManager *RecordingManager
+
 type segdspCallback struct {
 	rs *client.RadioClient
 }
@@ -39,7 +43,7 @@ func (cb *segdspCallback) OnSmartData(data []complex64) {
 }
 
 func (cb *segdspCallback) OnData(data []complex64) {
-	addComplex(data)
+	dspPipeline.AddComplex(data)
 }
 
 func onDeviceSync(rs *client.RadioClient) {
@@ -65,9 +69,9 @@ func onDeviceSync(rs *client.RadioClient) {
 		IsMuted:                false,
 	}
 
-	if demodulator != nil {
-		d.DemodulatorParams = demodulator.GetDemodParams()
-		d.IsMuted = demodulator.IsMuted()
+	if dspPipeline.Demodulator != nil {
+		d.DemodulatorParams = dspPipeline.Demodulator.GetDemodParams()
+		d.IsMuted = dspPipeline.Demodulator.IsMuted()
 	}
 
 	currDevice = makeDeviceMessage(d)
@@ -81,7 +85,7 @@ func refreshDevice() {
 		if err != nil {
 			log.Println("Error serializing JSON: ", err)
 		}
-		go broadcastMessage(string(m))
+		go wsServer.BroadcastMessage(string(m))
 	}
 }
 
@@ -124,7 +128,6 @@ func onSmartIQ(rs *client.RadioClient, data []complex64) {
 	copy(lastFFT, fftSamplesF)
 
 	for i, v := range fftSamplesF {
-		// FFT is symmetric
 		var oI = (i + l/2) % l
 		scaledV = 255 + ((v - float32(displayOffset)) * scale)
 		if scaledV < 0 {
@@ -138,34 +141,33 @@ func onSmartIQ(rs *client.RadioClient, data []complex64) {
 }
 
 func onFFT(data []uint8) {
-	var j = makeFFTMessage(data, demodulator.GetLevel())
+	var j = makeFFTMessage(data, dspPipeline.Demodulator.GetLevel())
 	m, err := json.Marshal(j)
 	if err != nil {
 		log.Println("Error serializing JSON: ", err)
 	}
-	go broadcastMessage(string(m))
+	go wsServer.BroadcastMessage(string(m))
 }
 
 func sendData(data interface{}) {
 	switch data := data.(type) {
 	case demodcore.DemodData:
-		var b = data
-		go broadcastBMessage(b.Data.MarshalByteArray())
-		go recordAudio(b.Data)
+		go wsServer.BroadcastBMessage(data.Data.MarshalByteArray())
+		go recManager.RecordAudio(data.Data)
 	default:
 		var j = makeDataMessage(data)
 		m, err := json.Marshal(j)
 		if err != nil {
 			log.Println("Error serializing JSON: ", err)
 		}
-		go broadcastMessage(string(m))
+		go wsServer.BroadcastMessage(string(m))
 	}
 }
 
 func createServer() *http.Server {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/ws", ws)
+	mux.HandleFunc("/ws", wsServer.ServeWS)
 	mux.Handle("/static/", http.StripPrefix("/static", staticFileServer))
 	mux.HandleFunc("/", content)
 
@@ -183,15 +185,15 @@ var squelchOff chan interface{}
 
 func onSquelchOn(data eventmanager.SquelchEventData) {
 	log.Println("Squelch ON", data.AvgValue, data.Threshold)
-	currDevice.IsMuted = demodulator.IsMuted()
-	stopRecording()
+	currDevice.IsMuted = dspPipeline.Demodulator.IsMuted()
+	recManager.StopRecording()
 	refreshDevice()
 }
 
 func onSquelchOff(data eventmanager.SquelchEventData) {
 	log.Println("Squelch OFF", data.AvgValue, data.Threshold)
-	currDevice.IsMuted = demodulator.IsMuted()
-	startRecording()
+	currDevice.IsMuted = dspPipeline.Demodulator.IsMuted()
+	recManager.StartRecording(stationName)
 	refreshDevice()
 }
 
@@ -234,14 +236,17 @@ func main() {
 		}
 	}()
 
-	recorder = &recorders.FileRecorder{}
-	recordingParams.recorderEnable = record
+	dspPipeline = NewDSPPipeline()
+	wsServer = NewWSServer(&currDevice)
+	recManager = NewRecordingManager(&recorders.FileRecorder{}, func() interface{} {
+		return dspPipeline.Demodulator.GetDemodParams()
+	})
+	recManager.RecorderEnable = record
 
 	if recordMethod != "file" {
 		panic("Only \"file\" method is supported for recording.")
 	}
 
-	initDSP()
 	var rs = client.MakeRadioClient(radioserverhost, "User", "SegDSP")
 	var cb = segdspCallback{
 		rs: rs,
@@ -279,10 +284,9 @@ func main() {
 	log.Println("SmartIQ Center Frequency ", rs.GetSmartCenterFrequency())
 	log.Println("SmartIQ Sample Rate: ", rs.GetSmartSampleRate())
 
-	demodulator = buildDSP(rs.GetSampleRate())
-	demodulator.SetEventManager(&ev)
-
-	dspCb = sendData
+	dspPipeline.Demodulator = buildDSP(rs.GetSampleRate())
+	dspPipeline.Demodulator.SetEventManager(&ev)
+	dspPipeline.SetCallback(sendData)
 
 	sigs := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
@@ -297,7 +301,7 @@ func main() {
 	var srv = createServer()
 
 	onDeviceSync(rs)
-	startDSP()
+	dspPipeline.Start()
 
 	log.Println("Starting")
 	rs.Start()
@@ -311,7 +315,7 @@ func main() {
 
 	log.Print("Stopping")
 	rs.Stop()
-	stopDSP()
+	dspPipeline.Stop()
 
 	fmt.Println("Work Done")
 }

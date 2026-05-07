@@ -7,27 +7,33 @@ import (
 	"log"
 	"net/http"
 	"runtime"
+	"sync"
 )
 
 const wsChannelBuf = 64
-
-var chanList = list.New()
 
 type conn struct {
 	stringc chan string
 	bytec   chan []byte
 }
 
-func closeN(c *list.Element) {
-	wsMutex.Lock()
-	chanList.Remove(c)
-	wsMutex.Unlock()
+type WSServer struct {
+	mu       sync.Mutex
+	chanList *list.List
+	device   *deviceMessage
 }
 
-func broadcastMessage(data string) {
-	wsMutex.Lock()
-	defer wsMutex.Unlock()
-	for e := chanList.Front(); e != nil; e = e.Next() {
+func NewWSServer(device *deviceMessage) *WSServer {
+	return &WSServer{
+		chanList: list.New(),
+		device:   device,
+	}
+}
+
+func (s *WSServer) BroadcastMessage(data string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for e := s.chanList.Front(); e != nil; e = e.Next() {
 		var c = e.Value.(conn)
 		select {
 		case c.stringc <- data:
@@ -36,10 +42,10 @@ func broadcastMessage(data string) {
 	}
 }
 
-func broadcastBMessage(data []byte) {
-	wsMutex.Lock()
-	defer wsMutex.Unlock()
-	for e := chanList.Front(); e != nil; e = e.Next() {
+func (s *WSServer) BroadcastBMessage(data []byte) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for e := s.chanList.Front(); e != nil; e = e.Next() {
 		var c = e.Value.(conn)
 		select {
 		case c.bytec <- data:
@@ -48,21 +54,25 @@ func broadcastBMessage(data []byte) {
 	}
 }
 
-func handleMessages(c *websocket.Conn) {
+func (s *WSServer) closeN(c *list.Element) {
+	s.mu.Lock()
+	s.chanList.Remove(c)
+	s.mu.Unlock()
+}
 
+func (s *WSServer) HandleMessages(c *websocket.Conn) {
 	var cChannel = make(chan string, wsChannelBuf)
 	var bChannel = make(chan []byte, wsChannelBuf)
-	wsMutex.Lock()
-	var li = chanList.PushBack(conn{
+	s.mu.Lock()
+	var li = s.chanList.PushBack(conn{
 		stringc: cChannel,
 		bytec:   bChannel,
 	})
-	wsMutex.Unlock()
-	defer closeN(li)
+	s.mu.Unlock()
+	defer s.closeN(li)
 
-	// region Send DeviceInfo
 	log.Println("New connection from", c.RemoteAddr())
-	m, err := json.Marshal(currDevice)
+	m, err := json.Marshal(s.device)
 	if err != nil {
 		log.Println("Error serializing JSON: ", err)
 	}
@@ -72,6 +82,7 @@ func handleMessages(c *websocket.Conn) {
 		log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
 		return
 	}
+
 	running := true
 	for running {
 		select {
@@ -88,17 +99,15 @@ func handleMessages(c *websocket.Conn) {
 				running = false
 			}
 		}
-
 		runtime.Gosched()
 	}
-	// endregion
 }
 
-func ws(w http.ResponseWriter, r *http.Request) {
+func (s *WSServer) ServeWS(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
 	}
-	handleMessages(c)
+	s.HandleMessages(c)
 }

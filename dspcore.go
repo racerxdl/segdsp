@@ -5,61 +5,69 @@ import (
 	"github.com/racerxdl/segdsp/demodcore"
 )
 
-var samplesFifo *fifo.Queue
-var demodulator demodcore.DemodCore
-var buffer []complex64
-var dspCb func(interface{})
-var dspReady chan struct{}
-var dspDone chan struct{}
+type DSPPipeline struct {
+	samplesFifo *fifo.Queue
+	Demodulator demodcore.DemodCore
+	buffer      []complex64
+	cb          func(interface{})
+	ready       chan struct{}
+	done        chan struct{}
+}
 
-func addComplex(data []complex64) {
-	samplesFifo.Add(data)
+func NewDSPPipeline() *DSPPipeline {
+	return &DSPPipeline{
+		samplesFifo: fifo.NewQueue(),
+		ready:       make(chan struct{}, 1),
+		done:        make(chan struct{}),
+	}
+}
+
+func (d *DSPPipeline) AddComplex(data []complex64) {
+	d.samplesFifo.Add(data)
 	select {
-	case dspReady <- struct{}{}:
+	case d.ready <- struct{}{}:
 	default:
 	}
 }
 
-func initDSP() {
-	samplesFifo = fifo.NewQueue()
-	dspReady = make(chan struct{}, 1)
-	dspDone = make(chan struct{})
+func (d *DSPPipeline) SetCallback(cb func(interface{})) {
+	d.cb = cb
 }
 
-func startDSP() {
-	go dspLoop()
+func (d *DSPPipeline) Start() {
+	go d.loop()
 }
 
-func stopDSP() {
-	close(dspReady)
-	<-dspDone
+func (d *DSPPipeline) Stop() {
+	close(d.ready)
+	<-d.done
 }
 
-func dspRun() {
-	length := samplesFifo.Len()
+func (d *DSPPipeline) run() {
+	length := d.samplesFifo.Len()
 
 	if length == 0 {
 		return
 	}
 
-	if demodulator == nil || dspCb == nil {
+	if d.Demodulator == nil || d.cb == nil {
 		return
 	}
 
-	buffer = samplesFifo.Next().([]complex64)
+	d.buffer = d.samplesFifo.Next().([]complex64)
 
-	var out = demodulator.Work(buffer)
+	var out = d.Demodulator.Work(d.buffer)
 
 	if out != nil {
-		dspCb(out)
+		d.cb(out)
 	}
 }
 
-func dspLoop() {
-	defer close(dspDone)
-	for range dspReady {
-		for samplesFifo.Len() > 0 {
-			dspRun()
+func (d *DSPPipeline) loop() {
+	defer close(d.done)
+	for range d.ready {
+		for d.samplesFifo.Len() > 0 {
+			d.run()
 		}
 	}
 }
