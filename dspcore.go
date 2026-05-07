@@ -3,38 +3,39 @@ package main
 import (
 	"github.com/racerxdl/go.fifo"
 	"github.com/racerxdl/segdsp/demodcore"
-	"runtime"
-	"sync/atomic"
 )
 
 var samplesFifo *fifo.Queue
 var demodulator demodcore.DemodCore
-var running atomic.Bool
 var buffer []complex64
-
 var dspCb func(interface{})
+var dspReady chan struct{}
+var dspDone chan struct{}
 
 func addComplex(data []complex64) {
 	samplesFifo.Add(data)
+	select {
+	case dspReady <- struct{}{}:
+	default:
+	}
 }
 
 func initDSP() {
 	samplesFifo = fifo.NewQueue()
+	dspReady = make(chan struct{}, 1)
+	dspDone = make(chan struct{})
 }
 
 func startDSP() {
-	if !running.Load() {
-		running.Store(true)
-		go dspLoop()
-	}
+	go dspLoop()
 }
 
 func stopDSP() {
-	running.Store(false)
+	close(dspReady)
+	<-dspDone
 }
 
 func dspRun() {
-
 	length := samplesFifo.Len()
 
 	if length == 0 {
@@ -55,8 +56,10 @@ func dspRun() {
 }
 
 func dspLoop() {
-	for running.Load() {
-		dspRun()
-		runtime.Gosched()
+	defer close(dspDone)
+	for range dspReady {
+		for samplesFifo.Len() > 0 {
+			dspRun()
+		}
 	}
 }
