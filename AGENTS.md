@@ -23,15 +23,15 @@ No Makefile or task runner exists.
 - `demodcore/` — Demodulator interface + FM/AM implementations
 - `eventmanager/` — Channel-based pub/sub event bus
 - `recorders/` — WAV file recording
-- `content/` — Static web UI served by the binary
+- `content/` — Static web UI embedded via `go:embed`
 
 ## Gotchas
 
 - Docker builds use `CGO_ENABLED=0` for static binaries despite native C code existing
-- arm32v6 is cross-compiled on the host (not in Docker) due to a Go compiler bug in Alpine — see `multi-build.sh`
 - Binary is named `segdsp` locally but `segdsp_worker` inside Docker containers
 - The app **cannot start** without a running `radioserver` instance (external SDR IQ source, not in this repo)
-- Default branch is `master`; releases are tag-triggered via Travis CI
+- Default branch is `master`; releases are tag-triggered via GitHub Actions (`release.yml`)
+- Multi-arch Docker builds (amd64, arm32v6, arm64v8) use QEMU emulation in CI — no host-side cross-compilation needed
 
 ## Testing
 
