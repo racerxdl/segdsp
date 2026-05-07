@@ -61,25 +61,26 @@ func (nco *NCO) Float32Sin(n int, amplitude float32) []float32 {
 	var d = make([]float32, n)
 	for i := 0; i < n; i++ {
 		d[i] = float32(math.Sin(float64(nco.phase))) * amplitude
+		nco.phase += nco.phaseIncrement
 	}
 	return d
 }
 
-// Float32Cos Compute N elements for a float32 array cosine wave
 func (nco *NCO) Float32Cos(n int, amplitude float32) []float32 {
 	var d = make([]float32, n)
 	for i := 0; i < n; i++ {
 		d[i] = float32(math.Cos(float64(nco.phase))) * amplitude
+		nco.phase += nco.phaseIncrement
 	}
 	return d
 }
 
-// Float32Sin Compute N elements for a float32 array sine wave
 func (nco *NCO) Complex64SinCos(n int, amplitude float32) []complex64 {
 	var d = make([]complex64, n)
 	for i := 0; i < n; i++ {
 		a, b := math.Sincos(float64(nco.phase))
 		d[i] = complex(float32(a)*amplitude, float32(b)*amplitude)
+		nco.phase += nco.phaseIncrement
 	}
 	return d
 }
