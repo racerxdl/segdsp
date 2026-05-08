@@ -1,3 +1,11 @@
+FROM node:22-alpine AS uibuild
+
+WORKDIR /ui
+COPY ui/package.json ui/package-lock.json ./
+RUN npm ci
+COPY ui/ .
+RUN npm run build
+
 FROM golang:1.25-alpine AS build
 
 WORKDIR /build
@@ -6,6 +14,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+COPY --from=uibuild /build/content/ content/
 RUN CGO_ENABLED=0 GOOS=linux go build -o segdsp_worker .
 
 FROM alpine:latest

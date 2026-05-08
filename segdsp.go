@@ -33,6 +33,7 @@ var fftMutex sync.Mutex
 var dspPipeline *DSPPipeline
 var wsServer *WSServer
 var recManager *RecordingManager
+var radioClient *client.RadioClient
 
 type segdspCallback struct {
 	rs *client.RadioClient
@@ -160,7 +161,6 @@ func createServer() *http.Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/ws", wsServer.ServeWS)
-	mux.Handle("/static/", http.StripPrefix("/static", staticFileServer))
 	mux.HandleFunc("/", content)
 
 	srv := &http.Server{Addr: httpAddr, Handler: mux}
@@ -229,7 +229,7 @@ func main() {
 	}()
 
 	dspPipeline = NewDSPPipeline()
-	wsServer = NewWSServer(&currDevice)
+	wsServer = NewWSServer(&currDevice, handleControl)
 	recManager = NewRecordingManager(&recorders.FileRecorder{}, func() interface{} {
 		return dspPipeline.Demodulator.GetDemodParams()
 	})
@@ -240,6 +240,7 @@ func main() {
 	}
 
 	var rs = client.MakeRadioClient(radioserverhost, "User", "SegDSP")
+	radioClient = rs
 	var cb = segdspCallback{
 		rs: rs,
 	}

@@ -23,3 +23,6 @@ bins
 qemu-*
 x86_64_*
 segdsp_worker*
+
+ui/node_modules/
+ui/dist/

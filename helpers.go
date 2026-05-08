@@ -67,3 +67,15 @@ func makeDeviceMessage(d deviceMessage) deviceMessage {
 
 	return d
 }
+
+type controlMessage struct {
+	MessageType string `json:"MessageType"`
+	ChannelFrequency  *uint   `json:"ChannelFrequency,omitempty"`
+	FFTfrequency      *uint   `json:"FFTfrequency,omitempty"`
+	DemodulatorMode   *string `json:"DemodulatorMode,omitempty"`
+	FilterBandwidth   *uint   `json:"FilterBandwidth,omitempty"`
+	Squelch           *float32 `json:"Squelch,omitempty"`
+	DisplayOffset     *int32  `json:"DisplayOffset,omitempty"`
+	DisplayRange      *int32  `json:"DisplayRange,omitempty"`
+	Rebuild           *bool   `json:"Rebuild,omitempty"`
+}

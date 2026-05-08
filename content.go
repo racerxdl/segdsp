@@ -9,17 +9,21 @@ import (
 //go:embed content/index.html
 var indexHTML []byte
 
-//go:embed content/static
-var staticFS embed.FS
+//go:embed content/assets
+var assetsFS embed.FS
 
 func content(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = w.Write(indexHTML)
+	if r.URL.Path == "/" {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write(indexHTML)
+		return
+	}
+	assetsServer.ServeHTTP(w, r)
 }
+
+var assetsServer http.Handler
 
 func init() {
-	sub, _ := fs.Sub(staticFS, "content/static")
-	staticFileServer = http.FileServer(http.FS(sub))
+	sub, _ := fs.Sub(assetsFS, "content/assets")
+	assetsServer = http.StripPrefix("/assets/", http.FileServer(http.FS(sub)))
 }
-
-var staticFileServer http.Handler

@@ -18,15 +18,17 @@ type conn struct {
 }
 
 type WSServer struct {
-	mu       sync.Mutex
-	chanList *list.List
-	device   *deviceMessage
+	mu        sync.Mutex
+	chanList  *list.List
+	device    *deviceMessage
+	onControl func(controlMessage)
 }
 
-func NewWSServer(device *deviceMessage) *WSServer {
+func NewWSServer(device *deviceMessage, onControl func(controlMessage)) *WSServer {
 	return &WSServer{
-		chanList: list.New(),
-		device:   device,
+		chanList:  list.New(),
+		device:    device,
+		onControl: onControl,
 	}
 }
 
@@ -83,6 +85,24 @@ func (s *WSServer) HandleMessages(c *websocket.Conn) {
 		return
 	}
 
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			_, msg, err := c.ReadMessage()
+			if err != nil {
+				return
+			}
+			var ctrl controlMessage
+			if err := json.Unmarshal(msg, &ctrl); err != nil {
+				continue
+			}
+			if ctrl.MessageType == "control" && s.onControl != nil {
+				s.onControl(ctrl)
+			}
+		}
+	}()
+
 	running := true
 	for running {
 		select {
@@ -98,6 +118,8 @@ func (s *WSServer) HandleMessages(c *websocket.Conn) {
 				log.Println("Error sending message:", err, "dropping connection from", c.RemoteAddr())
 				running = false
 			}
+		case <-done:
+			running = false
 		}
 		runtime.Gosched()
 	}
