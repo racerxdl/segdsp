@@ -15,6 +15,7 @@ build
 segdsp
 segdsp.prof
 *.json
+!ui/package.json
 !ui/package-lock.json
 *.float32
 *.cfile
