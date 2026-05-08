@@ -14,7 +14,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-COPY --from=uibuild /build/content/ content/
+COPY --from=uibuild /content/ content/
 RUN CGO_ENABLED=0 GOOS=linux go build -o segdsp_worker .
 
 FROM alpine:latest
